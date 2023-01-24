@@ -1,2 +1,2 @@
 # k3s-cluster
-Raspberry Pi k3s cluster deployed with Ansible.
+Raspberry Pi k3s high-availability cluster deployed with Ansible.
