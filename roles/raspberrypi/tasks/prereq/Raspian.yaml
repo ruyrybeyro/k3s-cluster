@@ -1,0 +1,50 @@
+---
+- name: Enable memory cgroup
+  ansible.builtin.replace:
+    path: /boot/cmdline.txt
+    regexp: "rootwait"
+    replace: "cgroup_memory=1 cgroup_enable=memory rootwait"
+  notify: Perform reboot
+  register: cmdline
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+
+- name: Remove no longer required dependencies
+  ansible.builtin.apt:
+    autoremove: true
+
+- name: Disable bluetooth and wifi services
+  ansible.builtin.systemd:
+    name: "{{ item }}.service"
+    enabled: false
+  with_items:
+    - bluetooth
+    - hciuart
+    - wpa_supplicant
+
+- name: Boot from USB if available
+  ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
+  changed_when: false
+  failed_when: false
+
+- name: Wait for network connection on boot
+  ansible.builtin.command: raspi-config nonint do_boot_wait 0
+  changed_when: false
+  failed_when: false
+
+- name: Update bootloader firmware
+  ansible.builtin.command: rpi-eeprom-update -ad
+  changed_when: false
+  failed_when: false
+  notify: Perform reboot
+  register: eeprom
+
+- name: Check reboot status
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_checksum: false
+  notify: Perform reboot
+  register: reboot
