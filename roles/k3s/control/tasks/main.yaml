@@ -7,7 +7,7 @@
     group: root
     mode: 0600
 
-- name: Copy K3s service file
+- name: Copy k3s service file
   template:
     src: "k3s.service.j2"
     dest: "{{ systemd_dir }}/k3s.service"
@@ -15,7 +15,7 @@
     group: root
     mode: 0644
 
-- name: Enable and check K3s service
+- name: Enable and check k3s service
   systemd:
     name: k3s
     daemon_reload: true
