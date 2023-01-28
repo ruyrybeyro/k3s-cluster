@@ -4,6 +4,8 @@
     path: /boot/cmdline.txt
     regexp: "rootwait"
     replace: "cgroup_memory=1 cgroup_enable=memory rootwait"
+  changed_when: cmdline.changed
+  failed_when: cmdline.rc > 0
   notify: Perform reboot
   register: cmdline
 
@@ -28,23 +30,27 @@
 - name: Boot from USB if available
   ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
   changed_when: false
-  failed_when: false
+  failed_when: boot_behaviour.rc > 0
+  register: boot_behaviour
 
 - name: Wait for network connection on boot
   ansible.builtin.command: raspi-config nonint do_boot_wait 0
   changed_when: false
-  failed_when: false
+  failed_when: boot_wait.rc > 0
+  register: boot_wait
 
 - name: Update bootloader firmware
   ansible.builtin.command: rpi-eeprom-update -ad
-  changed_when: false
-  failed_when: false
+  changed_when: eeprom_update.stdout.find('updates pending') != -1
+  failed_when: eeprom_update.rc > 0
   notify: Perform reboot
-  register: eeprom
+  register: eeprom_update
 
 - name: Check reboot status
   ansible.builtin.stat:
     path: /var/run/reboot-required
     get_checksum: false
+  changed_when: reboot.stat.exists
+  failed_when: false
   notify: Perform reboot
   register: reboot
