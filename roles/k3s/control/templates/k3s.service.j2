@@ -1,10 +1,14 @@
 [Unit]
 Description=Lightweight Kubernetes
 Documentation=https://k3s.io
+Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=notify
+EnvironmentFile=-/etc/default/%N
+EnvironmentFile=-/etc/sysconfig/%N
+EnvironmentFile=-/etc/systemd/system/k3s.service.env
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
 ExecStart=/usr/local/bin/k3s server --data-dir={{ k3s_data_dir }} {{ extra_server_args | default('') }}

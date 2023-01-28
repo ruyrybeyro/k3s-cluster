@@ -18,8 +18,8 @@
 
 - name: Disable bluetooth and wifi services
   ansible.builtin.systemd:
-    name: "{{ item }}.service"
     enabled: false
+    name: "{{ item }}.service"
   with_items:
     - bluetooth
     - hciuart
