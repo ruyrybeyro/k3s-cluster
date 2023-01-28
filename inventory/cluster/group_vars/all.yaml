@@ -1,11 +1,4 @@
 ---
 ansible_user: floren
 k3s_version: v1.25.6+k3s1
-k3s_config_dir: /etc/rancher/k3s
-k3s_data_dir: /var/lib/rancher/k3s
-systemd_dir: /etc/systemd/system
-control_ha: "{{ groups['control'] | length > 1 }}"
-control_host: "{{ hostvars[groups['control'][0]]['ansible_host'] | default(groups['control'][0]) }}"
-control_host_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
-extra_agent_args: ""
-extra_server_args: ""
+public_key: id_ed25519.pub

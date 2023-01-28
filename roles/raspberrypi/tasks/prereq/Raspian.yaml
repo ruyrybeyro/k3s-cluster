@@ -1,4 +1,10 @@
 ---
+- name: Set authorized key
+  ansible.posix.authorized_key:
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_ed25519.pub') }}"
+    state: present
+    user: "{{ ansible_user }}"
+
 - name: Enable memory cgroup
   ansible.builtin.replace:
     path: /boot/cmdline.txt
