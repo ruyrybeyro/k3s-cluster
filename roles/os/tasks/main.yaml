@@ -6,7 +6,6 @@
     regexp: '^((?!.*\bcgroup_memory=1\b).*)$'
     line: '\g<1> cgroup_memory=1 cgroup_enable=memory'
     state: present
-  changed_when: cmdline is changed
   notify: Perform reboot
   register: cmdline
 
