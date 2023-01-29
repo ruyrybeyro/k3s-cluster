@@ -2,6 +2,13 @@
 
 Raspberry Pi k3s high-availability cluster deployed with Ansible.
 
+```shell
+brew install ansible ansible-lint
+brew tap esolitos/ipa
+brew install esolitos/ipa/sshpass
+ansible-playbook deploy.yaml -k -i inventory/cluster/hosts.ini
+```
+
 Install k3s on primary control-plane:
 
 ```shell

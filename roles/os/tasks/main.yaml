@@ -1,17 +1,12 @@
 ---
-- name: Set authorized key
-  ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_ed25519.pub') }}"
-    state: present
-    user: "{{ ansible_user }}"
-
 - name: Enable memory cgroup
-  ansible.builtin.replace:
+  ansible.builtin.lineinfile:
+    backrefs: true
     path: /boot/cmdline.txt
-    regexp: "rootwait"
-    replace: "cgroup_memory=1 cgroup_enable=memory rootwait"
-  changed_when: cmdline.changed
-  failed_when: cmdline.rc > 0
+    regexp: '^((?!.*\bcgroup_memory=1\b).*)$'
+    line: '\g<1> cgroup_memory=1 cgroup_enable=memory'
+    state: present
+  changed_when: cmdline is changed
   notify: Perform reboot
   register: cmdline
 
@@ -27,7 +22,11 @@
 - name: Disable bluetooth and wifi services
   ansible.builtin.systemd:
     enabled: false
-    name: "{{ item }}.service"
+    name: '{{ name }}.service'
+  loop_control:
+    loop_var: service
+  vars:
+    name: '{{ service }}'
   with_items:
     - bluetooth
     - hciuart
@@ -36,19 +35,14 @@
 - name: Boot from USB if available
   ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
   changed_when: false
-  failed_when: boot_behaviour.rc > 0
-  register: boot_behaviour
 
 - name: Wait for network connection on boot
   ansible.builtin.command: raspi-config nonint do_boot_wait 0
   changed_when: false
-  failed_when: boot_wait.rc > 0
-  register: boot_wait
 
 - name: Update bootloader firmware
   ansible.builtin.command: rpi-eeprom-update -ad
   changed_when: eeprom_update.stdout.find('updates pending') != -1
-  failed_when: eeprom_update.rc > 0
   notify: Perform reboot
   register: eeprom_update
 
@@ -57,6 +51,5 @@
     path: /var/run/reboot-required
     get_checksum: false
   changed_when: reboot.stat.exists
-  failed_when: false
   notify: Perform reboot
   register: reboot

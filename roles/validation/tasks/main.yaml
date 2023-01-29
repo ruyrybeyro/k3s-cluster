@@ -1,0 +1,19 @@
+---
+- name: Test for Raspberry Pi CPU
+  ansible.builtin.command: egrep 'BCM2708|BCM2709|BCM2835|BCM2836' /proc/cpuinfo
+  changed_when: false
+  register: cpuinfo
+
+- name: Test for Raspberry Pi model
+  ansible.builtin.command: grep 'Raspberry Pi' /proc/device-tree/model
+  changed_when: false
+  register: model
+
+- name: Set Raspberry Pi fact
+  ansible.builtin.set_fact:
+    raspberry_pi: true
+  when:
+    - ansible_facts.lsb.codename | default('') == ansible_lsb_codename
+    - ansible_facts.lsb.id | default('') == ansible_lsb_id
+    - ansible_facts.machine | default('') == 'aarch64'
+    - cpuinfo.rc == 0 or model.rc == 0

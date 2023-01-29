@@ -1,0 +1,8 @@
+---
+- name: Perform reboot
+  ansible.builtin.reboot:
+    post_reboot_delay: 30
+  when: >
+    cmdline is changed or
+    eeprom_update.stdout.find('updates pending') != -1 or
+    reboot.stat.exists

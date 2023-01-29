@@ -1,7 +1,7 @@
 control_ha: "{{ groups['control'] | length > 1 }}"
 control_host: "{{ hostvars[groups['control'][0]]['ansible_host'] | default(groups['control'][0]) }}"
 control_host_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
-extra_server_args: ""
 k3s_config_dir: /etc/rancher/k3s
 k3s_data_dir: /var/lib/rancher/k3s
 systemd_dir: /etc/systemd/system
+extra_server_args: ""
