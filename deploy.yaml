@@ -1,11 +1,11 @@
 ---
 - name: Cluster Deployment
-  hosts: apollo.lan
+  hosts: cluster
   become: true
   gather_facts: true
   roles:
     - role: validation
-    - role: ssh
+    - role: user
       when: raspberry_pi | default(false)
     - role: os
       when: raspberry_pi | default(false)
