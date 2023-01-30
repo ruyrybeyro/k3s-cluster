@@ -1,14 +1,14 @@
 ---
 - name: Add KUBECONFIG variable to environment
   ansible.builtin.lineinfile:
-    line: KUBECONFIG={{ k3s_config_dir }}/k3s.yaml
+    line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
     path: /etc/environment
-    regexp: ^KUBECONFIG=
+    regexp: ^KUBECONFIG
     state: present
 
 - name: Create k3s configuration directory
   ansible.builtin.file:
-    path: '{{ k3s_config_dir }}'
+    path: '{{ k3s_conf_dir }}'
     mode: 0755
     owner: root
     group: root
@@ -17,7 +17,7 @@
 - name: Copy k3s configuration file
   ansible.builtin.template:
     src: config.yaml.j2
-    dest: '{{ k3s_config_dir }}/config.yaml'
+    dest: '{{ k3s_conf_dir }}/config.yaml'
     mode: 0600
     owner: root
     group: root
@@ -30,9 +30,9 @@
     owner: root
     group: root
 
-- name: Enable and check k3s service
+- name: Start k3s service
   ansible.builtin.systemd:
-    name: k3s
+    name: k3s.service
     daemon_reload: true
     enabled: true
     state: restarted
@@ -41,38 +41,23 @@
   ansible.builtin.wait_for:
     path: '{{ k3s_data_dir }}/server/node-token'
 
-# - name: Register token file permissions
-#   ansible.builtin.stat:
-#     path: '{{ k3s_data_dir }}/server/node-token'
-#   register: token_permissions
-
-# - name: Change token file permissions
-#   ansible.builtin.file:
-#     path: '{{ k3s_data_dir }}/server/node-token'
-#     mode: 0644
-
 - name: Read token
   ansible.builtin.slurp:
     path: '{{ k3s_data_dir }}/server/node-token'
   register: node_token
 
-- name: Store token
+- name: Set token fact
   ansible.builtin.set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-
-# - name: Restore token file permissions
-#   ansible.builtin.file:
-#     path: '{{ k3s_data_dir }}/server/node-token'
-#     mode: '{{ token_permissions.stat.mode }}'
-
-- name: Create kubectl symlink
-  ansible.builtin.file:
-    src: /usr/local/bin/k3s
-    dest: /usr/local/bin/kubectl
-    state: link
 
 - name: Create crictl symlink
   ansible.builtin.file:
     src: /usr/local/bin/k3s
     dest: /usr/local/bin/crictl
+    state: link
+
+- name: Create kubectl symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/kubectl
     state: link

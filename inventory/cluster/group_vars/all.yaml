@@ -3,6 +3,6 @@ ansible_lsb_codename: bullseye
 ansible_lsb_id: Debian
 ansible_user: floren
 ansible_user_key: id_ed25519.pub
-k3s_config_dir: /etc/rancher/k3s
+k3s_conf_dir: /etc/rancher/k3s
 k3s_data_dir: /var/lib/rancher/k3s
 k3s_version: v1.25.6+k3s1

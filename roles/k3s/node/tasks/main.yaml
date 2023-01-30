@@ -2,7 +2,7 @@
 - name: Copy k3s config file
   ansible.builtin.template:
     src: config.yaml.j2
-    dest: '{{ k3s_config_dir }}/config.yaml'
+    dest: '{{ k3s_conf_dir }}/config.yaml'
     owner: root
     group: root
     mode: 0600

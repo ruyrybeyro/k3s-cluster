@@ -28,7 +28,7 @@
     name: '{{ item }}'
     state: absent
   with_items:
-    - '{{ k3s_config_dir }}'
+    - '{{ k3s_conf_dir }}'
     - '{{ k3s_data_dir }}'
     - /etc/systemd/system/k3s.service
     - /etc/systemd/system/k3s-node.service
