@@ -9,7 +9,7 @@
   notify: Perform reboot
   register: cmdline
 
-- name: Upgrade all packages
+- name: Upgrade distribution packages
   ansible.builtin.apt:
     autoremove: true
     update_cache: true
