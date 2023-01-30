@@ -10,16 +10,16 @@
     - role: os
       when: raspberry_pi | default(false)
 
-# - name: Control Plane Deployment
-#   hosts: control
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: k3s/download
-#       when: raspberry_pi | default(false)
-#     - role: k3s/control
-#       when: raspberry_pi | default(false)
-#   serial: 1
+- name: Control Plane Deployment
+  hosts: control
+  become: true
+  gather_facts: true
+  roles:
+    - role: k3s/download
+      when: raspberry_pi | default(false)
+    - role: k3s/control
+      when: raspberry_pi | default(false)
+  serial: 1
 
 # - name: Node Deployment
 #   hosts: node
