@@ -39,6 +39,10 @@
   ansible.builtin.command: raspi-config nonint do_boot_wait 0
   changed_when: false
 
+- name: Set WiFi country code
+  ansible.builtin.command: 'raspi-config nonint do_wifi_country {{ country_code }}'
+  changed_when: false
+
 - name: Update bootloader firmware
   ansible.builtin.command: rpi-eeprom-update -ad
   changed_when: eeprom_update.stdout.find('updates pending') != -1

@@ -6,6 +6,7 @@ After=network-online.target
 
 [Service]
 Type=notify
+Delegate=yes
 EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/sysconfig/%N
 EnvironmentFile=-/etc/systemd/system/k3s.service.env
@@ -13,7 +14,6 @@ ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
 ExecStart=/usr/local/bin/k3s server --data-dir={{ k3s_data_dir }} {{ extra_server_args | default('') }}
 KillMode=process
-Delegate=yes
 LimitNOFILE=1048576
 LimitNPROC=infinity
 LimitCORE=infinity

@@ -1,19 +1,21 @@
 ---
+- name: Get user info
+  ansible.builtin.user:
+    name: '{{ ansible_user }}'
+    state: present
+  register: user_info
+
 - name: Set authorized key
   ansible.posix.authorized_key:
     key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + ansible_ssh_key) }}"
     state: present
     user: '{{ ansible_user }}'
 
-- name: User info
-  ansible.builtin.user:
-    name: '{{ ansible_user }}'
-    state: present
-  register: user_info
-
-- name: 'Hush login for {{ ansible_user }}'
+- name: Hush login
   ansible.builtin.file:
+    access_time: preserve
     mode: 0644
+    modification_time: preserve
     path: '{{ user_info.home }}/.hushlogin'
     state: touch
   become_user: '{{ ansible_user }}'

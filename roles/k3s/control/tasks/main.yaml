@@ -1,26 +1,34 @@
 ---
 - name: Add KUBECONFIG variable to environment
   ansible.builtin.lineinfile:
-    line: "KUBECONFIG={{ k3s_config_dir }}/k3s.yaml"
+    line: KUBECONFIG={{ k3s_config_dir }}/k3s.yaml
     path: /etc/environment
-    regexp: "^KUBECONFIG="
+    regexp: ^KUBECONFIG=
     state: present
 
-- name: Copy k3s config file
-  ansible.builtin.template:
-    src: "config.yaml.j2"
-    dest: "{{ k3s_config_dir }}/config.yaml"
+- name: Create k3s configuration directory
+  ansible.builtin.file:
+    path: '{{ k3s_config_dir }}'
+    mode: 0755
     owner: root
     group: root
+    state: directory
+
+- name: Copy k3s configuration file
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: '{{ k3s_config_dir }}/config.yaml'
     mode: 0600
+    owner: root
+    group: root
 
 - name: Copy k3s service file
   ansible.builtin.template:
-    src: "k3s.service.j2"
-    dest: "{{ systemd_dir }}/k3s.service"
+    src: k3s.service.j2
+    dest: /etc/systemd/system/k3s.service
+    mode: 0644
     owner: root
     group: root
-    mode: 0644
 
 - name: Enable and check k3s service
   ansible.builtin.systemd:
@@ -29,55 +37,33 @@
     enabled: true
     state: restarted
 
-- name: Wait for node-token
+- name: Wait for token creation
   ansible.builtin.wait_for:
-    path: "{{ k3s_data_dir }}/server/node-token"
+    path: '{{ k3s_data_dir }}/server/node-token'
 
-- name: Register node-token file access mode
-  ansible.builtin.stat:
-    path: "{{ k3s_data_dir }}/server/node-token"
-  register: p
+# - name: Register token file permissions
+#   ansible.builtin.stat:
+#     path: '{{ k3s_data_dir }}/server/node-token'
+#   register: token_permissions
 
-- name: Change file access node-token
-  ansible.builtin.file:
-    path: "{{ k3s_data_dir }}/server/node-token"
-    mode: 0600
+# - name: Change token file permissions
+#   ansible.builtin.file:
+#     path: '{{ k3s_data_dir }}/server/node-token'
+#     mode: 0644
 
-- name: Read node-token from master
+- name: Read token
   ansible.builtin.slurp:
-    path: "{{ k3s_data_dir }}/server/node-token"
+    path: '{{ k3s_data_dir }}/server/node-token'
   register: node_token
 
-- name: Store Master node-token
+- name: Store token
   ansible.builtin.set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
 
-- name: Restore node-token file access
-  ansible.builtin.file:
-    path: "{{ k3s_data_dir }}/server/node-token"
-    mode: "{{ p.stat.mode }}"
-
-- name: Create directory .kube
-  ansible.builtin.file:
-    path: "~/{{ ansible_user }}/.kube"
-    state: directory
-    owner: "{{ ansible_user }}"
-    mode: 0755
-
-- name: Copy config file to user home directory
-  ansible.builtin.copy:
-    src: "{{ k3s_config_dir }}/k3s.yaml"
-    dest: "~/{{ ansible_user }}/.kube/config"
-    remote_src: true
-    owner: "{{ ansible_user }}"
-    mode: 0600
-
-- name: Replace localhost by control host
-  ansible.builtin.command: >-
-    k3s kubectl config set-cluster default
-      --server=https://{{ control_host }}:6443
-      --kubeconfig=~/{{ ansible_user }}/.kube/config
-  changed_when: true
+# - name: Restore token file permissions
+#   ansible.builtin.file:
+#     path: '{{ k3s_data_dir }}/server/node-token'
+#     mode: '{{ token_permissions.stat.mode }}'
 
 - name: Create kubectl symlink
   ansible.builtin.file:

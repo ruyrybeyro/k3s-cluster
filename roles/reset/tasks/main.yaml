@@ -1,10 +1,9 @@
 ---
 - name: Disable services
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: '{{ item }}'
     state: stopped
     enabled: false
-  failed_when: false
   with_items:
     - k3s
     - k3s-node
@@ -12,7 +11,6 @@
 - name: Kill running shims
   ansible.builtin.command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
   changed_when: pkill.rc == 0
-  failed_when: false
   register: pkill
 
 - name: Umount k3s filesystems
@@ -21,19 +19,19 @@
     - /run/k3s
     - /var/lib/kubelet
     - /run/netns
-    - "{{ k3s_data_dir }}"
+    - '{{ k3s_data_dir }}'
   loop_control:
     loop_var: mounted_fs
 
 - name: Remove service files, binaries and data
   ansible.builtin.file:
-    name: "{{ item }}"
+    name: '{{ item }}'
     state: absent
   with_items:
-    - "{{ k3s_config_dir }}"
-    - "{{ k3s_data_dir }}"
-    - "{{ systemd_dir }}/k3s.service"
-    - "{{ systemd_dir }}/k3s-node.service"
+    - '{{ k3s_config_dir }}'
+    - '{{ k3s_data_dir }}'
+    - /etc/systemd/system/k3s.service
+    - /etc/systemd/system/k3s-node.service
     - /usr/local/bin/k3s
     - /var/lib/kubelet
 
