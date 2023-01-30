@@ -7,7 +7,7 @@
 
 - name: Set authorized key
   ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + ansible_ssh_key) }}"
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + ansible_user_key) }}"
     state: present
     user: '{{ ansible_user }}'
 
