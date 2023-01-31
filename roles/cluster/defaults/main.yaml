@@ -1,0 +1,4 @@
+---
+country_code: US
+disable_service_bluetooth: true
+disable_service_wifi: true

@@ -1,0 +1,36 @@
+---
+- name: Provisioning
+  ansible.builtin.include_role:
+    name: common
+
+- name: Add KUBECONFIG variable to environment
+  ansible.builtin.lineinfile:
+    line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
+    path: /etc/environment
+    regexp: ^KUBECONFIG
+    state: present
+
+- name: Wait for token creation
+  ansible.builtin.wait_for:
+    path: "{{ k3s_data_dir }}/server/node-token"
+
+- name: Read token
+  ansible.builtin.slurp:
+    path: "{{ k3s_data_dir }}/server/node-token"
+  register: node_token
+
+- name: Set token fact
+  ansible.builtin.set_fact:
+    token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
+- name: Create crictl symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/crictl
+    state: link
+
+- name: Create kubectl symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/kubectl
+    state: link

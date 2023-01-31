@@ -1,3 +1,0 @@
----
-control_host_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
-extra_agent_args: ''

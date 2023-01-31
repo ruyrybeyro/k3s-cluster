@@ -1,0 +1,4 @@
+---
+- name: Provisioning
+  ansible.builtin.include_role:
+    name: common

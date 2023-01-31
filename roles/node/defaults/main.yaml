@@ -1,0 +1,4 @@
+---
+control_host_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
+service_name: k3s-node
+extra_agent_args: ""
