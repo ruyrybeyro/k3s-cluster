@@ -1,15 +1,7 @@
 ---
-- name: Validation
-  ansible.builtin.include_role:
-    name: validation
-
-- name: Provisioning
+- name: Cluster Provisioning
   when: raspberry_pi | default(false)
   block:
-    - name: User Setup and OS Provisioning
-      ansible.builtin.include_role:
-        name: user
-
     - name: Upgrade distribution packages
       ansible.builtin.apt:
         autoremove: true

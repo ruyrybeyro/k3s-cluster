@@ -1,5 +1,5 @@
 [Unit]
-Description=Lightweight Kubernetes Server
+Description=Lightweight Kubernetes {{ k3s_agent | capitalize }}
 Documentation=https://k3s.io
 Wants=network-online.target
 After=network-online.target
@@ -8,11 +8,10 @@ After=network-online.target
 Type=notify
 Delegate=yes
 EnvironmentFile=-/etc/default/%N
-EnvironmentFile=-/etc/sysconfig/%N
-EnvironmentFile=-/etc/systemd/system/{{ service_name }}.service.env
+EnvironmentFile=-/etc/systemd/system/{{ k3s_service }}.service.env
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --data-dir={{ k3s_data_dir }} {{ extra_server_args | default('') }}
+ExecStart=/usr/local/bin/k3s {{ k3s_agent }} --data-dir={{ k3s_data_dir }} {{ k3s_service_args | default('') }}
 KillMode=process
 LimitNOFILE=1048576
 LimitNPROC=infinity

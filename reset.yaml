@@ -1,7 +1,10 @@
 ---
-- name: Cluster reset
-  hosts: cluster
+- name: Control Plane Reset
+  hosts: control
   gather_facts: true
   become: true
-  roles:
-    - role: reset
+  tasks:
+    - name: Perform control reset
+      ansible.builtin.import_role:
+        name: control
+        tasks_from: reset

@@ -1,6 +1,2 @@
 ---
-control_ha: "{{ (groups['control'] | length > 1) | default(false) }}"
-control_host: "{{ hostvars[groups['control'][0]]['ansible_host'] | default(groups['control'][0]) }}"
-control_host_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
-service_name: k3s
-extra_server_args: ""
+k3s_service_args: ""

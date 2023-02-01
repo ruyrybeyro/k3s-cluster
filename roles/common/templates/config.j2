@@ -1,0 +1,14 @@
+{% if k3s_agent == 'server' %}
+{% if k3s_ha and ansible_host == k3s_host %}
+cluster-init: true
+{% endif %}
+disable:
+  - local-storage
+  - servicelb
+disable-cloud-controller: true
+node-taint: CriticalAddonsOnly=true:NoExecute
+{% endif %}
+{% if k3s_token != '' and ((k3s_ha and ansible_host != k3s_host) or k3s_agent == 'agent') %}
+server: https://{{ k3s_host }}:6443
+token: {{ k3s_token }}
+{% endif %}

@@ -1,5 +1,5 @@
 ---
-- name: Stop k3s service
+- name: Stop service
   ansible.builtin.systemd:
     name: "{{ item }}.service"
     state: stopped
@@ -13,7 +13,7 @@
   changed_when: pkill.rc == 0
   register: pkill
 
-- name: Umount k3s filesystems
+- name: Umount filesystems
   ansible.builtin.include_tasks:
     file: umount.yaml
   with_items:
@@ -24,7 +24,7 @@
   loop_control:
     loop_var: mounted_fs
 
-- name: Remove k3s related data
+- name: Remove related data
   ansible.builtin.file:
     name: "{{ item }}"
     state: absent

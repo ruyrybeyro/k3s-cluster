@@ -15,5 +15,5 @@
   when:
     - ansible_facts.lsb.codename | default('') == ansible_lsb_codename
     - ansible_facts.lsb.id | default('') == ansible_lsb_id
-    - ansible_facts.machine | default('') == 'aarch64'
+    - ansible_facts.machine | default('') == "aarch64"
     - cpuinfo.rc == 0 or model.rc == 0
