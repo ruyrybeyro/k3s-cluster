@@ -66,3 +66,6 @@
     path: /etc/systemd/system/{{ k3s_service }}.service.env
     state: touch
   notify: Start service
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
