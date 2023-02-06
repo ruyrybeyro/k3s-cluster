@@ -1,6 +1,10 @@
 ---
-ansible_lsb_codename: bullseye
-ansible_lsb_id: Debian
-ansible_user: floren
-ansible_user_key: id_ed25519.pub
+cilium_chart_version: v1.12.6
+cilium_version: v0.12.12
+helm_version: v3.11.0
+metallb_chart_version: v1
+raspios_codename: bullseye
+raspios_id: Debian
+raspios_user: floren
+raspios_user_key: id_ed25519.pub
 k3s_version: v1.25.6+k3s1

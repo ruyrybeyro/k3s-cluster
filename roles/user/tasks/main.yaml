@@ -1,7 +1,7 @@
 ---
 - name: Get user info
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ raspios_user }}"
     state: present
   register: user_info
 
@@ -16,6 +16,6 @@
 
 - name: Set authorized key
   ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + ansible_user_key) }}"
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + raspios_user_key) }}"
     state: present
     user: "{{ user_info.name }}"

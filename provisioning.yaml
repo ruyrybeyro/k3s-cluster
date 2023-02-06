@@ -1,10 +1,10 @@
 ---
-# - name: Cluster Provisioning
-#   hosts: cluster
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: cluster
+- name: Cluster Provisioning
+  hosts: cluster
+  become: true
+  gather_facts: true
+  roles:
+    - role: cluster
 
 - name: Control Plane Provisioning
   hosts: control
@@ -14,9 +14,9 @@
     - role: control
   serial: 1
 
-# - name: Node Provisioning
-#   hosts: cerus.lan
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: node
+- name: Node Provisioning
+  hosts: cerus.lan
+  become: true
+  gather_facts: true
+  roles:
+    - role: node

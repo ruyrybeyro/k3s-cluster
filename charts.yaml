@@ -1,0 +1,16 @@
+---
+- name: Cilium Chart
+  hosts: control
+  become: true
+  gather_facts: true
+  roles:
+    - role: cilium
+
+# - name: Cilium Chart
+#   hosts: apollo.lan
+#   gather_facts: true
+#   tasks:
+#     - name: Install chart
+#       ansible.builtin.import_role:
+#         name: cilium
+#         tasks_from: chart

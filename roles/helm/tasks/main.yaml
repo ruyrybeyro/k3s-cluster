@@ -1,0 +1,37 @@
+---
+- name: Install dependencies
+  ansible.builtin.apt:
+    name: python3-yaml
+    state: present
+
+- name: Get current version
+  ansible.builtin.command:
+    cmd: helm version --client --template={{ "'{{ .Version }}'" }}
+  changed_when: false
+  failed_when: false
+  register: current_helm_version
+
+- name: Delete current binary
+  ansible.builtin.file:
+    path: /usr/local/bin/helm
+    state: absent
+  when: helm_version != current_helm_version.stdout | default(false)
+
+- name: Download archive
+  ansible.builtin.get_url:
+    url: https://get.helm.sh/helm-{{ helm_version }}-linux-arm64.tar.gz
+    checksum: sha256:https://get.helm.sh/helm-{{ helm_version }}-linux-arm64.tar.gz.sha256sum
+    dest: /tmp
+    owner: root
+    group: root
+    mode: 0644
+  notify: Install binary
+  when: helm_version != current_helm_version.stdout | default(false)
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Delete archive
+  ansible.builtin.file:
+    path: /tmp/helm-{{ helm_version }}-linux-arm64.tar.gz
+    state: absent

@@ -9,15 +9,18 @@
         upgrade: dist
 
     - name: Set boot from USB if available
-      ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
+      ansible.builtin.command:
+        cmd: raspi-config nonint do_boot_behaviour B2
       changed_when: false
 
     - name: Set wait for network connection on boot
-      ansible.builtin.command: raspi-config nonint do_boot_wait 0
+      ansible.builtin.command:
+        cmd: raspi-config nonint do_boot_wait 0
       changed_when: false
 
     - name: Set wifi country code
-      ansible.builtin.command: raspi-config nonint do_wifi_country {{ country_code }}
+      ansible.builtin.command:
+        cmd: raspi-config nonint do_wifi_country {{ country_code }}
       changed_when: false
 
     - name: Disable bluetooth service
@@ -50,7 +53,8 @@
       register: cmdline
 
     - name: Update bootloader firmware
-      ansible.builtin.command: rpi-eeprom-update -ad
+      ansible.builtin.command:
+        cmd: rpi-eeprom-update -ad
       changed_when: eeprom_update.stdout.find('updates pending') != -1
       notify: Perform reboot
       register: eeprom_update

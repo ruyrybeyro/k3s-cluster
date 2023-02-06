@@ -35,3 +35,33 @@
   ansible.builtin.set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
   when: k3s_token | length == 0
+
+- name: Get user info
+  ansible.builtin.user:
+    name: "{{ raspios_user }}"
+    state: present
+  register: user_info
+
+- name: Create configuration directory
+  ansible.builtin.file:
+    path: "{{ user_info.home }}/.kube"
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name }}"
+    mode: 0755
+    state: directory
+
+- name: Copy configuration file
+  ansible.builtin.copy:
+    src: "{{ k3s_conf_dir }}/k3s.yaml"
+    dest: "{{ user_info.home }}/.kube/config"
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name }}"
+    mode: 0600
+    remote_src: true
+
+- name: Replace localhost with control host
+  ansible.builtin.command:
+    cmd: kubectl config set-cluster default
+          --server=https://{{ ansible_host }}:6443
+          --kubeconfig={{ user_info.home }}/.kube/config
+  changed_when: true

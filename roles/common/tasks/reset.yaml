@@ -1,4 +1,8 @@
 ---
+- name: Set facts
+  ansible.builtin.import_tasks:
+    file: facts.yaml
+
 - name: Stop service
   ansible.builtin.assert:
     quiet: true
@@ -10,24 +14,26 @@
   ansible.builtin.meta: flush_handlers
 
 # - name: Kill running shim processes
-#   ansible.builtin.command: pkill -9 -f 'k3s/data/[^/]*/bin/containerd-shim'
+#   ansible.builtin.command:
+#     cmd: pkill -9 -f 'k3s/data/[^/]*/bin/containerd-shim'
 #   changed_when: pkill.rc == 0
+#   register: pkill
 
 # - name: Get the list of mounted filesystems
 #   ansible.builtin.shell: |
 #     set -o pipefail
-#     cat /proc/mounts | cut -d ' ' -f 2 | grep -E '^{{ fs }}'
+#     cat /proc/mounts | cut -d ' ' -f 2 | grep -E '^{{ mount }}'
 #   args:
 #     executable: /bin/bash
 #   changed_when: filesystems.stdout | length > 0
 #   loop_control:
 #     loop_var: directory
 #   vars:
-#     fs: "{{ directory }}"
+#     mount: "{{ directory }}"
 #   with_items:
 #     - "{{ k3s_data_dir }}"
 #     - /run/k3s
-#     - /run/netns
+#     - /run/netns/cni
 #     - /var/lib/kubelet
 #   register: filesystems
 

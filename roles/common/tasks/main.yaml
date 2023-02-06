@@ -1,29 +1,9 @@
 ---
-- name: Set agent fact
-  ansible.builtin.set_fact:
-    k3s_agent: "{{ 'agent' if ansible_play_role_names[0] == 'node' else 'server' }}"
+- name: Set facts
+  ansible.builtin.import_tasks:
+    file: facts.yaml
 
-# - name: Debug
-#   ansible.builtin.debug:
-#     msg: "agent: {{ k3s_agent }}"
-
-- name: Set high-availability fact
-  ansible.builtin.set_fact:
-    k3s_ha: "{{ (groups['control'] | length > 1) | default(false) }}"
-
-- name: Set host fact
-  ansible.builtin.set_fact:
-    k3s_host: "{{ hostvars[groups['control'][0]]['ansible_host'] | default(groups['control'][0]) }}"
-
-- name: Set service fact
-  ansible.builtin.set_fact:
-    k3s_service: k3s{{ '-agent' if ansible_play_role_names[0] == 'node' }}
-
-- name: Set token fact
-  ansible.builtin.set_fact:
-    k3s_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
-
-- name: Download binary
+- name: Install k3s binary
   ansible.builtin.get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
     checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
