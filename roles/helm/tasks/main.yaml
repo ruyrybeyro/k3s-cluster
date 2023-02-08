@@ -1,8 +1,27 @@
 ---
-- name: Install dependencies
+- name: Install git package
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+
+- name: Install python3-jsonpatch package
+  ansible.builtin.apt:
+    name: python3-jsonpatch
+    state: present
+    update_cache: true
+
+- name: Install python3-kubernetes package
+  ansible.builtin.apt:
+    name: python3-kubernetes
+    state: present
+    update_cache: true
+
+- name: Install python3-yaml package
   ansible.builtin.apt:
     name: python3-yaml
     state: present
+    update_cache: true
 
 - name: Get current version
   ansible.builtin.command:
@@ -35,3 +54,8 @@
   ansible.builtin.file:
     path: /tmp/helm-{{ helm_version }}-linux-arm64.tar.gz
     state: absent
+
+- name: Install diff plugin
+  kubernetes.core.helm_plugin:
+    plugin_path: https://github.com/databus23/helm-diff
+    state: present

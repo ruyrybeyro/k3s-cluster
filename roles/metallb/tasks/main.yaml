@@ -1,0 +1,54 @@
+---
+- name: Import role
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+- name: Add helm repository
+  kubernetes.core.helm_repository:
+    name: metallb
+    repo_state: present
+    repo_url: https://metallb.github.io/metallb
+
+- name: Install helm chart
+  kubernetes.core.helm:
+    chart_ref: metallb/metallb
+    chart_version: "{{ metallb_chart_version }}"
+    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+    name: metallb
+    namespace: metallb-system
+    create_namespace: true
+    update_repo_cache: true
+    wait: true
+  when: ansible_host == k3s_host
+
+- name: Chart Manifests
+  when: ansible_host == k3s_host
+  block:
+    - name: Install IPAddressPool manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: metallb.io/v1beta1
+          kind: IPAddressPool
+          metadata:
+            name: default-pool
+            namespace: metallb-system
+          spec:
+            addresses:
+              - "{{ metallb_chart_ip_pool }}"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present
+
+    - name: Install L2Advertisement manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: metallb.io/v1beta1
+          kind: L2Advertisement
+          metadata:
+            name: default
+            namespace: metallb-system
+          spec:
+            ipAddressPools:
+              - default-pool
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present

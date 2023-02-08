@@ -1,8 +1,13 @@
 ---
-- name: Delete current binary
-  ansible.builtin.file:
-    path: /usr/local/bin/cilium
-    state: absent
+- name: Import role
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+# - name: Delete current binary
+#   ansible.builtin.file:
+#     path: /usr/local/bin/cilium
+#     state: absent
 
 - name: Download archive
   ansible.builtin.get_url:
@@ -22,38 +27,23 @@
     path: /tmp/cilium-linux-arm.tar.gz
     state: absent
 
-- name: Import role
-  ansible.builtin.import_role:
-    name: common
-    tasks_from: facts
-
 - name: Add helm repository
   kubernetes.core.helm_repository:
     name: cilium
     repo_state: present
     repo_url: https://helm.cilium.io
 
-- name: Get user info
-  ansible.builtin.user:
-    name: "{{ raspios_user }}"
-    state: present
-  register: user_info
-
-- name: Install helm diff plugin
-  kubernetes.core.helm_plugin:
-    kubeconfig: "{{ user_info.home }}/.kube/config"
-    plugin_path: https://github.com/databus23/helm-diff
-    state: present
-  when: ansible_host == k3s_host
-
 - name: Install helm chart
   kubernetes.core.helm:
     chart_ref: cilium/cilium
     chart_version: "{{ cilium_chart_version }}"
-    kubeconfig: "{{ user_info.home }}/.kube/config"
+    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
     name: cilium
     namespace: kube-system
     update_repo_cache: true
     values:
-      operator.replicas: 1
+      l7Proxy: false
+      operator:
+        replicas: 1
+    wait: true
   when: ansible_host == k3s_host

@@ -1,3 +1,4 @@
 ---
 k3s_conf_dir: /etc/rancher/k3s
 k3s_data_dir: /var/lib/rancher/k3s
+k3s_socket_dir: /var/run/k3s

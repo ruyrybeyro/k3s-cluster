@@ -1,8 +1,5 @@
 ---
-cilium_chart_version: v1.12.6
-cilium_version: v0.12.12
 helm_version: v3.11.0
-metallb_chart_version: v1
 raspios_codename: bullseye
 raspios_id: Debian
 raspios_user: floren

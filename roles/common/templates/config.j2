@@ -10,9 +10,6 @@ disable-network-policy: true
 flannel-backend: none
 node-taint: CriticalAddonsOnly=true:NoExecute
 {% endif %}
-{% if k3s_agent == 'agent' %}
-node-taint: node.cilium.io/agent-not-ready:NoExecute
-{% endif %}
 {% if k3s_ha and ansible_host != k3s_host and k3s_token | length > 0 %}
 server: https://{{ k3s_host }}:6443
 token: {{ k3s_token }}
