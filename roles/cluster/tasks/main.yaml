@@ -26,12 +26,8 @@
     - name: Disable bluetooth service
       ansible.builtin.systemd:
         enabled: false
-        name: "{{ name }}.service"
-      loop_control:
-        loop_var: service
-      vars:
-        name: "{{ service }}"
-      with_items:
+        name: "{{ item }}.service"
+      loop:
         - bluetooth
         - hciuart
       when: disable_service_bluetooth | default(false)

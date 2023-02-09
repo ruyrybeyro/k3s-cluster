@@ -4,19 +4,17 @@
     name: common
     tasks_from: facts
 
-# - name: Delete current binary
-#   ansible.builtin.file:
-#     path: /usr/local/bin/cilium
-#     state: absent
-
 - name: Download archive
   ansible.builtin.get_url:
-    url: https://github.com/cilium/cilium-cli/releases/download/{{ cilium_version }}/cilium-linux-arm.tar.gz
-    checksum: sha256:https://github.com/cilium/cilium-cli/releases/download/{{ cilium_version }}/cilium-linux-arm.tar.gz.sha256sum
+    url: https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}-linux-arm.tar.gz
+    checksum: sha256:https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}-linux-arm.tar.gz.sha256sum
     dest: /tmp
     owner: root
     group: root
     mode: 0644
+  loop:
+    - ['cilium-cli', '{{ cilium_version }}', 'cilium']
+    - ['hubble', '{{ hubble_version }}', 'hubble']
   notify: Install binary
 
 - name: Flush handlers
@@ -24,8 +22,11 @@
 
 - name: Delete archive
   ansible.builtin.file:
-    path: /tmp/cilium-linux-arm.tar.gz
+    path: /tmp/{{ item }}-linux-arm.tar.gz
     state: absent
+  loop:
+    - cilium
+    - hubble
 
 - name: Add helm repository
   kubernetes.core.helm_repository:
@@ -42,6 +43,11 @@
     namespace: kube-system
     update_repo_cache: true
     values:
+      hubble:
+        relay:
+          enabled: true
+        ui:
+          enabled: true
       l7Proxy: false
       operator:
         replicas: 1

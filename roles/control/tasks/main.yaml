@@ -9,13 +9,9 @@
 - name: Create symlinks
   ansible.builtin.file:
     src: /usr/local/bin/k3s
-    dest: /usr/local/bin/{{ name }}
+    dest: /usr/local/bin/{{ item }}
     state: link
-  loop_control:
-    loop_var: link
-  vars:
-    name: "{{ link }}"
-  with_items:
+  loop:
     - crictl
     - ctr
     - kubectl

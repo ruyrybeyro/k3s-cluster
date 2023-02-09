@@ -1,1 +1,3 @@
 ---
+longhorn_chart_version: v1.4.0
+longhorn_loadbalancer_ip: 192.168.4.11

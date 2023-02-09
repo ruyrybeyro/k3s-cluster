@@ -1,8 +1,9 @@
 ---
-- name: Charts Installation
+- name: Charts Upgrade
   hosts: control
   become: true
   gather_facts: true
   roles:
     - role: cilium
     - role: metallb
+    - role: longhorn

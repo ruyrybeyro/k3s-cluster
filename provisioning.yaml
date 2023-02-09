@@ -15,7 +15,7 @@
   serial: 1
 
 - name: Node Provisioning
-  hosts: cerus.lan
+  hosts: node
   become: true
   gather_facts: true
   roles:
