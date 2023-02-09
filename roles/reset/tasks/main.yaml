@@ -1,0 +1,68 @@
+---
+- name: Import role
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+- name: Stop service
+  ansible.builtin.assert:
+    quiet: true
+    that: true
+  changed_when: true
+  notify: Stop service
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Kill running shim processes
+  ansible.builtin.command:
+    cmd: pkill -9 -f 'k3s/data/[^/]*/bin/containerd-shim'
+  changed_when: pkill.rc == 0
+  failed_when: false
+  register: pkill
+
+- name: Get the list of mounted filesystems
+  ansible.builtin.shell: |
+    set -o pipefail
+    cat /proc/mounts | cut -d ' ' -f 2 | grep -E '^{{ mount }}'
+  args:
+    executable: /bin/bash
+  changed_when: filesystems.stdout | length > 0
+  failed_when: false
+  loop_control:
+    loop_var: directory
+  vars:
+    mount: "{{ directory }}"
+  with_items:
+    - "{{ k3s_data_dir }}"
+    - /run/k3s
+    - /run/netns/cni
+    - /var/lib/kubelet
+  register: filesystems
+
+- name: Unmount filesystems
+  ansible.posix.mount:
+    path: "{{ path }}"
+    state: unmounted
+  loop_control:
+    loop_var: directory
+  vars:
+    path: "{{ directory }}"
+  with_items: "{{ filesystems.results | map(attribute='stdout_lines') | list }}"
+
+- name: Files cleanup
+  ansible.builtin.file:
+    name: "{{ name }}"
+    state: absent
+  loop_control:
+    loop_var: directory
+  vars:
+    name: "{{ directory }}"
+  with_items:
+    - "{{ k3s_conf_dir }}"
+    - "{{ k3s_data_dir }}"
+    - /etc/systemd/system/{{ k3s_service }}.service
+    - /etc/systemd/system/{{ k3s_service }}.service.env
+    - /usr/local/bin/k3s
+    - /var/lib/kubelet
+  notify: Daemon reload

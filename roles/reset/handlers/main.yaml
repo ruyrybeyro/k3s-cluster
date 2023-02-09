@@ -1,0 +1,10 @@
+---
+- name: Daemon reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Stop service
+  ansible.builtin.systemd:
+    name: "{{ k3s_service }}.service"
+    enabled: false
+    state: stopped
