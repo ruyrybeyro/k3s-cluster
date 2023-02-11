@@ -1,10 +1,10 @@
 ---
-- name: Charts Upgrade
+- name: Charts Setup
   hosts: control
   become: true
   gather_facts: true
   roles:
-    # - role: cilium
-    # - role: metallb
-    # - role: longhorn
+    - role: cilium
+    - role: metallb
+    - role: longhorn
     - role: prometheus

@@ -1,10 +1,10 @@
 ---
-- name: Cluster Provisioning
-  hosts: cluster
-  become: true
-  gather_facts: true
-  roles:
-    - role: cluster
+# - name: Cluster Provisioning
+#   hosts: cluster
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: cluster
 
 - name: Control Plane Provisioning
   hosts: control

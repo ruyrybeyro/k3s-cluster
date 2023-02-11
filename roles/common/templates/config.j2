@@ -8,8 +8,8 @@ disable:
 disable-cloud-controller: true
 disable-network-policy: true
 flannel-backend: none
-node-taint: CriticalAddonsOnly=true:NoExecute
 {% endif %}
+node-taint: node.cilium.io/agent-not-ready:NoExecute
 {% if k3s_ha and ansible_host != k3s_host and k3s_token | length > 0 %}
 server: https://{{ k3s_host }}:6443
 token: {{ k3s_token }}

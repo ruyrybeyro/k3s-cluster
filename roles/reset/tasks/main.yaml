@@ -4,87 +4,28 @@
     name: common
     tasks_from: facts
 
-# - name: Stop service
-#   ansible.builtin.assert:
-#     quiet: true
-#     that: true
-#   changed_when: true
-#   notify: Stop service
+- name: Stop service
+  ansible.builtin.assert:
+    quiet: true
+    that: true
+  changed_when: true
+  notify:
+    - Perform reboot
+    - Stop service
 
-# - name: Flush handlers
-#   ansible.builtin.meta: flush_handlers
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
 
-# - name: Kill running shim processes
-#   ansible.builtin.command:
-#     cmd: pkill -9 -f 'k3s/data/[^/]*/bin/containerd-shim'
-#   changed_when: pkill.rc == 0
-#   failed_when: false
-#   register: pkill
-
-# - name: Get the list of mounted filesystems
-#   ansible.builtin.shell: |
-#     set -o pipefail
-#     cat /proc/mounts | cut -d ' ' -f 2 | grep -E '^{{ item }}'
-#   args:
-#     executable: /bin/bash
-#   changed_when: filesystems.stdout | length > 0
-#   failed_when: false
-#   loop:
-#     - /run/k3s
-#     - /run/netns/cni
-#     - /var/lib/kubelet
-#     - /var/lib/rancher
-#   register: filesystems
-
-# - name: Unmount filesystems
-#   ansible.posix.mount:
-#     path: "{{ item }}"
-#     state: unmounted
-#   loop: "{{ filesystems.results | map(attribute='stdout_lines') | list }}"
-
-# - name: Files cleanup
-#   ansible.builtin.file:
-#     name: "{{ item }}"
-#     state: absent
-#   loop:
-#     - "{{ k3s_conf_dir }}"
-#     - /etc/systemd/system/{{ k3s_service }}.service
-#     - /etc/systemd/system/{{ k3s_service }}.service.env
-#     - /run/cilium
-#     - /run/k3s
-#     - /usr/local/bin/k3s
-#     - /var/lib/cni
-#     - /var/lib/kubelet
-#     - /var/lib/rancher
-#   notify: Daemon reload
-
-# - name: Get the list of network namespaces
-#   ansible.builtin.shell: |
-#     set -o pipefail
-#     ip netns show | cut -d ' ' -f 1
-#   args:
-#     executable: /bin/bash
-#   changed_when: namespaces.stdout | length > 0
-#   failed_when: false
-#   register: namespaces
-
-# - name: Remove iptables rules
-#   ansible.builtin.shell: |
-#     set -o pipefail
-#     {{ item }}-save | grep -v CILIUM | grep -v CNI | grep -v KUBE | {{ item }}-restore
-#   args:
-#     executable: /bin/bash
-#   changed_when: iptables.stdout | length > 0
-#   failed_when: false
-#   loop:
-#     - iptables
-#     - ip6tables
-#   register: iptables
-
-- name: Set node IPs fact
-  ansible.builtin.set_fact:
-    node_ips: "{{ k3s_control | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
-
-- name: Debug
-  ansible.builtin.debug:
-    var: node_ips
+- name: Files cleanup
+  ansible.builtin.file:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ k3s_conf_dir }}"
+    - /etc/systemd/system/{{ k3s_service }}.service
+    - /etc/systemd/system/{{ k3s_service }}.service.env
+    - /usr/local/bin/k3s
+    - /var/lib/cni
+    - /var/lib/kubelet
+    - /var/lib/longhorn
+    - /var/lib/rancher

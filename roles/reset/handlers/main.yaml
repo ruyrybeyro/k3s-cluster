@@ -1,16 +1,11 @@
 ---
-- name: Daemon reload
-  ansible.builtin.systemd:
-    daemon_reload: true
-
-- name: Delete network namespaces
-  community.general.ip_netns:
-    name: "{{ item }}"
-    state: absent
-  loop: "{{ namespaces.results | map(attribute='stdout_lines') | list }}"
-
 - name: Stop service
   ansible.builtin.systemd:
+    daemon_reload: true
     name: "{{ k3s_service }}.service"
     enabled: false
     state: stopped
+
+- name: Perform reboot
+  ansible.builtin.reboot:
+    post_reboot_delay: 30

@@ -48,6 +48,8 @@
           enabled: true
         ui:
           enabled: true
+          service:
+            type: NodePort
       l7Proxy: false
       operator:
         replicas: 1

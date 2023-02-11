@@ -1,9 +1,9 @@
 [control]
 apollo.lan
 boreas.lan
+cerus.lan
 
 [node]
-cerus.lan
 chaos.lan
 crios.lan
 helios.lan

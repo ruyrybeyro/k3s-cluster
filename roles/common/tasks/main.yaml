@@ -3,6 +3,12 @@
   ansible.builtin.import_tasks:
     file: facts.yaml
 
+- name: Install open-iscsi package
+  ansible.builtin.apt:
+    name: open-iscsi
+    state: present
+    update_cache: true
+
 - name: Install k3s binary
   ansible.builtin.get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
