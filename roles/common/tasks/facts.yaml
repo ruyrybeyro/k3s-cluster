@@ -1,20 +1,24 @@
 ---
+- name: Set control fact
+  ansible.builtin.set_fact:
+    k3s_control: "{{ groups['control'] }}"
+
 - name: Set agent fact
   ansible.builtin.set_fact:
-    k3s_agent: "{{ 'agent' if ansible_host not in groups.control else 'server' }}"
+    k3s_agent: "{{ 'agent' if ansible_host not in k3s_control else 'server' }}"
 
 - name: Set high-availability fact
   ansible.builtin.set_fact:
-    k3s_ha: "{{ (groups['control'] | length > 1) | default(false) }}"
+    k3s_ha: "{{ (k3s_control | length > 1) | default(false) }}"
 
 - name: Set host fact
   ansible.builtin.set_fact:
-    k3s_host: "{{ hostvars[groups['control'][0]]['ansible_host'] | default(groups['control'][0]) }}"
+    k3s_host: "{{ hostvars[k3s_control[0]]['ansible_host'] | default(k3s_control[0]) }}"
 
 - name: Set service fact
   ansible.builtin.set_fact:
-    k3s_service: k3s{{ '-agent' if ansible_host not in groups.control }}
+    k3s_service: k3s{{ '-agent' if ansible_host not in k3s_control }}
 
 - name: Set token fact
   ansible.builtin.set_fact:
-    k3s_token: "{{ hostvars[groups['control'][0]]['token'] | default('') }}"
+    k3s_token: "{{ hostvars[k3s_control[0]]['token'] | default('') }}"

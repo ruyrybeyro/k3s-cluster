@@ -1,0 +1,101 @@
+---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+- name: Set control ip fact
+  ansible.builtin.set_fact:
+    k3s_control_ips: "{{ k3s_control | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+
+- name: Add repository
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_state: present
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Helm Chart
+  when: ansible_host == k3s_host
+  block:
+    - name: Create namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: monitoring-system
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present
+
+    - name: Create secret
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: grafana-credentials
+            namespace: monitoring-system
+          stringData:
+            password: prom-operator
+            username: admin
+          type: Opaque
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present
+
+    - name: Install chart
+      kubernetes.core.helm:
+        chart_ref: prometheus-community/kube-prometheus-stack
+        chart_version: "{{ prometheus_chart_version }}"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        name: monitoring
+        namespace: monitoring-system
+        update_repo_cache: true
+        values:
+          alertmanager:
+            alertmanagerSpec:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: longhorn
+                    accessModes:
+                      - ReadWriteOnce
+                    resources:
+                      requests:
+                        storage: 5Gi
+          grafana:
+            admin:
+              existingSecret: grafana-credentials
+              passwordKey: password
+              userKey: username
+            service:
+              type: LoadBalancer
+          kubeControllerManager:
+            endpoints: "{{ k3s_control_ips }}"
+          kubeEtcd:
+            endpoints: "{{ k3s_control_ips }}"
+          kubeProxy:
+            endpoints: "{{ k3s_control_ips }}"
+          kubeScheduler:
+            endpoints: "{{ k3s_control_ips }}"
+          prometheus:
+            prometheusSpec:
+              enableAdminAPI: true
+              replicaExternalLabelName: replica
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: longhorn
+                    accessModes:
+                      - ReadWriteOnce
+                    resources:
+                      requests:
+                        storage: 50Gi
+            service:
+              type: NodePort
+          prometheus-node-exporter:
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 100m
+                memory: 200Mi
+        wait: true

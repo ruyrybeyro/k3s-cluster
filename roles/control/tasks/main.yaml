@@ -18,12 +18,12 @@
 
 - name: Wait for token creation
   ansible.builtin.wait_for:
-    path: "{{ k3s_data_dir }}/server/node-token"
+    path: /var/lib/rancher/k3s/server/node-token
   when: k3s_token | length == 0
 
 - name: Read token
   ansible.builtin.slurp:
-    path: "{{ k3s_data_dir }}/server/node-token"
+    path: /var/lib/rancher/k3s/server/node-token
   register: node_token
   when: k3s_token | length == 0
 

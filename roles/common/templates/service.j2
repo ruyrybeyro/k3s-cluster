@@ -11,7 +11,7 @@ EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/systemd/system/{{ k3s_service }}.service.env
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s {{ k3s_agent }} --data-dir={{ k3s_data_dir }} {{ k3s_service_args | default('') }}
+ExecStart=/usr/local/bin/k3s {{ k3s_agent }} {{ k3s_service_args | default('') }}
 KillMode=process
 LimitNOFILE=1048576
 LimitNPROC=infinity

@@ -6,9 +6,9 @@
   roles:
     - role: reset
 
-- name: Node Reset
-  hosts: cerus.lan
-  become: true
-  gather_facts: true
-  roles:
-    - role: reset
+# - name: Node Reset
+#   hosts: cerus.lan
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: reset
