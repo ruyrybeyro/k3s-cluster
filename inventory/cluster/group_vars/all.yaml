@@ -1,7 +1,5 @@
 ---
-helm_version: v3.11.0
 raspios_codename: bullseye
 raspios_id: Debian
 raspios_user: floren
 raspios_user_key: id_ed25519.pub
-k3s_version: v1.25.6+k3s1

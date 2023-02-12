@@ -1,40 +1,15 @@
 ---
-- name: Install git package
+- name: Install packages
   ansible.builtin.apt:
-    name: git
+    name: "{{ item }}"
     state: present
+    autoremove: true
     update_cache: true
-
-- name: Install python3-jsonpatch package
-  ansible.builtin.apt:
-    name: python3-jsonpatch
-    state: present
-    update_cache: true
-
-- name: Install python3-kubernetes package
-  ansible.builtin.apt:
-    name: python3-kubernetes
-    state: present
-    update_cache: true
-
-- name: Install python3-yaml package
-  ansible.builtin.apt:
-    name: python3-yaml
-    state: present
-    update_cache: true
-
-- name: Get current version
-  ansible.builtin.command:
-    cmd: helm version --client --template={{ "'{{ .Version }}'" }}
-  changed_when: false
-  failed_when: false
-  register: current_helm_version
-
-- name: Delete current binary
-  ansible.builtin.file:
-    path: /usr/local/bin/helm
-    state: absent
-  when: helm_version != current_helm_version.stdout | default(false)
+  loop:
+    - git
+    - python3-jsonpatch
+    - python3-kubernetes
+    - python3-yaml
 
 - name: Download archive
   ansible.builtin.get_url:
@@ -45,7 +20,6 @@
     group: root
     mode: 0644
   notify: Install binary
-  when: helm_version != current_helm_version.stdout | default(false)
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

@@ -34,8 +34,8 @@
             name: grafana-credentials
             namespace: monitoring-system
           stringData:
-            password: prom-operator
-            username: admin
+            password: "{{ grafana_password }}"
+            username: "{{ grafana_username }}"
           type: Opaque
         kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
         state: present
@@ -94,8 +94,8 @@
             resources:
               limits:
                 cpu: 1
-                memory: 2Gi
+                memory: 1Gi
               requests:
                 cpu: 100m
-                memory: 200Mi
+                memory: 100Mi
         wait: true

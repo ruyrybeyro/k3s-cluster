@@ -10,17 +10,24 @@
     that: true
   changed_when: true
   notify:
-    - Perform reboot
     - Stop service
+    - Perform reboot
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
+
+- name: Get user info
+  ansible.builtin.user:
+    name: "{{ raspios_user }}"
+    state: present
+  register: user_info
 
 - name: Files cleanup
   ansible.builtin.file:
     name: "{{ item }}"
     state: absent
   loop:
+    - "{{ user_info.home }}/.kube"
     - "{{ k3s_conf_dir }}"
     - /etc/systemd/system/{{ k3s_service }}.service
     - /etc/systemd/system/{{ k3s_service }}.service.env

@@ -1,2 +1,3 @@
 ---
 k3s_conf_dir: /etc/rancher/k3s
+k3s_version: v1.26.1+k3s1
