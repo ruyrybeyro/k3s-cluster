@@ -16,21 +16,22 @@
     - ctr
     - kubectl
 
-- name: Wait for token creation
-  ansible.builtin.wait_for:
-    path: /var/lib/rancher/k3s/server/node-token
+- name: Token
   when: k3s_token | length == 0
+  block:
+    - name: Wait for token creation
+      ansible.builtin.wait_for:
+        path: /var/lib/rancher/k3s/server/node-token
 
-- name: Read token
-  ansible.builtin.slurp:
-    path: /var/lib/rancher/k3s/server/node-token
-  register: node_token
-  when: k3s_token | length == 0
+    - name: Read token
+      ansible.builtin.slurp:
+        path: /var/lib/rancher/k3s/server/node-token
+      register: node_token
 
-- name: Set token fact
-  ansible.builtin.set_fact:
-    token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-  when: k3s_token | length == 0
+    - name: Set token fact
+      ansible.builtin.set_fact:
+        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+      run_once: true
 
 - name: Get user info
   ansible.builtin.user:

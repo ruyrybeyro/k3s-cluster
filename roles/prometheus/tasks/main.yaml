@@ -7,6 +7,7 @@
 - name: Set control ip fact
   ansible.builtin.set_fact:
     k3s_control_ips: "{{ k3s_control | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+  run_once: true
 
 - name: Add repository
   kubernetes.core.helm_repository:
@@ -94,8 +95,8 @@
             resources:
               limits:
                 cpu: 1
-                memory: 1Gi
+                memory: 2Gi
               requests:
                 cpu: 100m
-                memory: 100Mi
+                memory: 200Mi
         wait: true

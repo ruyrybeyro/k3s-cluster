@@ -1,4 +1,6 @@
 {% if k3s_agent == 'server' %}
+cluster-dns: {{ k3s_cluster_dns }}
+cluster-domain: {{ k3s_cluster_domain }}
 {% if k3s_ha and ansible_host == k3s_host %}
 cluster-init: true
 {% endif %}

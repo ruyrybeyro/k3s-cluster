@@ -1,0 +1,9 @@
+---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+- name: Debug
+  ansible.builtin.debug:
+    var: k3s_cluster_dns
