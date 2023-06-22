@@ -17,13 +17,13 @@
     dest: /usr/local/bin/k3s
     owner: root
     group: root
-    mode: 0755
+    mode: "755"
   notify: Start service
 
 - name: Create configuration directory
   ansible.builtin.file:
     path: "{{ k3s_conf_dir }}"
-    mode: 0755
+    mode: "755"
     owner: root
     group: root
     state: directory
@@ -32,7 +32,7 @@
   ansible.builtin.template:
     src: config.j2
     dest: "{{ k3s_conf_dir }}/config.yaml"
-    mode: 0600
+    mode: "600"
     owner: root
     group: root
   notify: Start service
@@ -41,7 +41,7 @@
   ansible.builtin.template:
     src: service.j2
     dest: /etc/systemd/system/{{ k3s_service }}.service
-    mode: 0644
+    mode: "644"
     owner: root
     group: root
   notify: Start service
@@ -49,7 +49,7 @@
 - name: Create service environment file
   ansible.builtin.file:
     access_time: preserve
-    mode: 0600
+    mode: "600"
     modification_time: preserve
     path: /etc/systemd/system/{{ k3s_service }}.service.env
     state: touch

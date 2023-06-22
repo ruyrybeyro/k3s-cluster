@@ -44,7 +44,7 @@
     path: "{{ user_info.home }}/.kube"
     owner: "{{ user_info.name }}"
     group: "{{ user_info.name }}"
-    mode: 0755
+    mode: "755"
     state: directory
 
 - name: Copy configuration file
@@ -53,7 +53,7 @@
     dest: "{{ user_info.home }}/.kube/config"
     owner: "{{ user_info.name }}"
     group: "{{ user_info.name }}"
-    mode: 0600
+    mode: "600"
     remote_src: true
 
 - name: Replace localhost with control host

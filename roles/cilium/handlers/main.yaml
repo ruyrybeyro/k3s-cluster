@@ -5,7 +5,7 @@
     dest: /usr/local/bin
     owner: root
     group: root
-    mode: 0755
+    mode: "755"
     remote_src: true
   loop:
     - cilium

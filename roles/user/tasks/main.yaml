@@ -8,7 +8,7 @@
 - name: Hush login
   ansible.builtin.file:
     access_time: preserve
-    mode: 0644
+    mode: "644"
     modification_time: preserve
     path: "{{ user_info.home }}/.hushlogin"
     state: touch
