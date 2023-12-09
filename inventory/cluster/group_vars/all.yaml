@@ -1,5 +1,4 @@
 ---
-raspios_codename: bullseye
 raspios_id: Debian
 raspios_user: floren
 raspios_user_key: id_ed25519.pub

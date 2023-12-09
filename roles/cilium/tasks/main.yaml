@@ -6,27 +6,35 @@
 
 - name: Download archive
   ansible.builtin.get_url:
-    url: https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}-linux-arm.tar.gz
-    checksum: sha256:https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}-linux-arm.tar.gz.sha256sum
+    url: https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}.tar.gz
+    checksum: sha256:https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}.tar.gz.sha256sum
     dest: /tmp
     owner: root
     group: root
     mode: "644"
   loop:
-    - ['cilium-cli', '{{ cilium_version }}', 'cilium']
-    - ['hubble', '{{ hubble_version }}', 'hubble']
-  notify: Install binary
+    - ['cilium-cli', '{{ cilium_cli_version }}', 'cilium-linux-arm64']
+    - ['hubble', '{{ cilium_hubble_version }}', 'hubble-linux-arm']
 
-- name: Flush handlers
-  ansible.builtin.meta: flush_handlers
+- name: Install binary
+  ansible.builtin.unarchive:
+    src: /tmp/{{ item }}.tar.gz
+    dest: /usr/local/bin
+    owner: root
+    group: root
+    mode: "755"
+    remote_src: true
+  loop:
+    - cilium-linux-arm64
+    - hubble-linux-arm
 
 - name: Delete archive
   ansible.builtin.file:
-    path: /tmp/{{ item }}-linux-arm.tar.gz
+    path: /tmp/{{ item }}.tar.gz
     state: absent
   loop:
-    - cilium
-    - hubble
+    - cilium-linux-arm64
+    - hubble-linux-arm
 
 - name: Add repository
   kubernetes.core.helm_repository:
@@ -38,7 +46,7 @@
   kubernetes.core.helm:
     chart_ref: cilium/cilium
     chart_version: "{{ cilium_chart_version }}"
-    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
     name: cilium
     namespace: kube-system
     update_repo_cache: true
@@ -50,8 +58,5 @@
           enabled: true
           service:
             type: NodePort
-      l7Proxy: false
-      operator:
-        replicas: 1
     wait: true
   when: ansible_host == k3s_host

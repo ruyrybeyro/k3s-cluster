@@ -13,14 +13,9 @@
         cmd: raspi-config nonint do_boot_behaviour B2
       changed_when: false
 
-    - name: Set wait for network connection on boot
-      ansible.builtin.command:
-        cmd: raspi-config nonint do_boot_wait 0
-      changed_when: false
-
     - name: Set wifi country code
       ansible.builtin.command:
-        cmd: raspi-config nonint do_wifi_country {{ country_code }}
+        cmd: raspi-config nonint do_wifi_country {{ cluster_country_code }}
       changed_when: false
 
     - name: Disable bluetooth service
@@ -30,13 +25,13 @@
       loop:
         - bluetooth
         - hciuart
-      when: disable_service_bluetooth | default(false)
+      when: cluster_disable_service_bluetooth | default(false)
 
     - name: Disable wifi service
       ansible.builtin.systemd:
         enabled: false
         name: wpa_supplicant.service
-      when: disable_service_wifi | default(false)
+      when: cluster_disable_service_wifi | default(false)
 
     - name: Enable memory cgroup
       ansible.builtin.lineinfile:

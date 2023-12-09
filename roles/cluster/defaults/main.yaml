@@ -1,4 +1,4 @@
 ---
-country_code: US
-disable_service_bluetooth: true
-disable_service_wifi: true
+cluster_country_code: US
+cluster_disable_service_bluetooth: true
+cluster_disable_service_wifi: true

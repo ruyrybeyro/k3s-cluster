@@ -21,6 +21,6 @@
             services:
               - kind: TraefikService
                 name: api@internal
-    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
     state: present
   when: ansible_host == k3s_host

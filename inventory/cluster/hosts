@@ -1,14 +1,14 @@
 [control]
-apollo.lan
-boreas.lan
-cerus.lan
+apollo
+boreas
+cerus
 
 [node]
-chaos.lan
-crios.lan
-helios.lan
-hermes.lan
-hypnos.lan
+chaos
+crios
+helios
+hermes
+hypnos
 
 [cluster:children]
 control

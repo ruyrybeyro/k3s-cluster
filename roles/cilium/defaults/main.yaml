@@ -1,4 +1,4 @@
 ---
-cilium_chart_version: v1.13.4
-cilium_version: v0.14.7
-hubble_version: v0.11.6
+cilium_chart_version: v1.14.4
+cilium_cli_version: v0.15.17
+cilium_hubble_version: v0.12.3

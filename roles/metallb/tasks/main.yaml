@@ -17,7 +17,7 @@
       kubernetes.core.helm:
         chart_ref: metallb/metallb
         chart_version: "{{ metallb_chart_version }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         name: metallb
         namespace: metallb-system
         create_namespace: true
@@ -35,7 +35,7 @@
           spec:
             addresses:
               - "{{ metallb_chart_ip_pool }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         state: present
 
     - name: Install L2Advertisement manifest
@@ -49,5 +49,5 @@
           spec:
             ipAddressPools:
               - default-pool
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         state: present

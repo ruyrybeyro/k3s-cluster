@@ -23,7 +23,7 @@
         api_version: v1
         kind: Namespace
         name: monitoring-system
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         state: present
 
     - name: Create secret
@@ -35,17 +35,17 @@
             name: grafana-credentials
             namespace: monitoring-system
           stringData:
-            password: "{{ grafana_password }}"
-            username: "{{ grafana_username }}"
+            password: "{{ prometheus_grafana_password }}"
+            username: "{{ prometheus_grafana_username }}"
           type: Opaque
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         state: present
 
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: prometheus-community/kube-prometheus-stack
         chart_version: "{{ prometheus_chart_version }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
         name: monitoring
         namespace: monitoring-system
         update_repo_cache: true

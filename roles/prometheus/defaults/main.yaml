@@ -1,4 +1,4 @@
 ---
-grafana_username: admin
-grafana_password: wuspij-rugbef-8xiSwy # prom-operator
-prometheus_chart_version: v47.0.0
+prometheus_chart_version: v55.0.0
+prometheus_grafana_username: admin
+prometheus_grafana_password: wuspij-rugbef-8xiSwy # default, prom-operator

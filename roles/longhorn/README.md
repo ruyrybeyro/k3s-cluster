@@ -1,5 +1,9 @@
 # Longhorn
 
+## Releases
+
+- [Longhorn Helm Chart](https://github.com/longhorn/longhorn/releases)
+
 Uninstall chart:
 
 ```shell

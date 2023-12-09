@@ -1,5 +1,11 @@
 # Prometheus
 
+## Releases
+
+- [kube-prometheus-stack Helm Chart](https://github.com/prometheus-community/helm-charts/releases)
+
+## Uninstall
+
 Uninstall chart:
 
 ```shell

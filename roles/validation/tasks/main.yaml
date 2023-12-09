@@ -15,7 +15,6 @@
   ansible.builtin.set_fact:
     raspberry_pi: true
   when:
-    - ansible_facts.lsb.codename | default('') == raspios_codename
     - ansible_facts.lsb.id | default('') == raspios_id
     - ansible_facts.machine | default('') == "aarch64"
     - cpuinfo.rc == 0 or model.rc == 0
