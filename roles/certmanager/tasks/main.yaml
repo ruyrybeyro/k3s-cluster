@@ -1,0 +1,27 @@
+---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: facts
+
+- name: Add repository
+  kubernetes.core.helm_repository:
+    name: jetstack
+    repo_state: present
+    repo_url: https://charts.jetstack.io
+
+- name: Install chart
+  kubernetes.core.helm:
+    chart_ref: jetstack/cert-manager
+    chart_version: "{{ certmanager_chart_version }}"
+    create_namespace: true
+    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+    name: cert-manager
+    namespace: cert-manager
+    update_repo_cache: true
+    values:
+      installCRDs: true
+      webhook:
+        hostNetwork: true
+    wait: true
+  when: ansible_host == k3s_host
