@@ -21,7 +21,5 @@
     update_repo_cache: true
     values:
       installCRDs: true
-      webhook:
-        hostNetwork: true
     wait: true
   when: ansible_host == k3s_host
