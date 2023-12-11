@@ -2,9 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "dependencyDashboard": true,
   "rebaseWhen": "conflicted",
-  "kubernetes": {
+  "ansible": {
     "fileMatch": [
-      "(^|/)defaults/main.yaml$"
+      "(^|/)tasks/[^/]+\\.ya?ml$"
     ]
   }
 }
