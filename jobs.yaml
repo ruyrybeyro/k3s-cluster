@@ -1,0 +1,40 @@
+---
+- name: Jobs Cleanup
+  hosts: apollo
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Import facts
+      ansible.builtin.import_role:
+        name: k3s
+        tasks_from: facts
+
+    - name: Get traefik-crd pod info
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        label_selectors:
+          - helmcharts.helm.cattle.io/chart = traefik-crd
+          - job-name = helm-install-traefik-crd
+        namespace: kube-system
+      register: pod_traefik_crd_info
+
+    - name: Print traefik-crd pod info
+      ansible.builtin.debug:
+        var: pod_traefik_crd_info.resources[0]['metadata']['name']
+
+    - name: Get cilium pod info
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        label_selectors:
+          - app.kubernetes.io/name = cilium-agent
+          - k8s-app = cilium
+        namespace: kube-system
+      register: pod_cilium_info
+
+    - name: Print cilium pod info
+      ansible.builtin.debug:
+        var: pod_cilium_info
