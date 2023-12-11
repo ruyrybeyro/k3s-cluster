@@ -22,6 +22,12 @@
     state: present
   register: user_info
 
+- name: Remove KUBECONFIG variable from environment
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: ^KUBECONFIG
+    state: absent
+
 - name: Files cleanup
   ansible.builtin.file:
     name: "{{ item }}"
