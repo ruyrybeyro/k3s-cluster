@@ -15,8 +15,8 @@
     - name: Upgrade distribution
       ansible.builtin.replace:
         path: "{{ item }}"
-        regexp: "bullseye"
-        replace: "bookworm"
+        regexp: bullseye
+        replace: bookworm
       loop:
         - /etc/apt/sources.list
         - /etc/apt/sources.list.d/raspi.list
