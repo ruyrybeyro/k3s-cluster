@@ -26,6 +26,7 @@
   become: true
   gather_facts: true
   roles:
+    - role: certmanager
     - role: cilium
     - role: metallb
     - role: longhorn
