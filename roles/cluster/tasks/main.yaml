@@ -19,7 +19,7 @@
       changed_when: false
 
     - name: Disable bluetooth service
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         enabled: false
         name: "{{ item }}.service"
       loop:
@@ -28,7 +28,7 @@
       when: cluster_disable_service_bluetooth | default(false)
 
     - name: Disable wifi service
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         enabled: false
         name: wpa_supplicant.service
       when: cluster_disable_service_wifi | default(false)
