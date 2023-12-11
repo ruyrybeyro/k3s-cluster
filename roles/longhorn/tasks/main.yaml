@@ -1,7 +1,7 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: common
+    name: k3s
     tasks_from: facts
 
 - name: Add repository
@@ -14,7 +14,7 @@
   kubernetes.core.helm:
     chart_ref: longhorn/longhorn
     chart_version: "{{ longhorn_chart_version }}"
-    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
     name: longhorn
     namespace: longhorn-system
     create_namespace: true

@@ -1,7 +1,7 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: common
+    name: k3s
     tasks_from: facts
 
 - name: Download archive
@@ -46,7 +46,7 @@
   kubernetes.core.helm:
     chart_ref: cilium/cilium
     chart_version: "{{ cilium_chart_version }}"
-    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
     name: cilium
     namespace: kube-system
     update_repo_cache: true

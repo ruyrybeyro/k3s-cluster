@@ -1,7 +1,7 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: common
+    name: k3s
     tasks_from: facts
 
 - name: Add repository
@@ -15,7 +15,7 @@
     chart_ref: jetstack/cert-manager
     chart_version: "{{ certmanager_chart_version }}"
     create_namespace: true
-    kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
     name: cert-manager
     namespace: cert-manager
     update_repo_cache: true

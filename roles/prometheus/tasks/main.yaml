@@ -1,7 +1,7 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: common
+    name: k3s
     tasks_from: facts
 
 - name: Set control ip fact
@@ -23,7 +23,7 @@
         api_version: v1
         kind: Namespace
         name: monitoring-system
-        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
         state: present
 
     - name: Create secret
@@ -38,14 +38,14 @@
             password: "{{ prometheus_grafana_password }}"
             username: "{{ prometheus_grafana_username }}"
           type: Opaque
-        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
         state: present
 
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: prometheus-community/kube-prometheus-stack
         chart_version: "{{ prometheus_chart_version }}"
-        kubeconfig: "{{ common_k3s_conf_dir }}/k3s.yaml"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
         name: monitoring
         namespace: monitoring-system
         update_repo_cache: true

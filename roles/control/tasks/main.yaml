@@ -1,7 +1,7 @@
 ---
 - name: Add KUBECONFIG variable to environment
   ansible.builtin.lineinfile:
-    line: KUBECONFIG={{ common_k3s_conf_dir }}/k3s.yaml
+    line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
     path: /etc/environment
     regexp: ^KUBECONFIG
     state: present
@@ -49,7 +49,7 @@
 
 - name: Copy configuration file
   ansible.builtin.copy:
-    src: "{{ common_k3s_conf_dir }}/k3s.yaml"
+    src: "{{ k3s_conf_dir }}/k3s.yaml"
     dest: "{{ user_info.home }}/.kube/config"
     owner: "{{ user_info.name }}"
     group: "{{ user_info.name }}"

@@ -1,5 +1,0 @@
----
-common_k3s_cluster_dns: 10.43.0.10
-common_k3s_cluster_domain: cluster.local
-common_k3s_conf_dir: /etc/rancher/k3s
-common_k3s_version: v1.28.4+k3s2

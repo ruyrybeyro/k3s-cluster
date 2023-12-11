@@ -1,4 +1,4 @@
 ---
 dependencies:
-  - role: common
+  - role: k3s
   - role: helm

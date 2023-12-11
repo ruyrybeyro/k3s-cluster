@@ -1,2 +1,2 @@
 ---
-node_k3s_service_args: ""
+node_service_args: ""

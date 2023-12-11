@@ -1,7 +1,7 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: common
+    name: k3s
     tasks_from: facts
 
 - name: Stop service
@@ -28,7 +28,7 @@
     state: absent
   loop:
     - "{{ user_info.home }}/.kube"
-    - "{{ common_k3s_conf_dir }}"
+    - "{{ k3s_conf_dir }}"
     - /etc/systemd/system/{{ k3s_service }}.service
     - /etc/systemd/system/{{ k3s_service }}.service.env
     - /usr/local/bin/k3s
@@ -36,9 +36,3 @@
     - /var/lib/kubelet
     - /var/lib/longhorn
     - /var/lib/rancher
-
-- name: Variables cleanup
-  ansible.builtin.lineinfile:
-    path: /etc/environment
-    regexp: ^KUBECONFIG
-    state: absent
