@@ -24,17 +24,13 @@
       ansible.builtin.debug:
         var: pod_traefik_crd_info.resources[0]['metadata']['name']
 
-    - name: Get cilium pod info
-      kubernetes.core.k8s_info:
-        api_version: v1
+    - name: Delete traefik-crd pod
+      kubernetes.core.k8s:
         kind: Pod
         kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-        label_selectors:
-          - app.kubernetes.io/name = cilium-agent
-          - k8s-app = cilium
+        name: pod_traefik_crd_info.resources[0]['metadata']['name']
         namespace: kube-system
-      register: pod_cilium_info
-
-    - name: Print cilium pod info
-      ansible.builtin.debug:
-        var: pod_cilium_info
+        wait: true
+        wait_condition:
+          status: false
+        wait_sleep: 1
