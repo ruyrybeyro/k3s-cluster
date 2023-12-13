@@ -14,3 +14,9 @@ Update the OS distribution:
 ```shell
 ansible-playbook -k distribution.yaml
 ```
+
+Delete successful jobs:
+
+```shell
+kubectl delete jobs --field-selector status.successful=1
+```
