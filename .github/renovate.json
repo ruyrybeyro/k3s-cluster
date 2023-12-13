@@ -1,10 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "dependencyDashboard": true,
-  "rebaseWhen": "conflicted",
-  "ansible": {
-    "fileMatch": [
-      "(^|/)roles/[^/]+/tasks/[^/]+\\.ya?ml$"
-    ]
-  }
+  "dependencyDashboard": true
 }
