@@ -18,5 +18,5 @@ ansible-playbook -k distribution.yaml
 Delete successful jobs:
 
 ```shell
-kubectl delete jobs --field-selector status.successful=1
+kubectl delete jobs -A --field-selector status.successful=1
 ```
