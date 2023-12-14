@@ -22,4 +22,4 @@
     values:
       installCRDs: true
     wait: true
-  when: ansible_host == k3s_host
+  when: ansible_host == k3s_default_host

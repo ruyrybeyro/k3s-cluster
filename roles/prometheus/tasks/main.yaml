@@ -6,7 +6,7 @@
 
 - name: Set control ip fact
   ansible.builtin.set_fact:
-    k3s_control_ips: "{{ k3s_control | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+    k3s_control_ips: "{{ k3s_control_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
   run_once: true
 
 - name: Add repository
@@ -16,7 +16,7 @@
     repo_url: https://prometheus-community.github.io/helm-charts
 
 - name: Helm Chart
-  when: ansible_host == k3s_host
+  when: ansible_host == k3s_default_host
   block:
     - name: Create namespace
       kubernetes.core.k8s:

@@ -29,8 +29,8 @@
   loop:
     - "{{ user_info.home }}/.kube"
     - "{{ k3s_conf_dir }}"
-    - /etc/systemd/system/{{ k3s_service }}.service
-    - /etc/systemd/system/{{ k3s_service }}.service.env
+    - /etc/systemd/system/{{ k3s_service_name }}.service
+    - /etc/systemd/system/{{ k3s_service_name }}.service.env
     - /usr/local/bin/k3s
     - /var/lib/cni
     - /var/lib/kubelet

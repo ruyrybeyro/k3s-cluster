@@ -40,7 +40,7 @@
 - name: Create service file
   ansible.builtin.template:
     src: service.j2
-    dest: /etc/systemd/system/{{ k3s_service }}.service
+    dest: /etc/systemd/system/{{ k3s_service_name }}.service
     mode: "644"
     owner: root
     group: root
@@ -51,9 +51,29 @@
     access_time: preserve
     mode: "600"
     modification_time: preserve
-    path: /etc/systemd/system/{{ k3s_service }}.service.env
+    path: /etc/systemd/system/{{ k3s_service_name }}.service.env
     state: touch
   notify: Start service
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Traefik Configuration
+  when: ansible_host in k3s_control_hosts
+  block:
+    - name: Wait for directory creation
+      ansible.builtin.wait_for:
+        path: "{{ k3s_lib_dir }}/server/manifests"
+        state: present
+
+    - name: Create configuration file
+      ansible.builtin.template:
+        src: traefik.j2
+        dest: "{{ k3s_lib_dir }}/server/manifests/traefik-config.yaml"
+        mode: "600"
+        owner: root
+        group: root
+      notify: Start service
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

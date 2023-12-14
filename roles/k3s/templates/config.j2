@@ -1,7 +1,7 @@
-{% if k3s_agent == 'server' %}
+{% if k3s_service_type == 'server' %}
 cluster-dns: {{ k3s_cluster_dns }}
 cluster-domain: {{ k3s_cluster_domain }}
-{% if k3s_ha and ansible_host == k3s_host %}
+{% if k3s_ha_cluster and ansible_host == k3s_default_host %}
 cluster-init: true
 {% endif %}
 disable:
@@ -12,7 +12,7 @@ disable-network-policy: true
 flannel-backend: none
 {% endif %}
 node-taint: node.cilium.io/agent-not-ready:NoExecute
-{% if k3s_ha and ansible_host != k3s_host and k3s_token | length > 0 %}
-server: https://{{ k3s_host }}:6443
+{% if k3s_ha_cluster and ansible_host != k3s_default_host and k3s_token | length > 0 %}
+server: https://{{ k3s_default_host }}:6443
 token: {{ k3s_token }}
 {% endif %}

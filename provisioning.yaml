@@ -28,7 +28,5 @@
   roles:
     - role: cilium
     - role: certmanager
-    - role: metallb
     - role: longhorn
     - role: prometheus
-    # - role: traefik

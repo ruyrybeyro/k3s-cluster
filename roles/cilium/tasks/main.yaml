@@ -42,21 +42,64 @@
     repo_state: present
     repo_url: https://helm.cilium.io
 
-- name: Install chart
-  kubernetes.core.helm:
-    chart_ref: cilium/cilium
-    chart_version: "{{ cilium_chart_version }}"
-    kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-    name: cilium
-    namespace: kube-system
-    update_repo_cache: true
-    values:
-      hubble:
-        relay:
-          enabled: true
-        ui:
-          enabled: true
-          service:
-            type: NodePort
-    wait: true
-  when: ansible_host == k3s_host
+- name: Helm Chart
+  when: ansible_host == k3s_default_host
+  block:
+    - name: Install chart
+      kubernetes.core.helm:
+        chart_ref: cilium/cilium
+        chart_version: "{{ cilium_chart_version }}"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        name: cilium
+        namespace: kube-system
+        update_repo_cache: true
+        values:
+          bgpControlPlane:
+            enabled: true
+          enableCiliumEndpointSlice: true
+          externalIPs:
+            enabled: true
+          hubble:
+            relay:
+              enabled: true
+              rollOutPods: true
+            ui:
+              enabled: true
+              rollOutPods: true
+              # service:
+              #   type: NodePort
+          k8sClientRateLimit:
+            qps: 50
+            burst: 100
+          l2announcements:
+            enabled: true
+          rollOutCiliumPods: true
+        wait: true
+
+    - name: Install CiliumLoadBalancerIPPool manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: cilium.io/v2alpha1
+          kind: CiliumLoadBalancerIPPool
+          metadata:
+            name: default-pool
+            namespace: kube-system
+          spec:
+            cidrs:
+              - cidr: "{{ cilium_ip_pool }}"
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present
+
+    - name: Install CiliumL2AnnouncementPolicy manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: cilium.io/v2alpha1
+          kind: CiliumL2AnnouncementPolicy
+          metadata:
+            name: default-l2-announcement-policy
+            namespace: kube-system
+          spec:
+            externalIPs: true
+            loadBalancerIPs: true
+        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        state: present

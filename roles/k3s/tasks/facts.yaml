@@ -1,30 +1,30 @@
 ---
-- name: Set control fact
+- name: Set control hosts fact
   ansible.builtin.set_fact:
-    k3s_control: "{{ groups['control'] }}"
+    k3s_control_hosts: "{{ groups['control'] }}"
   run_once: true
 
-- name: Set agent fact
+- name: Set default host fact
   ansible.builtin.set_fact:
-    k3s_agent: "{{ 'agent' if ansible_host not in k3s_control else 'server' }}"
+    k3s_default_host: "{{ hostvars[k3s_control_hosts[0]]['ansible_host'] | default(k3s_control_hosts[0]) }}"
   run_once: true
 
-- name: Set high-availability fact
+- name: Set high-availability cluster fact
   ansible.builtin.set_fact:
-    k3s_ha: "{{ (k3s_control | length > 1) | default(false) }}"
+    k3s_ha_cluster: "{{ (k3s_control_hosts | length > 1) | default(false) }}"
   run_once: true
 
-- name: Set host fact
+- name: Set service name fact
   ansible.builtin.set_fact:
-    k3s_host: "{{ hostvars[k3s_control[0]]['ansible_host'] | default(k3s_control[0]) }}"
+    k3s_service_name: k3s{{ '-agent' if ansible_host not in k3s_control_hosts }}
   run_once: true
 
-- name: Set service fact
+- name: Set service type fact
   ansible.builtin.set_fact:
-    k3s_service: k3s{{ '-agent' if ansible_host not in k3s_control }}
+    k3s_service_type: "{{ 'agent' if ansible_host not in k3s_control_hosts else 'server' }}"
   run_once: true
 
 - name: Set token fact
   ansible.builtin.set_fact:
-    k3s_token: "{{ hostvars[k3s_control[0]]['token'] | default('') }}"
+    k3s_token: "{{ hostvars[k3s_control_hosts[0]]['token'] | default('') }}"
   run_once: true

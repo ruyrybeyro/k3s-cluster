@@ -21,11 +21,11 @@
   block:
     - name: Wait for token creation
       ansible.builtin.wait_for:
-        path: /var/lib/rancher/k3s/server/node-token
+        path: "{{ k3s_lib_dir }}/server/node-token"
 
     - name: Read token
       ansible.builtin.slurp:
-        path: /var/lib/rancher/k3s/server/node-token
+        path: "{{ k3s_lib_dir }}/server/node-token"
       register: node_token
 
     - name: Set token fact
