@@ -2,14 +2,6 @@
 - name: Cluster Provisioning
   when: raspberry_pi | default(false)
   block:
-    - name: Upgrade distribution packages
-      ansible.builtin.apt:
-        autoremove: true
-        force_apt_get: true
-        update_cache: true
-        upgrade: dist
-        state: fixed
-
     - name: Set boot from USB if available
       ansible.builtin.command:
         cmd: raspi-config nonint do_boot_behaviour B2
@@ -46,17 +38,6 @@
       notify: Reboot
       register: cmdline
 
-    - name: Update bootloader firmware
-      ansible.builtin.command:
-        cmd: rpi-eeprom-update -ad
-      changed_when: eeprom_update.stdout.find('updates pending') != -1
-      notify: Reboot
-      register: eeprom_update
-
-    - name: Check reboot status
-      ansible.builtin.stat:
-        path: /var/run/reboot-required
-        get_checksum: false
-      changed_when: reboot.stat.exists
-      notify: Reboot
-      register: reboot
+    - name: Upgrade distribution
+      ansible.builtin.import_tasks:
+        file: upgrade.yaml

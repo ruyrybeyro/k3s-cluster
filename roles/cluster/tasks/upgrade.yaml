@@ -1,0 +1,23 @@
+---
+- name: Upgrade distribution packages
+  ansible.builtin.apt:
+    autoremove: true
+    force_apt_get: true
+    update_cache: true
+    upgrade: dist
+    state: fixed
+
+- name: Update bootloader firmware
+  ansible.builtin.command:
+    cmd: rpi-eeprom-update -ad
+  changed_when: eeprom_update.stdout.find('updates pending') != -1
+  notify: Reboot
+  register: eeprom_update
+
+- name: Check reboot status
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_checksum: false
+  changed_when: reboot.stat.exists
+  notify: Reboot
+  register: reboot
