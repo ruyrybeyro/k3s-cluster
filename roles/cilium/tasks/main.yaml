@@ -66,8 +66,11 @@
               enabled: true
               rollOutPods: true
           k8sClientRateLimit:
-            qps: 50
             burst: 100
+            qps: 50
+          k8sServiceHost: 127.0.0.1
+          k8sServicePort: 6444
+          kubeProxyReplacement: true
           l2announcements:
             enabled: true
           rollOutCiliumPods: true
