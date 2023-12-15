@@ -8,14 +8,24 @@
 - [Cilium CLI](https://github.com/cilium/cilium-cli/releases)
 - [Cilium Hubble](https://github.com/cilium/hubble/releases)
 
-## Chart Configuration
+## Helm Chart Configuration
 
-### [Kubernetes Without kube-proxy](https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/)
+- [Reference](https://docs.cilium.io/en/stable/helm-reference/)
 
-For [Cilium #19038](https://github.com/cilium/cilium/issues/19038), k3s does proxy the api server on each host to `localhost:6444`:
+### Kubernetes Without kube-proxy
+
+- [Reference](ttps://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/)
+
+For [Cilium #19038](https://github.com/cilium/cilium/issues/19038), `k3s` does proxy the API server on each host to `localhost:6444`:
 
 ```yaml
 k8sServiceHost: 127.0.0.1
 k8sServicePort: 6444
 kubeProxyReplacement: true
+```
+
+Validate the setup:
+
+```shell
+$ sudo kubectl -n kube-system exec ds/cilium -- cilium status --verbose
 ```

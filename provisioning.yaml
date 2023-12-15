@@ -5,6 +5,8 @@
   gather_facts: true
   roles:
     - role: cluster
+  tags:
+    - cluster
 
 - name: Control Plane Provisioning
   hosts: control
@@ -13,6 +15,8 @@
   roles:
     - role: control
   serial: 1
+  tags:
+    - control
 
 - name: Node Provisioning
   hosts: node
@@ -20,6 +24,8 @@
   gather_facts: true
   roles:
     - role: node
+  tags:
+    - node
 
 - name: Charts Provisioning
   hosts: control
@@ -30,3 +36,5 @@
     - role: certmanager
     - role: longhorn
     - role: prometheus
+  tags:
+    - charts

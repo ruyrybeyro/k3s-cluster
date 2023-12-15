@@ -20,6 +20,8 @@
       loop:
         - /etc/apt/sources.list
         - /etc/apt/sources.list.d/raspi.list
+      tags:
+        - distro
 
     - name: Upgrade distribution packages
       ansible.builtin.apt:
@@ -28,16 +30,23 @@
         update_cache: true
         upgrade: dist
         state: fixed
+      tags:
+        - distro
+        - upgrade
 
     - name: Set device id
       ansible.builtin.command:
         cmd: lsusb -s 2:2
       changed_when: device_id.stdout.find(device_name) != -1
       register: device_id
+      tags:
+        - fstrim
 
     - name: Set device attributes
       ansible.builtin.set_fact:
         attributes: "{{ device_id.stdout | regex_search('ID\\s+(.*)\\s+' + device_name, '\\1') | join | trim | split(':') }}"
+      tags:
+        - fstrim
 
     - name: Set provisioning rule
       ansible.builtin.lineinfile:
@@ -48,6 +57,8 @@
         owner: root
         group: root
         mode: '0644'
+      tags:
+        - fstrim
       when: attributes is iterable and (attributes | length == 2)
 
     - name: Start fstrim.timer
@@ -56,14 +67,20 @@
         daemon_reload: true
         enabled: true
         state: restarted
+      tags:
+        - fstrim
       when: attributes is iterable and (attributes | length == 2)
 
     - name: Reboot
       ansible.builtin.reboot:
         post_reboot_delay: 30
+      tags:
+        - fstrim
 
     - name: Trim disk
       ansible.builtin.command:
         cmd: fstrim -v /
       changed_when: trim_disk.stdout.find('trimmed') != -1
       register: trim_disk
+      tags:
+        - fstrim
