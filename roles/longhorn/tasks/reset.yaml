@@ -1,0 +1,13 @@
+---
+- name: Remove package
+  ansible.builtin.apt:
+    name: open-iscsi
+    autoremove: true
+    force_apt_get: true
+    update_cache: true
+    state: absent
+
+- name: Remove files
+  ansible.builtin.file:
+    name: /var/lib/longhorn
+    state: absent

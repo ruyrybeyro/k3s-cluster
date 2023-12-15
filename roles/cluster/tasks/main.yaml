@@ -5,23 +5,27 @@
     - name: Upgrade distribution packages
       ansible.builtin.apt:
         autoremove: true
+        force_apt_get: true
         update_cache: true
         upgrade: dist
+        state: fixed
 
     - name: Set boot from USB if available
       ansible.builtin.command:
         cmd: raspi-config nonint do_boot_behaviour B2
-      changed_when: false
+      changed_when: boot_behaviour.stdout | length > 0
+      register: boot_behaviour
 
     - name: Set wifi country code
       ansible.builtin.command:
         cmd: raspi-config nonint do_wifi_country {{ cluster_country_code }}
-      changed_when: false
+      changed_when: wifi_country.stdout | length > 0
+      register: wifi_country
 
     - name: Disable bluetooth service
       ansible.builtin.systemd_service:
         enabled: false
-        name: "{{ item }}.service"
+        name: '{{ item }}.service'
       loop:
         - bluetooth
         - hciuart
@@ -39,15 +43,14 @@
         path: /boot/cmdline.txt
         regexp: ^((?!.*\bcgroup_memory=1\b).*)$
         line: \g<1> cgroup_memory=1 cgroup_enable=memory
-        state: present
-      notify: Perform reboot
+      notify: Reboot
       register: cmdline
 
     - name: Update bootloader firmware
       ansible.builtin.command:
         cmd: rpi-eeprom-update -ad
       changed_when: eeprom_update.stdout.find('updates pending') != -1
-      notify: Perform reboot
+      notify: Reboot
       register: eeprom_update
 
     - name: Check reboot status
@@ -55,5 +58,5 @@
         path: /var/run/reboot-required
         get_checksum: false
       changed_when: reboot.stat.exists
-      notify: Perform reboot
+      notify: Reboot
       register: reboot

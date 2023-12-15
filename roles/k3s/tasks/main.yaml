@@ -3,11 +3,11 @@
   ansible.builtin.import_tasks:
     file: facts.yaml
 
-- name: Install open-iscsi package
+- name: Install package
   ansible.builtin.apt:
     name: open-iscsi
-    state: present
     autoremove: true
+    force_apt_get: true
     update_cache: true
 
 - name: Install k3s binary
@@ -17,39 +17,41 @@
     dest: /usr/local/bin/k3s
     owner: root
     group: root
-    mode: "755"
+    mode: '0755'
   notify: Start service
 
 - name: Create configuration directory
   ansible.builtin.file:
-    path: "{{ k3s_conf_dir }}"
-    mode: "755"
+    path: '{{ k3s_conf_dir }}'
     owner: root
     group: root
+    mode: '0755'
     state: directory
 
 - name: Create configuration file
   ansible.builtin.template:
     src: config.j2
-    dest: "{{ k3s_conf_dir }}/config.yaml"
-    mode: "600"
+    dest: '{{ k3s_conf_dir }}/config.yaml'
     owner: root
     group: root
+    mode: '0600'
   notify: Start service
 
 - name: Create service file
   ansible.builtin.template:
     src: service.j2
     dest: /etc/systemd/system/{{ k3s_service_name }}.service
-    mode: "644"
     owner: root
     group: root
+    mode: '0644'
   notify: Start service
 
 - name: Create service environment file
   ansible.builtin.file:
     access_time: preserve
-    mode: "600"
+    owner: root
+    group: root
+    mode: '0600'
     modification_time: preserve
     path: /etc/systemd/system/{{ k3s_service_name }}.service.env
     state: touch
@@ -57,3 +59,22 @@
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
+
+# - name: Traefik Configuration
+#   when: ansible_host in k3s_control_hosts
+#   block:
+#     - name: Wait for directory creation
+#       ansible.builtin.wait_for:
+#         path: '{{ k3s_lib_dir }}/server/manifests'
+
+#     - name: Create configuration file
+#       ansible.builtin.template:
+#         src: traefik.j2
+#         dest: '{{ k3s_lib_dir }}/server/manifests/traefik-config.yaml'
+#         owner: root
+#         group: root
+#         mode: '0600'
+#       notify: Start service
+
+# - name: Flush handlers
+#   ansible.builtin.meta: flush_handlers

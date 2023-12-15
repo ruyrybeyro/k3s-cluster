@@ -4,15 +4,9 @@
     name: k3s
     tasks_from: facts
 
-- name: Set control ip fact
-  ansible.builtin.set_fact:
-    k3s_control_ips: "{{ k3s_control_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
-  run_once: true
-
 - name: Add repository
   kubernetes.core.helm_repository:
-    name: prometheus-community
-    repo_state: present
+    name: prometheus
     repo_url: https://prometheus-community.github.io/helm-charts
 
 - name: Helm Chart
@@ -23,8 +17,7 @@
         api_version: v1
         kind: Namespace
         name: monitoring-system
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-        state: present
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
     - name: Create secret
       kubernetes.core.k8s:
@@ -35,17 +28,16 @@
             name: grafana-credentials
             namespace: monitoring-system
           stringData:
-            password: "{{ prometheus_grafana_password }}"
-            username: "{{ prometheus_grafana_username }}"
+            password: '{{ prometheus_grafana_password }}'
+            username: '{{ prometheus_grafana_username }}'
           type: Opaque
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-        state: present
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
     - name: Install chart
       kubernetes.core.helm:
-        chart_ref: prometheus-community/kube-prometheus-stack
-        chart_version: "{{ prometheus_chart_version }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        chart_ref: prometheus/kube-prometheus-stack
+        chart_version: '{{ prometheus_chart_version }}'
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
         name: monitoring
         namespace: monitoring-system
         update_repo_cache: true
@@ -69,13 +61,13 @@
             service:
               type: LoadBalancer
           kubeControllerManager:
-            endpoints: "{{ k3s_control_ips }}"
+            endpoints: '{{ k3s_control_ips }}'
           kubeEtcd:
-            endpoints: "{{ k3s_control_ips }}"
+            endpoints: '{{ k3s_control_ips }}'
           kubeProxy:
-            endpoints: "{{ k3s_control_ips }}"
+            endpoints: '{{ k3s_control_ips }}'
           kubeScheduler:
-            endpoints: "{{ k3s_control_ips }}"
+            endpoints: '{{ k3s_control_ips }}'
           prometheus:
             prometheusSpec:
               enableAdminAPI: true

@@ -1,10 +1,19 @@
 ---
-- name: Add KUBECONFIG variable to environment
+- name: Install packages
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    autoremove: true
+    force_apt_get: true
+    update_cache: true
+  loop:
+    - python3-jsonpatch
+    - python3-kubernetes
+
+- name: Add variable to environment
   ansible.builtin.lineinfile:
     line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
     path: /etc/environment
     regexp: ^KUBECONFIG
-    state: present
 
 - name: Create symlinks
   ansible.builtin.file:
@@ -16,16 +25,16 @@
     - ctr
     - kubectl
 
-- name: Token
+- name: Set Token
   when: k3s_token | length == 0
   block:
     - name: Wait for token creation
       ansible.builtin.wait_for:
-        path: "{{ k3s_lib_dir }}/server/node-token"
+        path: '{{ k3s_lib_dir }}/server/node-token'
 
     - name: Read token
       ansible.builtin.slurp:
-        path: "{{ k3s_lib_dir }}/server/node-token"
+        path: '{{ k3s_lib_dir }}/server/node-token'
       register: node_token
 
     - name: Set token fact
@@ -35,30 +44,29 @@
 
 - name: Get user info
   ansible.builtin.user:
-    name: "{{ raspios_user }}"
-    state: present
+    name: '{{ pi_user }}'
   register: user_info
 
 - name: Create configuration directory
   ansible.builtin.file:
-    path: "{{ user_info.home }}/.kube"
-    owner: "{{ user_info.name }}"
-    group: "{{ user_info.name }}"
-    mode: "755"
+    path: '{{ user_info.home }}/.kube'
+    owner: '{{ user_info.name }}'
+    group: '{{ user_info.name }}'
+    mode: '0755'
     state: directory
 
 - name: Copy configuration file
   ansible.builtin.copy:
-    src: "{{ k3s_conf_dir }}/k3s.yaml"
-    dest: "{{ user_info.home }}/.kube/config"
-    owner: "{{ user_info.name }}"
-    group: "{{ user_info.name }}"
-    mode: "600"
+    src: '{{ k3s_conf_dir }}/k3s.yaml'
+    dest: '{{ user_info.home }}/.kube/config'
+    owner: '{{ user_info.name }}'
+    group: '{{ user_info.name }}'
+    mode: '0600'
     remote_src: true
 
-- name: Replace localhost with control host
+- name: Set host
   ansible.builtin.command:
     cmd: kubectl config set-cluster default
-          --server=https://{{ ansible_host }}:6443
           --kubeconfig={{ user_info.home }}/.kube/config
+          --server=https://{{ ansible_host }}:6443
   changed_when: true

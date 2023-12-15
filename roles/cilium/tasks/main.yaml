@@ -11,7 +11,7 @@
     dest: /tmp
     owner: root
     group: root
-    mode: "644"
+    mode: '0644'
   loop:
     - ['cilium-cli', '{{ cilium_cli_version }}', 'cilium-linux-arm64']
     - ['hubble', '{{ cilium_hubble_version }}', 'hubble-linux-arm']
@@ -22,7 +22,7 @@
     dest: /usr/local/bin
     owner: root
     group: root
-    mode: "755"
+    mode: '0755'
     remote_src: true
   loop:
     - cilium-linux-arm64
@@ -39,7 +39,6 @@
 - name: Add repository
   kubernetes.core.helm_repository:
     name: cilium
-    repo_state: present
     repo_url: https://helm.cilium.io
 
 - name: Helm Chart
@@ -48,8 +47,8 @@
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: cilium/cilium
-        chart_version: "{{ cilium_chart_version }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
+        chart_version: '{{ cilium_chart_version }}'
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
         name: cilium
         namespace: kube-system
         update_repo_cache: true
@@ -66,8 +65,6 @@
             ui:
               enabled: true
               rollOutPods: true
-              # service:
-              #   type: NodePort
           k8sClientRateLimit:
             qps: 50
             burst: 100
@@ -86,9 +83,8 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: "{{ cilium_ip_pool }}"
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-        state: present
+              - cidr: '{{ cilium_ip_pool }}'
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
     - name: Install CiliumL2AnnouncementPolicy manifest
       kubernetes.core.k8s:
@@ -101,5 +97,4 @@
           spec:
             externalIPs: true
             loadBalancerIPs: true
-        kubeconfig: "{{ k3s_conf_dir }}/k3s.yaml"
-        state: present
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'

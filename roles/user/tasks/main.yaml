@@ -1,21 +1,20 @@
 ---
 - name: Get user info
   ansible.builtin.user:
-    name: "{{ raspios_user }}"
-    state: present
+    name: '{{ pi_user }}'
   register: user_info
 
 - name: Hush login
   ansible.builtin.file:
     access_time: preserve
-    mode: "644"
+    group: '{{ user_info.name }}'
+    owner: '{{ user_info.name }}'
+    mode: '0644'
     modification_time: preserve
-    path: "{{ user_info.home }}/.hushlogin"
+    path: '{{ user_info.home }}/.hushlogin'
     state: touch
-  become_user: "{{ user_info.name }}"
 
 - name: Set authorized key
   ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + raspios_user_key) }}"
-    state: present
-    user: "{{ user_info.name }}"
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + pi_user_key) }}"
+    user: '{{ user_info.name }}'

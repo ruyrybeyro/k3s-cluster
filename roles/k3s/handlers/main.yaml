@@ -1,7 +1,17 @@
 ---
+- name: Reboot
+  ansible.builtin.reboot:
+    post_reboot_delay: 30
+
 - name: Start service
   ansible.builtin.systemd_service:
-    name: "{{ k3s_service_name }}.service"
+    name: '{{ k3s_service_name }}.service'
     daemon_reload: true
     enabled: true
     state: restarted
+
+- name: Stop service
+  ansible.builtin.systemd_service:
+    name: '{{ k3s_service_name }}.service'
+    enabled: false
+    state: stopped

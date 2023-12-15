@@ -1,8 +1,7 @@
 ---
-- name: Import facts
-  ansible.builtin.import_role:
-    name: k3s
-    tasks_from: facts
+- name: Set facts
+  ansible.builtin.import_tasks:
+    file: facts.yaml
 
 - name: Stop service
   ansible.builtin.assert:
@@ -11,28 +10,40 @@
   changed_when: true
   notify:
     - Stop service
-    - Perform reboot
+    - Reboot
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
 
-- name: Get user info
-  ansible.builtin.user:
-    name: "{{ raspios_user }}"
-    state: present
-  register: user_info
-
-- name: Files cleanup
-  ansible.builtin.file:
-    name: "{{ item }}"
+- name: Remove packages
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    autoremove: true
+    force_apt_get: true
+    update_cache: true
     state: absent
   loop:
-    - "{{ user_info.home }}/.kube"
-    - "{{ k3s_conf_dir }}"
+    - python3-jsonpatch
+    - python3-kubernetes
+
+- name: Get user info
+  ansible.builtin.user:
+    name: '{{ pi_user }}'
+  register: user_info
+
+- name: Remove files
+  ansible.builtin.file:
+    name: '{{ item }}'
+    state: absent
+  loop:
+    - '{{ user_info.home }}/.kube'
+    - '{{ k3s_conf_dir }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
+    - /usr/local/bin/crictl
+    - /usr/local/bin/ctr
     - /usr/local/bin/k3s
+    - /usr/local/bin/kubectl
     - /var/lib/cni
     - /var/lib/kubelet
-    - /var/lib/longhorn
     - /var/lib/rancher

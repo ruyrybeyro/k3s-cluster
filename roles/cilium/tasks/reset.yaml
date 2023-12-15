@@ -1,0 +1,8 @@
+---
+- name: Remove files
+  ansible.builtin.file:
+    name: '{{ item }}'
+    state: absent
+  loop:
+    - /usr/local/bin/cilium
+    - /usr/local/bin/hubble

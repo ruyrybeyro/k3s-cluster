@@ -14,7 +14,7 @@
   tasks:
     - name: Upgrade distribution
       ansible.builtin.replace:
-        path: "{{ item }}"
+        path: '{{ item }}'
         regexp: bullseye
         replace: bookworm
       loop:
@@ -24,8 +24,10 @@
     - name: Upgrade distribution packages
       ansible.builtin.apt:
         autoremove: true
+        force_apt_get: true
         update_cache: true
         upgrade: dist
+        state: fixed
 
     - name: Set device id
       ansible.builtin.command:
@@ -43,10 +45,9 @@
         line: "{{ provisioning_rule | join(', ') }}"
         path: /etc/udev/rules.d/10-provisioning.rules
         regexp: ^ACTION
-        state: present
         owner: root
         group: root
-        mode: "644"
+        mode: '0644'
       when: attributes is iterable and (attributes | length == 2)
 
     - name: Start fstrim.timer
@@ -57,12 +58,12 @@
         state: restarted
       when: attributes is iterable and (attributes | length == 2)
 
-    - name: Perform reboot
+    - name: Reboot
       ansible.builtin.reboot:
         post_reboot_delay: 30
 
     - name: Trim disk
       ansible.builtin.command:
         cmd: fstrim -v /
-      changed_when: trim_disk.stdout.find("trimmed") != -1
+      changed_when: trim_disk.stdout.find('trimmed') != -1
       register: trim_disk

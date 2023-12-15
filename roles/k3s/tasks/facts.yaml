@@ -4,6 +4,11 @@
     k3s_control_hosts: "{{ groups['control'] }}"
   run_once: true
 
+- name: Set control ips fact
+  ansible.builtin.set_fact:
+    k3s_control_ips: "{{ k3s_control_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+  run_once: true
+
 - name: Set default host fact
   ansible.builtin.set_fact:
     k3s_default_host: "{{ hostvars[k3s_control_hosts[0]]['ansible_host'] | default(k3s_control_hosts[0]) }}"
@@ -11,7 +16,7 @@
 
 - name: Set high-availability cluster fact
   ansible.builtin.set_fact:
-    k3s_ha_cluster: "{{ (k3s_control_hosts | length > 1) | default(false) }}"
+    k3s_ha_cluster: '{{ (k3s_control_hosts | length > 1) | default(false) }}'
   run_once: true
 
 - name: Set service name fact
