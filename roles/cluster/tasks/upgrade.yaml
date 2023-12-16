@@ -10,9 +10,9 @@
 - name: Update bootloader firmware
   ansible.builtin.command:
     cmd: rpi-eeprom-update -ad
-  changed_when: eeprom_update.stdout.find('updates pending') != -1
+  changed_when: command.stdout.find('updates pending') != -1
   notify: Reboot
-  register: eeprom_update
+  register: command
 
 - name: Check reboot status
   ansible.builtin.stat:

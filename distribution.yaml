@@ -80,7 +80,7 @@
     - name: Trim disk
       ansible.builtin.command:
         cmd: fstrim -v /
-      changed_when: trim_disk.stdout.find('trimmed') != -1
-      register: trim_disk
+      changed_when: command.stdout.find('trimmed') != -1
+      register: command
       tags:
         - fstrim

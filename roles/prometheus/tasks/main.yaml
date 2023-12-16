@@ -61,13 +61,13 @@
             service:
               type: LoadBalancer
           kubeControllerManager:
-            endpoints: '{{ k3s_control_ips }}'
+            endpoints: '{{ k3s_server_ips }}'
           kubeEtcd:
-            endpoints: '{{ k3s_control_ips }}'
+            endpoints: '{{ k3s_server_ips }}'
           kubeProxy:
-            endpoints: '{{ k3s_control_ips }}'
+            endpoints: '{{ k3s_server_ips }}'
           kubeScheduler:
-            endpoints: '{{ k3s_control_ips }}'
+            endpoints: '{{ k3s_server_ips }}'
           prometheus:
             prometheusSpec:
               enableAdminAPI: true

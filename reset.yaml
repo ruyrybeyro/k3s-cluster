@@ -1,6 +1,6 @@
 ---
-- name: Reset Control Plane
-  hosts: control
+- name: Reset Server
+  hosts: server
   become: true
   gather_facts: true
   tasks:

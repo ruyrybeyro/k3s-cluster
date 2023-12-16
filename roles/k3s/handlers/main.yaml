@@ -15,3 +15,7 @@
     name: '{{ k3s_service_name }}.service'
     enabled: false
     state: stopped
+  failed_when:
+    - service.failed == true
+    - service.msg.find('Could not find the requested service') == -1
+  register: service

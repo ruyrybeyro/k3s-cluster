@@ -15,17 +15,6 @@
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
 
-- name: Remove packages
-  ansible.builtin.apt:
-    name: '{{ item }}'
-    autoremove: true
-    force_apt_get: true
-    update_cache: true
-    state: absent
-  loop:
-    - python3-jsonpatch
-    - python3-kubernetes
-
 - name: Get user info
   ansible.builtin.user:
     name: '{{ pi_user }}'
@@ -47,3 +36,14 @@
     - /var/lib/cni
     - /var/lib/kubelet
     - /var/lib/rancher
+
+- name: Remove packages
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    autoremove: true
+    force_apt_get: true
+    update_cache: true
+    state: absent
+  loop:
+    - python3-jsonpatch
+    - python3-kubernetes

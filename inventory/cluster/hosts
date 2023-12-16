@@ -1,4 +1,4 @@
-[control]
+[server]
 apollo
 boreas
 cerus
@@ -11,5 +11,5 @@ hermes
 hypnos
 
 [cluster:children]
-control
+server
 node

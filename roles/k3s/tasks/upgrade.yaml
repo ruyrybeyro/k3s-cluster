@@ -1,0 +1,62 @@
+---
+- name: Set facts
+  ansible.builtin.import_tasks:
+    file: facts.yaml
+
+- name: Upgrade Kubernetes
+  when: ansible_host == k3s_default_host
+  block:
+    - name: Install server manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: upgrade.cattle.io/v1
+          kind: Plan
+          metadata:
+            name: k3s-server
+            namespace: system-upgrade
+            labels:
+              k3s-upgrade: server
+          spec:
+            concurrency: 1
+            version: '{{ k3s_version }}'
+            nodeSelector:
+              matchExpressions:
+                - { key: k3s-upgrade, operator: Exists }
+                - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
+                - { key: k3os.io/mode, operator: DoesNotExist }
+                - { key: node-role.kubernetes.io/control-plane, operator: Exists }
+            serviceAccountName: system-upgrade
+            cordon: true
+            upgrade:
+              image: rancher/k3s-upgrade
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+
+    - name: Install node manifest
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: upgrade.cattle.io/v1
+          kind: Plan
+          metadata:
+            name: k3s-agent
+            namespace: system-upgrade
+            labels:
+              k3s-upgrade: agent
+          spec:
+            concurrency: 2
+            version: '{{ k3s_version }}'
+            nodeSelector:
+              matchExpressions:
+                - { key: k3s-upgrade, operator: Exists }
+                - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
+                - { key: k3os.io/mode, operator: DoesNotExist}
+                - { key: node-role.kubernetes.io/control-plane, operator: DoesNotExist }
+            serviceAccountName: system-upgrade
+            prepare:
+              image: rancher/k3s-upgrade
+              args: ['prepare', 'k3s-server']
+            drain:
+              force: true
+              skipWaitForDeleteTimeout: 60
+            upgrade:
+              image: rancher/k3s-upgrade
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'

@@ -8,15 +8,15 @@
   tags:
     - cluster
 
-- name: Control Plane Provisioning
-  hosts: control
+- name: Server Provisioning
+  hosts: server
   become: true
   gather_facts: true
   roles:
-    - role: control
+    - role: server
   serial: 1
   tags:
-    - control
+    - server
 
 - name: Node Provisioning
   hosts: node
@@ -28,7 +28,7 @@
     - node
 
 - name: Charts Provisioning
-  hosts: control
+  hosts: server
   become: true
   gather_facts: true
   roles:
