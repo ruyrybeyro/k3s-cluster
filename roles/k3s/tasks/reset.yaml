@@ -28,12 +28,12 @@
       for j in $(grep {{ item }} /proc/self/mounts | cut -d ' ' -f 2); do
         umount -f $j
       done
+      rm -rf {{ item }}
     fi
   args:
     executable: /bin/bash
   changed_when: script.rc == 0
   loop:
-    - /run/k3s
     - /var/lib/cni
     - /var/lib/kubelet
     - /var/lib/rancher
@@ -55,12 +55,8 @@
     - '{{ k3s_conf_dir }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
-    - /run/k3s
     - /usr/local/bin/crictl
     - /usr/local/bin/ctr
     - /usr/local/bin/k3s
     - /usr/local/bin/kubectl
-    - /var/lib/cni
-    - /var/lib/kubelet
-    - /var/lib/rancher
   tags: always
