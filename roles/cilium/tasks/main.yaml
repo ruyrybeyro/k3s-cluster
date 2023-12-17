@@ -18,8 +18,8 @@
         group: root
         mode: '0644'
       loop:
-        - ['cilium-cli', '{{ cilium_cli_version }}', 'cilium-linux-arm64']
-        - ['hubble', '{{ cilium_hubble_version }}', 'hubble-linux-arm']
+        - ['cilium-cli', '{{ cilium_cli_version }}', '{{ cilium_cli_filename }}']
+        - ['hubble', '{{ cilium_hubble_version }}', '{{ cilium_hubble_filename }}']
       tags: binary
 
     - name: Install binary
@@ -31,8 +31,8 @@
         mode: '0755'
         remote_src: true
       loop:
-        - cilium-linux-arm64
-        - hubble-linux-arm
+        - '{{ cilium_cli_filename }}'
+        - '{{ cilium_hubble_filename }}'
       tags: binary
 
     - name: Delete archive
@@ -40,8 +40,8 @@
         path: /tmp/{{ item }}.tar.gz
         state: absent
       loop:
-        - cilium-linux-arm64
-        - hubble-linux-arm
+        - '{{ cilium_cli_filename }}'
+        - '{{ cilium_hubble_filename }}'
       tags: binary
 
     - name: Add repository

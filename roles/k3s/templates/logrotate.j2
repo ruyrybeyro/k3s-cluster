@@ -1,0 +1,9 @@
+/var/log/{{ k3s_service_name }}/{{ k3s_service_name }}.log {
+	daily
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 0600 root root
+}

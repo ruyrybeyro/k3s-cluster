@@ -1,9 +1,13 @@
-# K3S
+# Lightweight Kubernetes
+
+Production ready, easy to install, half the memory, all in a binary less than 100MB.
 
 ## Releases
 
-- [K3S](https://github.com/k3s-io/k3s/releases)
+- [k3s-io/k3s](https://github.com/k3s-io/k3s/releases)
+- [rancher/kubectl](https://hub.docker.com/r/rancher/kubectl/tags)
+- [rancher/upgrade-system-controller](https://github.com/rancher/upgrade-system-controller/releases)
 
 ## Package Dependencies
 
-- open-iscsi, needed for Longhorn
+- `open-iscsi`, needed for Longhorn

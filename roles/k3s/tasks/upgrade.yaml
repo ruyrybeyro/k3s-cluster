@@ -15,7 +15,7 @@
           kind: Plan
           metadata:
             name: k3s-server
-            namespace: system-upgrade
+            namespace: upgrade-system
             labels:
               k3s-upgrade: server
           spec:
@@ -27,7 +27,7 @@
                 - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
                 - { key: k3os.io/mode, operator: DoesNotExist }
                 - { key: node-role.kubernetes.io/control-plane, operator: Exists }
-            serviceAccountName: system-upgrade
+            serviceAccountName: upgrade-system
             cordon: true
             upgrade:
               image: rancher/k3s-upgrade
@@ -40,7 +40,7 @@
           kind: Plan
           metadata:
             name: k3s-agent
-            namespace: system-upgrade
+            namespace: upgrade-system
             labels:
               k3s-upgrade: agent
           spec:
@@ -52,7 +52,7 @@
                 - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
                 - { key: k3os.io/mode, operator: DoesNotExist}
                 - { key: node-role.kubernetes.io/control-plane, operator: DoesNotExist }
-            serviceAccountName: system-upgrade
+            serviceAccountName: upgrade-system
             prepare:
               image: rancher/k3s-upgrade
               args: ['prepare', 'k3s-server']

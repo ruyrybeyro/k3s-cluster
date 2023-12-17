@@ -27,3 +27,8 @@
     - role: certmanager
     - role: longhorn
     - role: prometheus
+  tasks:
+    - name: Install system upgrade controller
+      ansible.builtin.import_role:
+        name: k3s
+        tasks_from: controller
