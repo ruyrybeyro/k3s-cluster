@@ -11,3 +11,11 @@ Production ready, easy to install, half the memory, all in a binary less than 10
 ## Package Dependencies
 
 - `open-iscsi`, needed for Longhorn
+
+## Service Status
+
+See `journalctl` output:
+
+```shell
+$ journalctl -xeu k3s.service
+```

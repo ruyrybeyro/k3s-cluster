@@ -1,12 +1,13 @@
 ---
-- name: Set facts
-  ansible.builtin.import_tasks:
-    file: facts.yaml
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
 
-- name: System Upgrade Controller
+- name: Upgrade Kubernetes
   when: ansible_host == k3s_default_host
   block:
-    - name: Install namespace manifest
+    - name: Install namespace
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
@@ -17,7 +18,7 @@
               pod-security.kubernetes.io/enforce: privileged
         kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
-    - name: Install service account manifest
+    - name: Install service account
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
@@ -27,7 +28,7 @@
             namespace: upgrade-system
         kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
-    - name: Install cluster role binding manifest
+    - name: Install cluster role binding
       kubernetes.core.k8s:
         definition:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -64,7 +65,7 @@
             SYSTEM_UPGRADE_PLAN_POLLING_INTERVAL: '15m'
         kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
-    - name: Install deployment manifest
+    - name: Install deployment
       kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
@@ -157,4 +158,59 @@
                       type: DirectoryOrCreate
                   - name: tmp
                     emptyDir: {}
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+
+    - name: Install server plan
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: upgrade.cattle.io/v1
+          kind: Plan
+          metadata:
+            name: k3s-server
+            namespace: upgrade-system
+            labels:
+              k3s-upgrade: server
+          spec:
+            concurrency: 1
+            version: '{{ k3s_version }}'
+            nodeSelector:
+              matchExpressions:
+                - { key: k3s-upgrade, operator: Exists }
+                - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
+                - { key: k3os.io/mode, operator: DoesNotExist }
+                - { key: node-role.kubernetes.io/control-plane, operator: Exists }
+            serviceAccountName: upgrade-system
+            cordon: true
+            upgrade:
+              image: rancher/k3s-upgrade
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+
+    - name: Install node plan
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: upgrade.cattle.io/v1
+          kind: Plan
+          metadata:
+            name: k3s-agent
+            namespace: upgrade-system
+            labels:
+              k3s-upgrade: agent
+          spec:
+            concurrency: 2
+            version: '{{ k3s_version }}'
+            nodeSelector:
+              matchExpressions:
+                - { key: k3s-upgrade, operator: Exists }
+                - { key: k3s-upgrade, operator: NotIn, values: ['disabled', 'false'] }
+                - { key: k3os.io/mode, operator: DoesNotExist}
+                - { key: node-role.kubernetes.io/control-plane, operator: DoesNotExist }
+            serviceAccountName: upgrade-system
+            prepare:
+              image: rancher/k3s-upgrade
+              args: ['prepare', 'k3s-server']
+            drain:
+              force: true
+              skipWaitForDeleteTimeout: 60
+            upgrade:
+              image: rancher/k3s-upgrade
         kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'

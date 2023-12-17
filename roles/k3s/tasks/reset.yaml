@@ -28,7 +28,7 @@
       for j in $(grep {{ item }} /proc/self/mounts | cut -d ' ' -f 2); do
         umount -f $j
       done
-      rm -rf {{ item }}
+      find {{ item }} -type d -o -type f -o -type s -delete
     fi
   args:
     executable: /bin/bash

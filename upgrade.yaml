@@ -42,8 +42,7 @@
         name: helm
       tags: helm
 
-    - name: Upgrade k3s
+    - name: Upgrade kubernetes
       ansible.builtin.import_role:
-        name: k3s
-        tasks_from: upgrade
+        name: controller
       tags: k3s

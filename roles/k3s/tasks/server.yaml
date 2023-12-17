@@ -1,14 +1,4 @@
 ---
-- name: Install packages
-  ansible.builtin.apt:
-    name: '{{ item }}'
-    autoremove: true
-    force_apt_get: true
-    update_cache: true
-  loop:
-    - python3-jsonpatch
-    - python3-kubernetes
-
 - name: Add variable to environment
   ansible.builtin.lineinfile:
     line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml

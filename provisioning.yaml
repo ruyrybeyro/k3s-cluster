@@ -11,8 +11,8 @@
   become: true
   gather_facts: true
   roles:
-    - role: k3s
     - role: helm
+    - role: k3s
   serial:
     - 1
     - 2
@@ -27,8 +27,3 @@
     - role: certmanager
     - role: longhorn
     - role: prometheus
-  tasks:
-    - name: Install system upgrade controller
-      ansible.builtin.import_role:
-        name: k3s
-        tasks_from: controller

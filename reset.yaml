@@ -6,6 +6,11 @@
   serial:
     - 3
     - 5
+  vars_prompt:
+    - name: remove_packages
+      prompt: Remove APT packages? [Y/n]
+      default: 'n'
+      private: false
   tasks:
     - name: Reset kubernetes
       ansible.builtin.import_role:

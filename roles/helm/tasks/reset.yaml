@@ -3,7 +3,6 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Remove Dependencies
   when: ansible_host in k3s_server_hosts
@@ -12,13 +11,11 @@
       kubernetes.core.helm_plugin:
         plugin_name: diff
         state: absent
-      tags: always
 
     - name: Remove packages
       ansible.builtin.apt:
         name: '{{ item }}'
         autoremove: true
-        force_apt_get: true
         update_cache: true
         state: absent
       loop:
@@ -26,8 +23,10 @@
         - git
         - helm
         - python3-debian
+        - python3-jsonpatch
+        - python3-kubernetes
         - python3-yaml
-      tags: package
+      when: remove_packages in ['y', 'Y']
 
     - name: Remove files
       ansible.builtin.file:
@@ -36,4 +35,3 @@
       loop:
         - /etc/apt/sources.list.d/helm-stable.sources
         - /usr/share/keyrings/helm-archive-stable.gpg
-      tags: package

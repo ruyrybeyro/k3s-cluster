@@ -4,7 +4,6 @@
     state: fixed
     upgrade: dist
     autoremove: true
-    force_apt_get: true
     update_cache: true
 
 - name: Update bootloader firmware

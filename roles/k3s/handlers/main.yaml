@@ -6,7 +6,7 @@
 - name: Start service
   ansible.builtin.systemd_service:
     name: '{{ k3s_service_name }}.service'
-    state: reloaded
+    state: started
     daemon_reload: true
     enabled: true
 

@@ -12,11 +12,12 @@
       ansible.builtin.apt:
         name: '{{ item }}'
         autoremove: true
-        force_apt_get: true
         update_cache: true
       loop:
         - apt-transport-https
         - python3-debian
+        - python3-jsonpatch
+        - python3-kubernetes
 
     - name: Verify key presence
       ansible.builtin.stat:
@@ -68,7 +69,6 @@
           ansible.builtin.apt:
             name: '{{ item }}'
             autoremove: true
-            force_apt_get: true
             update_cache: true
           loop:
             - helm

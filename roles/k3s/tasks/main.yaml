@@ -7,7 +7,6 @@
   ansible.builtin.apt:
     name: open-iscsi
     autoremove: true
-    force_apt_get: true
     update_cache: true
 
 - name: Install k3s binary
