@@ -16,8 +16,9 @@
 
     - name: Disable bluetooth service
       ansible.builtin.systemd_service:
-        enabled: false
         name: '{{ item }}.service'
+        state: stopped
+        enabled: false
       loop:
         - bluetooth
         - hciuart
@@ -25,16 +26,17 @@
 
     - name: Disable wifi service
       ansible.builtin.systemd_service:
-        enabled: false
         name: wpa_supplicant.service
+        state: stopped
+        enabled: false
       when: cluster_disable_service_wifi | default(false)
 
     - name: Enable memory cgroup
       ansible.builtin.lineinfile:
-        backrefs: true
         path: /boot/cmdline.txt
-        regexp: ^((?!.*\bcgroup_memory=1\b).*)$
         line: \g<1> cgroup_memory=1 cgroup_enable=memory
+        regexp: ^((?!.*\bcgroup_memory=1\b).*)$
+        backrefs: true
       notify: Reboot
       register: cmdline
 

@@ -1,13 +1,28 @@
 ---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+  tags: always
+
+- name: Remove repository
+  kubernetes.core.helm_repository:
+    name: longhorn
+    repo_state: absent
+  tags: always
+  when: ansible_host in k3s_server_hosts
+
 - name: Remove package
   ansible.builtin.apt:
     name: open-iscsi
+    state: absent
     autoremove: true
     force_apt_get: true
     update_cache: true
-    state: absent
+  tags: package
 
 - name: Remove files
   ansible.builtin.file:
     name: /var/lib/longhorn
     state: absent
+  tags: always

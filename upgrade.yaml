@@ -3,8 +3,7 @@
   hosts: cluster
   become: true
   gather_facts: true
-  tags:
-    - cluster
+  tags: cluster
   tasks:
     - name: Upgrade distribution
       ansible.builtin.import_role:
@@ -15,48 +14,36 @@
   hosts: server
   become: true
   gather_facts: true
-  tags:
-    - kubernetes
   tasks:
     - name: Upgrade Charts
       block:
         - name: Upgrade cert-manager chart
           ansible.builtin.import_role:
             name: certmanager
-          tags:
-            - charts
-            - certmanager
+          tags: certmanager
 
         - name: Upgrade cilium chart
           ansible.builtin.import_role:
             name: cilium
-          tags:
-            - charts
-            - cilium
+          tags: cilium
 
         - name: Upgrade longhorn chart
           ansible.builtin.import_role:
             name: longhorn
-          tags:
-            - charts
-            - longhorn
+          tags: longhorn
 
         - name: Upgrade prometheus chart
           ansible.builtin.import_role:
             name: prometheus
-          tags:
-            - charts
-            - prometheus
+          tags: prometheus
 
     - name: Upgrade helm
       ansible.builtin.import_role:
         name: helm
-      tags:
-        - helm
+      tags: helm
 
     - name: Upgrade k3s
       ansible.builtin.import_role:
         name: k3s
         tasks_from: upgrade
-      tags:
-        - k3s
+      tags: k3s

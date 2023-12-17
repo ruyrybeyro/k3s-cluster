@@ -3,13 +3,16 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
+  tags: always
 
 - name: Add repository
   kubernetes.core.helm_repository:
     name: prometheus
     repo_url: https://prometheus-community.github.io/helm-charts
+  tags: repo
 
 - name: Helm Chart
+  tags: chart
   when: ansible_host == k3s_default_host
   block:
     - name: Create namespace

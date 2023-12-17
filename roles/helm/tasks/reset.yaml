@@ -1,27 +1,39 @@
 ---
-- name: Remove plugin
-  kubernetes.core.helm_plugin:
-    plugin_name: diff
-    state: absent
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+  tags: always
 
-- name: Remove packages
-  ansible.builtin.apt:
-    name: '{{ item }}'
-    autoremove: true
-    force_apt_get: true
-    update_cache: true
-    state: absent
-  loop:
-    - apt-transport-https
-    - git
-    - helm
-    - python3-debian
-    - python3-yaml
+- name: Remove Dependencies
+  when: ansible_host in k3s_server_hosts
+  block:
+    - name: Remove plugin
+      kubernetes.core.helm_plugin:
+        plugin_name: diff
+        state: absent
+      tags: always
 
-- name: Remove files
-  ansible.builtin.file:
-    name: '{{ item }}'
-    state: absent
-  loop:
-    - /etc/apt/sources.list.d/helm-stable.sources
-    - /usr/share/keyrings/helm-archive-stable.gpg
+    - name: Remove packages
+      ansible.builtin.apt:
+        name: '{{ item }}'
+        autoremove: true
+        force_apt_get: true
+        update_cache: true
+        state: absent
+      loop:
+        - apt-transport-https
+        - git
+        - helm
+        - python3-debian
+        - python3-yaml
+      tags: package
+
+    - name: Remove files
+      ansible.builtin.file:
+        name: '{{ item }}'
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/helm-stable.sources
+        - /usr/share/keyrings/helm-archive-stable.gpg
+      tags: package

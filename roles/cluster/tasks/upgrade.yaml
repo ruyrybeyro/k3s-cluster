@@ -1,11 +1,11 @@
 ---
 - name: Upgrade distribution packages
   ansible.builtin.apt:
+    state: fixed
+    upgrade: dist
     autoremove: true
     force_apt_get: true
     update_cache: true
-    upgrade: dist
-    state: fixed
 
 - name: Update bootloader firmware
   ansible.builtin.command:
@@ -21,3 +21,6 @@
   changed_when: reboot.stat.exists
   notify: Reboot
   register: reboot
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

@@ -2,6 +2,7 @@
 - name: Set facts
   ansible.builtin.import_tasks:
     file: facts.yaml
+  tags: always
 
 - name: Stop service
   ansible.builtin.assert:
@@ -11,14 +12,39 @@
   notify:
     - Stop service
     - Reboot
+  tags: always
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
+  tags: always
+
+- name: Kill processes
+  ansible.builtin.shell: |
+    set -eo pipefail
+    if [ -d {{ item }} ]; then
+      for i in $(ps -eo pid= -o args= | grep {{ item }} | grep -v grep | tr -s ' ' | cut -d ' ' -f 2); do
+        kill -KILL $i
+      done
+      for j in $(grep {{ item }} /proc/self/mounts | cut -d ' ' -f 2); do
+        umount -f $j
+      done
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: script.rc == 0
+  loop:
+    - /run/k3s
+    - /var/lib/cni
+    - /var/lib/kubelet
+    - /var/lib/rancher
+  register: script
+  tags: always
 
 - name: Get user info
   ansible.builtin.user:
     name: '{{ pi_user }}'
   register: user_info
+  tags: always
 
 - name: Remove files
   ansible.builtin.file:
@@ -29,6 +55,7 @@
     - '{{ k3s_conf_dir }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
+    - /run/k3s
     - /usr/local/bin/crictl
     - /usr/local/bin/ctr
     - /usr/local/bin/k3s
@@ -36,14 +63,4 @@
     - /var/lib/cni
     - /var/lib/kubelet
     - /var/lib/rancher
-
-- name: Remove packages
-  ansible.builtin.apt:
-    name: '{{ item }}'
-    autoremove: true
-    force_apt_get: true
-    update_cache: true
-    state: absent
-  loop:
-    - python3-jsonpatch
-    - python3-kubernetes
+  tags: always

@@ -2,8 +2,10 @@
 - name: Set facts
   ansible.builtin.import_tasks:
     file: facts.yaml
+  tags: always
 
 - name: Upgrade Kubernetes
+  tags: always
   when: ansible_host == k3s_default_host
   block:
     - name: Install server manifest

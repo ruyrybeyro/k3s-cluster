@@ -1,59 +1,12 @@
 ---
-- name: Install packages
-  ansible.builtin.apt:
-    name: '{{ item }}'
-    autoremove: true
-    force_apt_get: true
-    update_cache: true
-  loop:
-    - apt-transport-https
-    - python3-debian
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+  tags: always
 
-- name: Verify key presence
-  ansible.builtin.stat:
-    path: /usr/share/keyrings/helm-archive-stable.gpg
-  changed_when: not gpg_key.stat.exists
-  register: gpg_key
-
-- name: Helm Package
-  when: not gpg_key.stat.exists
-  block:
-    - name: Get key
-      ansible.builtin.get_url:
-        url: https://baltocdn.com/helm/signing.asc
-        dest: /tmp/signing.asc
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Dearmor key
-      ansible.builtin.command:
-        cmd: gpg --dearmor -o /usr/share/keyrings/helm-archive-stable.gpg /tmp/signing.asc
-      changed_when: true
-
-    - name: Delete key
-      ansible.builtin.file:
-        path: /tmp/signing.asc
-        state: absent
-
-    - name: Get architecture
-      ansible.builtin.command:
-        cmd: dpkg --print-architecture
-      changed_when: false
-      register: arch
-
-    - name: Install repository
-      ansible.builtin.deb822_repository:
-        architectures: '{{ arch.stdout }}'
-        components: main
-        name: helm-stable
-        signed_by: /usr/share/keyrings/helm-archive-stable.gpg
-        suites: all
-        uris: https://baltocdn.com/helm/stable/debian/
-        enabled: true
-        trusted: true
-
-- name: Install Plugins
+- name: Install Dependencies
+  when: ansible_host in k3s_server_hosts
   block:
     - name: Install packages
       ansible.builtin.apt:
@@ -62,10 +15,66 @@
         force_apt_get: true
         update_cache: true
       loop:
-        - helm
-        - git
-        - python3-yaml
+        - apt-transport-https
+        - python3-debian
 
-    - name: Install plugin
-      kubernetes.core.helm_plugin:
-        plugin_path: https://github.com/databus23/helm-diff
+    - name: Verify key presence
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/helm-archive-stable.gpg
+      changed_when: not gpg_key.stat.exists
+      register: gpg_key
+
+    - name: Helm Package
+      when: not gpg_key.stat.exists
+      block:
+        - name: Get key
+          ansible.builtin.get_url:
+            url: https://baltocdn.com/helm/signing.asc
+            dest: /tmp/signing.asc
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Dearmor key
+          ansible.builtin.command:
+            cmd: gpg --dearmor -o /usr/share/keyrings/helm-archive-stable.gpg /tmp/signing.asc
+          changed_when: true
+
+        - name: Delete key
+          ansible.builtin.file:
+            path: /tmp/signing.asc
+            state: absent
+
+        - name: Get architecture
+          ansible.builtin.command:
+            cmd: dpkg --print-architecture
+          changed_when: false
+          register: arch
+
+        - name: Install repository
+          ansible.builtin.deb822_repository:
+            architectures: '{{ arch.stdout }}'
+            components: main
+            name: helm-stable
+            signed_by: /usr/share/keyrings/helm-archive-stable.gpg
+            suites: all
+            uris: https://baltocdn.com/helm/stable/debian/
+            enabled: true
+            trusted: true
+
+    - name: Install Plugins
+      block:
+        - name: Install packages
+          ansible.builtin.apt:
+            name: '{{ item }}'
+            autoremove: true
+            force_apt_get: true
+            update_cache: true
+          loop:
+            - helm
+            - git
+            - python3-yaml
+
+        - name: Install plugin
+          kubernetes.core.helm_plugin:
+            plugin_path: https://github.com/databus23/helm-diff

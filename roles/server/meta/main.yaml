@@ -1,4 +1,0 @@
----
-dependencies:
-  - role: k3s
-  - role: helm

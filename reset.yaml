@@ -1,50 +1,38 @@
 ---
-- name: Reset Server
-  hosts: server
+- name: Cluster Reset
+  hosts: cluster
   become: true
   gather_facts: true
+  serial:
+    - 3
+    - 5
   tasks:
-    - name: Remove helm repository
-      kubernetes.core.helm_repository:
-        name: '{{ item }}'
-        repo_state: absent
-      loop:
-        - cilium
-        - jetstack
-        - longhorn
-        - prometheus
-
-    - name: Reset k3s
+    - name: Reset kubernetes
       ansible.builtin.import_role:
         name: k3s
         tasks_from: reset
 
-    - name: Reset cilium
+    - name: Reset cert-manager chart
+      ansible.builtin.import_role:
+        name: certmanager
+        tasks_from: reset
+
+    - name: Reset cilium chart
       ansible.builtin.import_role:
         name: cilium
+        tasks_from: reset
+
+    - name: Reset longhorn chart
+      ansible.builtin.import_role:
+        name: longhorn
+        tasks_from: reset
+
+    - name: Reset prometheus chart
+      ansible.builtin.import_role:
+        name: prometheus
         tasks_from: reset
 
     - name: Reset helm
       ansible.builtin.import_role:
         name: helm
-        tasks_from: reset
-
-- name: Reset Node
-  hosts: node
-  become: true
-  gather_facts: true
-  tasks:
-    - name: Reset k3s
-      ansible.builtin.import_role:
-        name: k3s
-        tasks_from: reset
-
-- name: Reset Cluster
-  hosts: cluster
-  become: true
-  gather_facts: true
-  tasks:
-    - name: Reset longhorn
-      ansible.builtin.import_role:
-        name: longhorn
         tasks_from: reset

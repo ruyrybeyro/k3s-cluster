@@ -64,9 +64,8 @@
     - name: Start fstrim.timer
       ansible.builtin.systemd_service:
         name: fstrim.timer
-        daemon_reload: true
+        state: reloaded
         enabled: true
-        state: restarted
       tags:
         - fstrim
       when: attributes is iterable and (attributes | length == 2)

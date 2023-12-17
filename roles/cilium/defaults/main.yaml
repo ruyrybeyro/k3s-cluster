@@ -2,4 +2,4 @@
 cilium_chart_version: v1.14.5
 cilium_cli_version: v0.15.18
 cilium_hubble_version: v0.12.3
-cilium_ip_pool: '192.168.4.32/27'
+cilium_ip_pool: '192.168.4.16/28'
