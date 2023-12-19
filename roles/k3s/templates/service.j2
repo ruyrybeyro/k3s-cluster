@@ -11,7 +11,11 @@ EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/systemd/system/{{ k3s_service_name }}.service.env
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s {{ k3s_service_type }} {{ server_service_args | default('') }} {{ node_service_args | default('') }}
+{% if k3s_service_type == 'server' %}
+ExecStart=/usr/local/bin/k3s {{ k3s_service_type }} {{ k3s_service_server_args }}
+{% else %}
+ExecStart=/usr/local/bin/k3s {{ k3s_service_type }} {{ k3s_service_agent_args }}
+{% endif %}
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=process
 LimitCORE=infinity

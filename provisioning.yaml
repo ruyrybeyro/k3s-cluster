@@ -3,6 +3,11 @@
   hosts: cluster
   become: true
   gather_facts: true
+  vars_prompt:
+    - name: trim_disks
+      prompt: Trim SSD disks? [Y/n]
+      default: 'n'
+      private: false
   roles:
     - role: cluster
 

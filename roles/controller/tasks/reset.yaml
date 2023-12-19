@@ -7,7 +7,7 @@
 - name: Upgrade Reset
   when: ansible_host == k3s_default_host
   block:
-    - name: Delete node plan
+    - name: Delete agent plan
       kubernetes.core.k8s:
         api_version: upgrade.cattle.io/v1
         kind: Plan

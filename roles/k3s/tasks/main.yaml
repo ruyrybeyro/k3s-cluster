@@ -9,52 +9,51 @@
     autoremove: true
     update_cache: true
 
-- name: Install k3s binary
-  ansible.builtin.get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
-    dest: /usr/local/bin/k3s
-    owner: root
-    group: root
-    mode: '0755'
+- name: Service Setup
   notify: Start service
+  block:
+    - name: Install k3s binary
+      ansible.builtin.get_url:
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+        dest: /usr/local/bin/k3s
+        owner: root
+        group: root
+        mode: '0755'
 
-- name: Create configuration directory
-  ansible.builtin.file:
-    path: '{{ k3s_conf_dir }}'
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
+    - name: Create configuration directory
+      ansible.builtin.file:
+        path: '{{ k3s_conf_dir }}'
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
 
-- name: Create configuration file
-  ansible.builtin.template:
-    src: config.j2
-    dest: '{{ k3s_conf_dir }}/config.yaml'
-    owner: root
-    group: root
-    mode: '0600'
-  notify: Start service
+    - name: Create configuration file
+      ansible.builtin.template:
+        src: config.j2
+        dest: '{{ k3s_conf_dir }}/config.yaml'
+        owner: root
+        group: root
+        mode: '0600'
 
-- name: Create service file
-  ansible.builtin.template:
-    src: service.j2
-    dest: /etc/systemd/system/{{ k3s_service_name }}.service
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Start service
+    - name: Create service file
+      ansible.builtin.template:
+        src: service.j2
+        dest: /etc/systemd/system/{{ k3s_service_name }}.service
+        owner: root
+        group: root
+        mode: '0644'
 
-- name: Create service environment file
-  ansible.builtin.file:
-    path: /etc/systemd/system/{{ k3s_service_name }}.service.env
-    access_time: preserve
-    modification_time: preserve
-    state: touch
-    owner: root
-    group: root
-    mode: '0600'
-  notify: Start service
+    - name: Create service environment file
+      ansible.builtin.file:
+        path: /etc/systemd/system/{{ k3s_service_name }}.service.env
+        access_time: preserve
+        modification_time: preserve
+        state: touch
+        owner: root
+        group: root
+        mode: '0600'
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

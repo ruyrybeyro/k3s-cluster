@@ -2,7 +2,6 @@
 - name: Set facts
   ansible.builtin.import_tasks:
     file: facts.yaml
-  tags: always
 
 - name: Stop service
   ansible.builtin.assert:
@@ -12,23 +11,23 @@
   notify:
     - Stop service
     - Reboot
-  tags: always
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-  tags: always
 
-- name: Kill processes
+- name: Remove kubernetes files
   ansible.builtin.shell: |
     set -eo pipefail
-    if [ -d {{ item }} ]; then
-      for i in $(ps -eo pid= -o args= | grep {{ item }} | grep -v grep | tr -s ' ' | cut -d ' ' -f 2); do
-        kill -KILL $i
+    if [[ -d {{ item }} ]]; then
+      for process in $(ps -eo pid= -o args= | grep {{ item }} | grep -v grep | tr -s ' ' | cut -d ' ' -f 2); do
+        kill -KILL $process
       done
-      for j in $(grep {{ item }} /proc/self/mounts | cut -d ' ' -f 2); do
-        umount -f $j
+      for mount in $(grep {{ item }} /proc/self/mounts | cut -d ' ' -f 2); do
+        umount -f $mount
       done
-      find {{ item }} -type d -o -type f -o -type s -delete
+      for type in c s p l f d; do
+        find {{ item }} -type $type -delete
+      done
     fi
   args:
     executable: /bin/bash
@@ -38,15 +37,13 @@
     - /var/lib/kubelet
     - /var/lib/rancher
   register: script
-  tags: always
 
 - name: Get user info
   ansible.builtin.user:
     name: '{{ pi_user }}'
   register: user_info
-  tags: always
 
-- name: Remove files
+- name: Remove generic files
   ansible.builtin.file:
     name: '{{ item }}'
     state: absent
@@ -59,4 +56,3 @@
     - /usr/local/bin/ctr
     - /usr/local/bin/k3s
     - /usr/local/bin/kubectl
-  tags: always

@@ -3,11 +3,9 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Remove repository
   kubernetes.core.helm_repository:
     name: prometheus
     repo_state: absent
-  tags: always
   when: ansible_host in k3s_server_hosts

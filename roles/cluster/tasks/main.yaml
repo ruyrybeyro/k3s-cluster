@@ -1,4 +1,12 @@
 ---
+- name: Import validation tasks
+  ansible.builtin.import_tasks:
+    file: validation.yaml
+
+- name: Import user tasks
+  ansible.builtin.import_tasks:
+    file: user.yaml
+
 - name: Cluster Provisioning
   when: raspberry_pi | default(false)
   block:
@@ -40,6 +48,20 @@
       notify: Reboot
       register: cmdline
 
+    - name: Set disks provisioning
+      ansible.builtin.import_tasks:
+        file: provisioning.yaml
+
     - name: Upgrade distribution
       ansible.builtin.import_tasks:
         file: upgrade.yaml
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Trim disks
+  ansible.builtin.command:
+    cmd: fstrim -v /
+  changed_when: command.stdout.find('trimmed') != -1
+  register: command
+  when: trim_disks in ['y', 'Y']

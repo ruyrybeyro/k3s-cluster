@@ -185,7 +185,7 @@
               image: rancher/k3s-upgrade
         kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
 
-    - name: Install node plan
+    - name: Install agent plan
       kubernetes.core.k8s:
         definition:
           apiVersion: upgrade.cattle.io/v1

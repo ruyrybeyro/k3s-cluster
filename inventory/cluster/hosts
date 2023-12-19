@@ -3,7 +3,7 @@ apollo
 boreas
 cerus
 
-[node]
+[agent]
 chaos
 crios
 helios
@@ -12,4 +12,4 @@ hypnos
 
 [cluster:children]
 server
-node
+agent
