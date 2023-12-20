@@ -84,14 +84,12 @@
                     resources:
                       requests:
                         storage: 50Gi
-            service:
-              type: NodePort
           prometheus-node-exporter:
             resources:
               limits:
-                cpu: 1
-                memory: 2Gi
+                cpu: 400m
+                memory: 256Mi
               requests:
                 cpu: 100m
-                memory: 200Mi
+                memory: 64Mi
         wait: true

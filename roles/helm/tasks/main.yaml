@@ -16,7 +16,6 @@
       loop:
         - apt-transport-https
         - python3-debian
-        - python3-jsonpatch
         - python3-kubernetes
 
     - name: Verify key presence
@@ -50,11 +49,11 @@
           ansible.builtin.command:
             cmd: dpkg --print-architecture
           changed_when: false
-          register: arch
+          register: architecture
 
         - name: Install repository
           ansible.builtin.deb822_repository:
-            architectures: '{{ arch.stdout }}'
+            architectures: '{{ architecture.stdout }}'
             components: main
             name: helm-stable
             signed_by: /usr/share/keyrings/helm-archive-stable.gpg
@@ -73,8 +72,7 @@
           loop:
             - helm
             - git
-            - python3-yaml
 
-        - name: Install plugin
+        - name: Install diff plugin
           kubernetes.core.helm_plugin:
             plugin_path: https://github.com/databus23/helm-diff

@@ -66,6 +66,16 @@
           bgpControlPlane:
             enabled: true
           enableCiliumEndpointSlice: true
+          envoy:
+            enabled: true
+            resources:
+              limits:
+                cpu: 400m
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 64Mi
+            rollOutPods: true
           externalIPs:
             enabled: true
           hubble:
@@ -83,8 +93,22 @@
           kubeProxyReplacement: true
           l2announcements:
             enabled: true
+          operator:
+            resources:
+              limits:
+                cpu: 200m
+                memory: 128Mi
+              requests:
+                cpu: 100m
+                memory: 64Mi
+            rollOutPods: true
           rollOutCiliumPods: true
         wait: true
+      register: error
+
+    - name: Show error
+      ansible.builtin.debug:
+        msg: '{{ error.stderr_lines }}'
 
     - name: Install announcement manifest
       kubernetes.core.k8s:

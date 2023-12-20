@@ -1,4 +1,4 @@
-# cert-manager
+# Cert Manager
 
 ## Upgrade
 

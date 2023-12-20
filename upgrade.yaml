@@ -37,12 +37,17 @@
             name: prometheus
           tags: prometheus
 
+        # - name: Upgrade sealed-secrets chart
+        #   ansible.builtin.import_role:
+        #     name: sealedsecrets
+        #   tags: sealedsecrets
+
     - name: Upgrade helm
       ansible.builtin.import_role:
         name: helm
       tags: helm
 
-    - name: Upgrade kubernetes
-      ansible.builtin.import_role:
-        name: controller
-      tags: k3s
+    # - name: Upgrade k3s
+    #   ansible.builtin.import_role:
+    #     name: controller
+    #   tags: k3s

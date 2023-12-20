@@ -6,13 +6,11 @@
 
 - name: Hush login
   ansible.builtin.file:
-    access_time: preserve
-    group: '{{ user_info.name }}'
-    owner: '{{ user_info.name }}'
-    mode: '0644'
-    modification_time: preserve
     path: '{{ user_info.home }}/.hushlogin'
     state: touch
+    owner: '{{ user_info.name }}'
+    group: '{{ user_info.name }}'
+    mode: '0644'
 
 - name: Set authorized key
   ansible.posix.authorized_key:

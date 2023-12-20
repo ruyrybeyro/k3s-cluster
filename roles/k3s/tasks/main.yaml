@@ -48,8 +48,6 @@
     - name: Create service environment file
       ansible.builtin.file:
         path: /etc/systemd/system/{{ k3s_service_name }}.service.env
-        access_time: preserve
-        modification_time: preserve
         state: touch
         owner: root
         group: root

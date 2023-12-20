@@ -12,26 +12,25 @@
         plugin_name: diff
         state: absent
 
-    - name: Remove packages
-      ansible.builtin.apt:
-        name: '{{ item }}'
-        autoremove: true
-        update_cache: true
-        state: absent
-      loop:
-        - apt-transport-https
-        - git
-        - helm
-        - python3-debian
-        - python3-jsonpatch
-        - python3-kubernetes
-        - python3-yaml
+    - name: Remove Packages
       when: remove_packages in ['y', 'Y']
+      block:
+        - name: Remove packages
+          ansible.builtin.apt:
+            name: '{{ item }}'
+            state: absent
+            autoremove: true
+          loop:
+            - apt-transport-https
+            - git
+            - helm
+            - python3-debian
+            - python3-kubernetes
 
-    - name: Remove files
-      ansible.builtin.file:
-        name: '{{ item }}'
-        state: absent
-      loop:
-        - /etc/apt/sources.list.d/helm-stable.sources
-        - /usr/share/keyrings/helm-archive-stable.gpg
+        - name: Remove files
+          ansible.builtin.file:
+            name: '{{ item }}'
+            state: absent
+          loop:
+            - /etc/apt/sources.list.d/helm-stable.sources
+            - /usr/share/keyrings/helm-archive-stable.gpg

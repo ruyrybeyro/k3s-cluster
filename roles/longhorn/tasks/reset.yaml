@@ -15,7 +15,6 @@
     name: open-iscsi
     state: absent
     autoremove: true
-    update_cache: true
   when: remove_packages in ['y', 'Y']
 
 - name: Remove files

@@ -32,3 +32,4 @@
     - role: certmanager
     - role: longhorn
     - role: prometheus
+    # - role: sealedsecrets

@@ -19,3 +19,14 @@ See `journalctl` output:
 ```shell
 $ journalctl -xeu k3s.service
 ```
+
+## Traefik
+
+To disable Traefik and use Cilium, add into `config.j2` template:
+
+```yaml
+disable:
+  - local-storage
+  - servicelb
+  - traefik
+```
