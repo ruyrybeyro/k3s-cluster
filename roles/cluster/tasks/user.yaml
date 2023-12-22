@@ -1,18 +1,13 @@
 ---
-- name: Get user info
-  ansible.builtin.user:
-    name: '{{ pi_user }}'
-  register: user_info
-
-- name: Hush login
-  ansible.builtin.file:
-    path: '{{ user_info.home }}/.hushlogin'
-    state: touch
-    owner: '{{ user_info.name }}'
-    group: '{{ user_info.name }}'
-    mode: '0644'
-
 - name: Set authorized key
   ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + pi_user_key) }}"
-    user: '{{ user_info.name }}'
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + raspberry_pi_user_key) }}"
+    user: '{{ raspberry_pi_user }}'
+
+- name: Create sudoers file
+  ansible.builtin.copy:
+    content: '{{ raspberry_pi_user }} ALL=(ALL:ALL) NOPASSWD:ALL'
+    dest: '/etc/sudoers.d/{{ raspberry_pi_user }}'
+    owner: root
+    group: root
+    mode: '0440'

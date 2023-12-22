@@ -1,4 +1,3 @@
 ---
 - name: Reboot
   ansible.builtin.reboot:
-    post_reboot_delay: 30

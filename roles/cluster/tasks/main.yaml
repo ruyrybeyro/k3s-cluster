@@ -10,47 +10,97 @@
 - name: Cluster Provisioning
   when: raspberry_pi | default(false)
   block:
-    - name: Set boot from USB if available
-      ansible.builtin.command:
-        cmd: raspi-config nonint do_boot_behaviour B2
-      changed_when: boot_behaviour.stdout | length > 0
-      register: boot_behaviour
-
-    - name: Set wifi country code
-      ansible.builtin.command:
-        cmd: raspi-config nonint do_wifi_country {{ cluster_country_code }}
-      changed_when: wifi_country.stdout | length > 0
-      register: wifi_country
-
-    - name: Disable bluetooth service
-      ansible.builtin.systemd_service:
-        name: '{{ item }}.service'
-        state: stopped
-        enabled: false
-      loop:
-        - bluetooth
-        - hciuart
-      when: cluster_disable_service_bluetooth | default(false)
-
-    - name: Disable wifi service
-      ansible.builtin.systemd_service:
-        name: wpa_supplicant.service
-        state: stopped
-        enabled: false
-      when: cluster_disable_service_wifi | default(false)
-
-    - name: Enable memory cgroup
-      ansible.builtin.lineinfile:
-        path: /boot/cmdline.txt
-        line: \g<1> cgroup_memory=1 cgroup_enable=memory
-        regexp: ^((?!.*\bcgroup_memory=1\b).*)$
-        backrefs: true
+    - name: Disable Bluetooth
       notify: Reboot
-      register: cmdline
+      when: cluster_disable_service_bluetooth | default(false)
+      block:
+        - name: Disable bluetooth firmware
+          ansible.builtin.lineinfile:
+            dest: /boot/firmware/config.txt
+            insertafter: '[all]'
+            line: dtoverlay=disable-bt
+            regexp: ^dtoverlay=disable-bt
 
-    - name: Set disks provisioning
+        - name: Disable bluetooth services
+          ansible.builtin.systemd_service:
+            name: '{{ item }}'
+            state: stopped
+            enabled: false
+          loop:
+            - bluetooth.service
+            - hciuart.service
+
+    - name: Disable WiFi
+      notify: Reboot
+      when: cluster_disable_service_wifi | default(false)
+      block:
+        - name: Disable wifi firmware
+          ansible.builtin.lineinfile:
+            dest: /boot/firmware/config.txt
+            insertafter: '[all]'
+            line: dtoverlay=disable-wifi
+            regexp: ^dtoverlay=disable-wifi
+
+        - name: Disable wifi service
+          ansible.builtin.systemd_service:
+            name: wpa_supplicant.service
+            state: stopped
+            enabled: false
+
+    - name: Ubuntu Optimizations
+      notify: Reboot
+      block:
+        - name: Disable atime updates
+          ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: 'discard,errors'
+            replace: 'discard,noatime,errors'
+
+        - name: Disable cloud-init service
+          ansible.builtin.file:
+            path: /etc/cloud/cloud-init.disabled
+            access_time: preserve
+            modification_time: preserve
+            state: touch
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Disable snapd services
+          ansible.builtin.systemd_service:
+            name: '{{ item }}'
+            state: stopped
+            enabled: false
+          loop:
+            - snap.lxd.activate.service
+            - snapd.service
+            - snapd.seeded.service
+            - snapd.socket
+
+    - name: Kubernetes Requirements
+      notify: Reboot
+      block:
+        - name: Enable cpuset and memory cgroups
+          ansible.builtin.lineinfile:
+            path: /boot/firmware/cmdline.txt
+            line: \g<1> cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
+            regexp: ^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$
+            backrefs: true
+          register: cmdline
+
+        - name: Install package
+          ansible.builtin.apt:
+            name: linux-modules-extra-raspi
+            autoremove: true
+            update_cache: true
+
+    - name: Set device rule
       ansible.builtin.import_tasks:
-        file: provisioning.yaml
+        file: device.yaml
+
+    - name: Disable firewall
+      ansible.builtin.import_tasks:
+        file: firewall.yaml
 
     - name: Upgrade distribution
       ansible.builtin.import_tasks:

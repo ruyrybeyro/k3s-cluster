@@ -40,7 +40,7 @@
 
 - name: Get user info
   ansible.builtin.user:
-    name: '{{ pi_user }}'
+    name: '{{ raspberry_pi_user }}'
   register: user_info
 
 - name: Remove generic files

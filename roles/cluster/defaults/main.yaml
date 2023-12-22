@@ -1,5 +1,4 @@
 ---
-cluster_country_code: US
 cluster_device_id: '2:2'
 cluster_device_name: ASMedia
 cluster_disable_service_bluetooth: true

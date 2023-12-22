@@ -6,20 +6,36 @@
     autoremove: true
     update_cache: true
 
-- name: Update bootloader firmware
-  ansible.builtin.command:
-    cmd: rpi-eeprom-update -ad
-  changed_when: command.stdout.find('updates pending') != -1
-  notify: Reboot
-  register: command
+- name: Firmware Files Cleanup
+  block:
+    - name: Find firmware backup files
+      ansible.builtin.find:
+        path: /boot/firmware
+        patterns: '*.bak'
+        recurse: true
+      register: backup_files
 
-- name: Check reboot status
-  ansible.builtin.stat:
-    path: /var/run/reboot-required
-    get_checksum: false
-  changed_when: reboot.stat.exists
+    - name: Purge firmware backup files
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop: "{{ backup_files.files | map(attribute='path') | list }}"
+
+- name: Reboot Required
   notify: Reboot
-  register: reboot
+  block:
+    - name: Update bootloader firmware
+      ansible.builtin.command:
+        cmd: rpi-eeprom-update -ad
+      changed_when: bootloader.stdout.find('updates pending') != -1
+      register: bootloader
+
+    - name: Get file status
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_checksum: false
+      changed_when: reboot.stat.exists
+      register: reboot
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

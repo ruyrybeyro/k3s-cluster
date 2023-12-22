@@ -14,6 +14,6 @@ flannel-backend: none
 {% endif %}
 node-taint: node.cilium.io/agent-not-ready:NoExecute
 {% if k3s_ha_cluster and ansible_host != k3s_default_host and k3s_token | length > 0 %}
-server: https://{{ k3s_default_host }}:6443
+server: https://{{ k3s_default_host }}:{{ k3s_api_port }}
 token: {{ k3s_token }}
 {% endif %}

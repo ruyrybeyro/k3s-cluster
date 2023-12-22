@@ -1,14 +1,15 @@
 ---
-- name: Test Raspberry Pi model
+- name: Get Raspberry Pi model
   ansible.builtin.command:
     cmd: grep 'Raspberry Pi' /proc/device-tree/model
-  changed_when: model.rc != 0
-  register: model
+  changed_when: raspberry_pi_model.rc != 0
+  register: raspberry_pi_model
 
 - name: Set Raspberry Pi fact
   ansible.builtin.set_fact:
     raspberry_pi: true
   when:
-    - ansible_facts.lsb.id | default('') == pi_lsbid
-    - ansible_facts.machine | default('') == 'aarch64'
-    - model.rc == 0
+    - ansible_facts.lsb.id == 'Ubuntu'
+    - ansible_facts.lsb.release is version('20.10', '>=')
+    - ansible_facts.machine == 'aarch64'
+    - raspberry_pi_model.rc == 0

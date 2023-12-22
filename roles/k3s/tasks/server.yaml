@@ -1,8 +1,8 @@
 ---
 - name: Add variable to environment
   ansible.builtin.lineinfile:
-    line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
     path: /etc/environment
+    line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
     regexp: ^KUBECONFIG
 
 - name: Create symlinks
@@ -34,7 +34,7 @@
 
 - name: Get user info
   ansible.builtin.user:
-    name: '{{ pi_user }}'
+    name: '{{ raspberry_pi_user }}'
   register: user_info
 
 - name: Create configuration directory
@@ -58,7 +58,7 @@
   ansible.builtin.command:
     cmd: kubectl config set-cluster default
           --kubeconfig={{ user_info.home }}/.kube/config
-          --server=https://{{ ansible_host }}:6443
+          --server=https://{{ ansible_host }}:{{ k3s_api_port }}
   changed_when: true
 
 # https://github.com/k3s-io/k3s/issues/5103#issuecomment-1842151021
@@ -70,13 +70,15 @@
 #       ansible.builtin.wait_for:
 #         path: '{{ k3s_lib_dir }}/server/manifests'
 
-#     - name: Create manifest
-#       ansible.builtin.file:
-#         path: '{{ k3s_lib_dir }}/server/manifests/traefik.yaml.skip'
-#         state: touch
-#         owner: root
-#         group: root
-#         mode: '0644'
+    # - name: Create manifest
+    #   ansible.builtin.file:
+    #     path: '{{ k3s_lib_dir }}/server/manifests/traefik.yaml.skip'
+    #     access_time: preserve
+    #     modification_time: preserve
+    #     state: touch
+    #     owner: root
+    #     group: root
+    #     mode: '0644'
 
 # - name: Flush handlers
 #   ansible.builtin.meta: flush_handlers

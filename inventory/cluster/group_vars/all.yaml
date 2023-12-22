@@ -1,4 +1,3 @@
 ---
-pi_lsbid: Debian
-pi_user: floren
-pi_user_key: id_ed25519.pub
+raspberry_pi_user: floren
+raspberry_pi_user_key: id_ed25519.pub

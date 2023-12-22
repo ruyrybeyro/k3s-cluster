@@ -11,25 +11,25 @@
   roles:
     - role: cluster
 
-- name: Kubernetes Provisioning
-  hosts: cluster
-  become: true
-  gather_facts: true
-  roles:
-    - role: helm
-    - role: k3s
-  serial:
-    - 1
-    - 2
-    - 5
+# - name: Kubernetes Provisioning
+#   hosts: cluster
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: helm
+#     - role: k3s
+#   serial:
+#     - 1
+#     - 2
+#     - 5
 
-- name: Charts Provisioning
-  hosts: server
-  become: true
-  gather_facts: true
-  roles:
-    - role: cilium
-    - role: certmanager
-    - role: longhorn
-    - role: prometheus
-    # - role: sealedsecrets
+# - name: Charts Provisioning
+#   hosts: server
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: cilium
+#     - role: certmanager
+#     - role: longhorn
+#     - role: prometheus
+#     # - role: sealedsecrets
