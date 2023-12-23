@@ -7,10 +7,16 @@
 - name: Remove Dependencies
   when: ansible_host in k3s_server_hosts
   block:
+    - name: Get packages information
+      ansible.builtin.package_facts:
+
     - name: Remove plugin
       kubernetes.core.helm_plugin:
         plugin_name: diff
         state: absent
+      when:
+        - "'helm' in ansible_facts.packages"
+        - "'python3-kubernetes' in ansible_facts.packages"
 
     - name: Remove Packages
       when: remove_packages in ['y', 'Y']
@@ -20,11 +26,12 @@
             name: '{{ item }}'
             state: absent
             autoremove: true
+            clean: true
+            purge: true
           loop:
             - apt-transport-https
-            - git
             - helm
-            - python3-debian
+            - python3-jsonpatch
             - python3-kubernetes
 
         - name: Remove files
@@ -33,4 +40,4 @@
             state: absent
           loop:
             - /etc/apt/sources.list.d/helm-stable.sources
-            - /usr/share/keyrings/helm-archive-stable.gpg
+            - /usr/share/keyrings/helm-archive-keyring.gpg

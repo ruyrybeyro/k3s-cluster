@@ -15,12 +15,11 @@
         update_cache: true
       loop:
         - apt-transport-https
-        - python3-debian
         - python3-kubernetes
 
     - name: Get file status
       ansible.builtin.stat:
-        path: /usr/share/keyrings/helm-archive-stable.gpg
+        path: /usr/share/keyrings/helm-archive-keyring.gpg
       changed_when: not gpg_key.stat.exists
       register: gpg_key
 
@@ -71,7 +70,7 @@
             update_cache: true
           loop:
             - helm
-            - git
+            - python3-jsonpatch
 
         - name: Install diff plugin
           kubernetes.core.helm_plugin:

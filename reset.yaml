@@ -17,6 +17,9 @@
         name: k3s
         tasks_from: reset
 
+    - name: Get packages information
+      ansible.builtin.package_facts:
+
     - name: Reset cert-manager chart
       ansible.builtin.import_role:
         name: certmanager

@@ -10,7 +10,7 @@
 - name: Cluster Provisioning
   when: raspberry_pi | default(false)
   block:
-    - name: Disable Bluetooth
+    - name: Bluetooth Configuration
       notify: Reboot
       when: cluster_disable_service_bluetooth | default(false)
       block:
@@ -30,7 +30,7 @@
             - bluetooth.service
             - hciuart.service
 
-    - name: Disable WiFi
+    - name: WiFi Configuration
       notify: Reboot
       when: cluster_disable_service_wifi | default(false)
       block:
@@ -47,10 +47,10 @@
             state: stopped
             enabled: false
 
-    - name: Ubuntu Optimizations
+    - name: OS Configuration
       notify: Reboot
       block:
-        - name: Disable atime updates
+        - name: Disable access time updates
           ansible.builtin.replace:
             path: /etc/fstab
             regexp: 'discard,errors'
@@ -66,18 +66,44 @@
             group: root
             mode: '0644'
 
+        - name: Disable firewall
+          ansible.builtin.systemd_service:
+            name: ufw.service
+            state: stopped
+            enabled: false
+
+        - name: Set service facts
+          ansible.builtin.service_facts:
+
+        - name: Remove Snap Packages
+          when:
+            - ansible_facts.services['snapd.service'] is defined
+            - ansible_facts.services['snapd.service'].state == 'running'
+          block:
+            - name: Get snap packages
+              ansible.builtin.command:
+                cmd: snap list
+              changed_when: false
+              register: snap_packages
+
+            - name: Remove snap packages
+              community.general.snap:
+                name: '{{ item | split | first }}'
+                state: absent
+              loop: '{{ snap_packages.stdout_lines[1:] }}'
+              when: snap_packages.stdout_lines[1:] is iterable
+
         - name: Disable snapd services
           ansible.builtin.systemd_service:
             name: '{{ item }}'
             state: stopped
             enabled: false
           loop:
-            - snap.lxd.activate.service
             - snapd.service
             - snapd.seeded.service
             - snapd.socket
 
-    - name: Kubernetes Requirements
+    - name: Kubernetes Configuration
       notify: Reboot
       block:
         - name: Enable cpuset and memory cgroups
@@ -94,15 +120,11 @@
             autoremove: true
             update_cache: true
 
-    - name: Set device rule
+    - name: Device Configuration
       ansible.builtin.import_tasks:
         file: device.yaml
 
-    - name: Disable firewall
-      ansible.builtin.import_tasks:
-        file: firewall.yaml
-
-    - name: Upgrade distribution
+    - name: Distribution Upgrade
       ansible.builtin.import_tasks:
         file: upgrade.yaml
 

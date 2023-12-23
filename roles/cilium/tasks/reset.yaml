@@ -5,7 +5,9 @@
     tasks_from: facts
 
 - name: Remove Dependencies
-  when: ansible_host in k3s_server_hosts
+  when:
+    - ansible_host in k3s_server_hosts
+    - "'helm' in ansible_facts.packages"
   block:
     - name: Remove repository
       kubernetes.core.helm_repository:

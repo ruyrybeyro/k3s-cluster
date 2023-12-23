@@ -4,6 +4,8 @@
     state: fixed
     upgrade: dist
     autoremove: true
+    clean: true
+    purge: true
     update_cache: true
 
 - name: Firmware Files Cleanup

@@ -5,7 +5,9 @@
     tasks_from: facts
 
 - name: Upgrade Reset
-  when: ansible_host == k3s_default_host
+  when:
+    - ansible_host == k3s_default_host
+    - "'python3-kubernetes' in ansible_facts.packages"
   block:
     - name: Delete agent plan
       kubernetes.core.k8s:
