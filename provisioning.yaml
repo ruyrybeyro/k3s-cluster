@@ -3,11 +3,25 @@
   hosts: cluster
   become: true
   gather_facts: true
+  pre_tasks:
+    - name: Validate password
+      ansible.builtin.assert:
+        that:
+          - smtp_password | length > 11
+          - smtp_password == smtp_password_check
+        fail_msg: Passwords don't match or less than 12 characters
+        quiet: true
   vars_prompt:
-    - name: trim_disks
+    - name: disk_trim
       prompt: Trim SSD disks? [Y/n]
       default: 'n'
       private: false
+    - name: smtp_password
+      prompt: Enter SMTP server password
+      unsafe: true
+    - name: smtp_password_check
+      prompt: Retype password
+      unsafe: true
   roles:
     - role: cluster
 

@@ -1,0 +1,236 @@
+---
+- name: Hardware Configuration
+  block:
+    - name: Bluetooth Configuration
+      when: cluster_disable_service_bluetooth | default(false)
+      block:
+        - name: Disable bluetooth firmware
+          ansible.builtin.lineinfile:
+            dest: /boot/firmware/config.txt
+            insertafter: '[all]'
+            line: dtoverlay=disable-bt
+            regexp: ^dtoverlay=disable-bt
+
+        - name: Disable bluetooth services
+          ansible.builtin.systemd_service:
+            name: '{{ item }}'
+            state: stopped
+            enabled: false
+          loop:
+            - bluetooth.service
+            - hciuart.service
+
+    - name: WiFi Configuration
+      when: cluster_disable_service_wifi | default(false)
+      block:
+        - name: Disable wifi firmware
+          ansible.builtin.lineinfile:
+            dest: /boot/firmware/config.txt
+            insertafter: '[all]'
+            line: dtoverlay=disable-wifi
+            regexp: ^dtoverlay=disable-wifi
+
+        - name: Disable wifi service
+          ansible.builtin.systemd_service:
+            name: wpa_supplicant.service
+            state: stopped
+            enabled: false
+
+    - name: Device Configuration
+      block:
+        - name: Set device id
+          ansible.builtin.command:
+            cmd: lsusb -s {{ cluster_device_id }}
+          changed_when: false
+          register: device_id
+
+        - name: Device Trim
+          when: device_id.stdout.find(cluster_device_name) != -1
+          block:
+            - name: Set device attributes
+              ansible.builtin.set_fact:
+                attributes: "{{ device_id.stdout | regex_search('ID\\s+(.*)\\s+' + cluster_device_name, '\\1') | join | trim | split(':') }}"
+
+            - name: Device Rule Setup
+              when:
+                - attributes is iterable
+                - attributes | length == 2
+              block:
+                - name: Set device rule
+                  ansible.builtin.set_fact:
+                    device_rule:
+                      - ACTION=="add|change"
+                      - ATTRS{idVendor}=="{{ attributes[0] }}"
+                      - ATTRS{idProduct}=="{{ attributes[1] }}"
+                      - SUBSYSTEM=="scsi_disk"
+                      - ATTR{provisioning_mode}="unmap"
+
+                - name: Create device rule
+                  ansible.builtin.lineinfile:
+                    path: /etc/udev/rules.d/10-unmap.fstrim.rules
+                    line: "{{ device_rule | join(', ') }}"
+                    regexp: ^ACTION
+                    owner: root
+                    group: root
+                    mode: '0644'
+                    create: true
+
+                - name: Start fstrim.timer
+                  ansible.builtin.systemd_service:
+                    name: fstrim.timer
+                    state: started
+                    enabled: true
+
+- name: OS Configuration
+  block:
+    - name: Disable access time updates
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: 'discard,errors'
+        replace: 'discard,noatime,errors'
+
+    - name: Disable cloud-init service
+      ansible.builtin.file:
+        path: /etc/cloud/cloud-init.disabled
+        access_time: preserve
+        modification_time: preserve
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Disable firewall service
+      ansible.builtin.systemd_service:
+        name: ufw.service
+        state: stopped
+        enabled: false
+
+    - name: Set service facts
+      ansible.builtin.service_facts:
+
+    - name: Remove Snap Packages
+      when:
+        - ansible_facts.services['snapd.service'] is defined
+        - ansible_facts.services['snapd.service'].state == 'running'
+      block:
+        - name: Get snap packages
+          ansible.builtin.command:
+            cmd: snap list
+          changed_when: false
+          register: snap_packages
+
+        - name: Remove snap packages
+          community.general.snap:
+            name: '{{ item | split | first }}'
+            state: absent
+          loop: '{{ snap_packages.stdout_lines[1:] }}'
+          when: snap_packages.stdout_lines[1:] is iterable
+
+    - name: Disable snapd services
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        state: stopped
+        enabled: false
+      loop:
+        - snapd.service
+        - snapd.seeded.service
+        - snapd.socket
+
+    # - name: Unattended Upgrade
+    #   block:
+    #     - name: Disable access time updates
+    #       ansible.builtin.replace:
+    #         path: /etc/apt/apt.conf.d/50unattended-upgrades
+    #         regexp: 'discard,errors'
+    #         replace: 'discard,noatime,errors'
+
+- name: Mail Configuration
+  block:
+    - name: Install mail package
+      ansible.builtin.apt:
+        name: postfix
+        autoremove: true
+        update_cache: true
+
+    - name: Set mail configuration
+      ansible.builtin.debconf:
+        name: postfix
+        question: 'postfix/{{ item.name }}'
+        value: '{{ item.value }}'
+        vtype: string
+      with_items:
+        - name: main_mailer_type
+          value: "'Satellite system'"
+        - name: mailname
+          value: '{{ ansible_host }}'
+        - name: recipient_delim
+          value: '+'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: relayhost
+          value: '[{{ cluster_mail_relay_host }}]:{{ cluster_mail_relay_port }}'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: mailbox_limit
+          value: '51200000'
+        - name: inet_interfaces
+          value: '{{ cluster_mail_inet_interfaces }}'
+
+### System mail name: apollo.lan
+# Recipient for root and postmaster mail: floren
+# Other destinations to accept mail for (blank for none): $myhostname apollo.lan, apollo, localhost.localdomain, localhost
+# Force synchronous updates on mail queue? Yes
+# Local networks: 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+# Mailbox size limit (bytes): 51200000
+### Local address extension character: +
+# Internet protocols to use: ipv4
+
+# setting synchronous mail queue updates: true
+# setting myorigin
+# setting destinations: apollo.lan, apollo, localhost.localdomain, localhost
+# setting relayhost: smtp.mail.me.com:587
+# setting mynetworks: 127.0.0.1/32 192.168.4.2/32
+# setting mailbox_size_limit: 51200000
+# setting recipient_delimiter: +
+# setting inet_interfaces: loopback-only
+# setting inet_protocols: ipv4
+# WARNING: /etc/aliases exists, but does not have a root alias.
+
+    # - name: Update mail configuration
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/postfix/main.cf
+    #     line: '{{ item.name }} = {{ item.value }}'
+    #     regexp: '^{{ item.name }} ='
+    #   with_items:
+    #     - name: inet_interfaces
+    #       value: '{{ cluster_mail_inet_interfaces }}'
+    #     - name: inet_protocols
+    #       value: '{{ cluster_mail_inet_protocols }}'
+
+    - name: Enable mail service
+      ansible.builtin.systemd_service:
+        name: postfix
+        state: restarted
+        enabled: true
+
+- name: Kubernetes Configuration
+  block:
+    - name: Enable cpuset and memory cgroups
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/cmdline.txt
+        line: \g<1> cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
+        regexp: ^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$
+        backrefs: true
+      register: cmdline
+
+    - name: Install extra modules package
+      ansible.builtin.apt:
+        name: linux-modules-extra-raspi
+        autoremove: true
+        update_cache: true

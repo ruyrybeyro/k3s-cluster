@@ -4,6 +4,9 @@ Cluster related tasks.
 
 ## Troubleshooting
 
+Uninstall cloud-init and snapd:
+
+- https://notes.n3s0.tech/posts/20221208145448/
 - https://github.com/bodsch/ansible-snapd
 
 Analyze services:
