@@ -1,49 +1,83 @@
 ---
 - name: Cluster Provisioning
-  hosts: cluster
+  hosts: apollo
   become: true
   gather_facts: true
   pre_tasks:
+    - name: Validate username
+      ansible.builtin.assert:
+        that: prompt_mail_username == prompt_mail_username_check
+        fail_msg: Usernames don't match
+        quiet: true
     - name: Validate password
       ansible.builtin.assert:
         that:
-          - smtp_password | length > 11
-          - smtp_password == smtp_password_check
+          - prompt_mail_password | length > 11
+          - prompt_mail_password == prompt_mail_password_check
         fail_msg: Passwords don't match or less than 12 characters
         quiet: true
+    - name: Validate username alias
+      ansible.builtin.assert:
+        that: prompt_mail_alias == prompt_mail_alias_check
+        fail_msg: Aliases don't match
+        quiet: true
   vars_prompt:
-    - name: disk_trim
+    - name: prompt_disk_trim
       prompt: Trim SSD disks? [Y/n]
       default: 'n'
       private: false
-    - name: smtp_password
-      prompt: Enter SMTP server password
+    - name: prompt_mail_username
+      prompt: Enter mail server username
+      default: 'floren.munteanu@icloud.com'
+      private: false
       unsafe: true
-    - name: smtp_password_check
+    - name: prompt_mail_username_check
+      prompt: Retype username
+      default: 'floren.munteanu@icloud.com'
+      private: false
+      unsafe: true
+    - name: prompt_mail_password
+      prompt: Enter mail server password
+      default: 'bqxk-zlat-wmkb-qulm'
+      private: false
+      unsafe: true
+    - name: prompt_mail_password_check
       prompt: Retype password
+      default: 'bqxk-zlat-wmkb-qulm'
+      private: false
+      unsafe: true
+    - name: prompt_mail_alias
+      prompt: Enter mail server alias
+      default: 'notymail@icloud.com'
+      private: false
+      unsafe: true
+    - name: prompt_mail_alias_check
+      prompt: Retype alias
+      default: 'notymail@icloud.com'
+      private: false
       unsafe: true
   roles:
     - role: cluster
 
-- name: Kubernetes Provisioning
-  hosts: cluster
-  become: true
-  gather_facts: true
-  roles:
-    - role: helm
-    - role: k3s
-  serial:
-    - 1
-    - 2
-    - 5
+# - name: Kubernetes Provisioning
+#   hosts: cluster
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: helm
+#     - role: k3s
+#   serial:
+#     - 1
+#     - 2
+#     - 5
 
-- name: Charts Provisioning
-  hosts: server
-  become: true
-  gather_facts: true
-  roles:
-    - role: cilium
-    - role: certmanager
-    - role: longhorn
-    - role: prometheus
-    # - role: sealedsecrets
+# - name: Charts Provisioning
+#   hosts: server
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: cilium
+#     - role: certmanager
+#     - role: longhorn
+#     - role: prometheus
+#     # - role: sealedsecrets

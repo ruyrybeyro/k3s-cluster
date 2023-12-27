@@ -6,7 +6,7 @@
 
 - name: Create sudoers file
   ansible.builtin.copy:
-    content: '{{ raspberry_pi_user }} ALL=(ALL:ALL) NOPASSWD:ALL'
+    content: "{{ raspberry_pi_user }} ALL=(ALL:ALL) NOPASSWD:ALL\n"
     dest: '/etc/sudoers.d/{{ raspberry_pi_user }}'
     owner: root
     group: root

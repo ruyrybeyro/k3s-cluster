@@ -3,8 +3,6 @@ cluster_device_id: '2:2'
 cluster_device_name: ASMedia
 cluster_disable_service_bluetooth: true
 cluster_disable_service_wifi: true
-cluster_domain: '.lan'
-cluster_mail_inet_interfaces: localhost
-cluster_mail_inet_protocols: ipv4
+cluster_mail_protocols: ipv4
 cluster_mail_relay_host: smtp.mail.me.com
-cluster_mail_relay_post: 587
+cluster_mail_relay_port: 587

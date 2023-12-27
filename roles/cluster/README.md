@@ -4,11 +4,6 @@ Cluster related tasks.
 
 ## Troubleshooting
 
-Uninstall cloud-init and snapd:
-
-- https://notes.n3s0.tech/posts/20221208145448/
-- https://github.com/bodsch/ansible-snapd
-
 Analyze services:
 
 ```shell
@@ -28,16 +23,35 @@ systemctl list-dependencies snapd
 systemctl list-dependencies --reverse snapd.socket
 ```
 
-Firewall state:
+## Postfix
 
-```yaml
-ufw:
-    name: ufw
-    source: sysv
-    state: running
-ufw.service:
-    name: ufw.service
-    source: systemd
-    state: stopped
-    status: enabled
+- `postfix` configuration: `/etc/postfix/main.cf`
+- `debconf` database: `/var/cache/debconf/config.dat`
+- `postfix` `dpkg` confguration: `/var/lib/dpkg/info/postfix.config`
+
+Show `debconf` configuration settings:
+
+```shell
+debconf-show postfix
+```
+
+Show `postfix` default configuration setting:
+
+```shell
+postconf -d smtp_sasl_auth_enable
+```
+
+Reconfigure `postfix`:
+
+```shell
+dpkg-reconfigure postfix
+```
+
+Uninstall `postfix``:
+
+```shell
+apt remove --purge -y postfix ssl-cert mailutils
+apt autoremove
+apt clean
+rm -f /etc/aliases /etc/aliases.db /etc/mailname
 ```

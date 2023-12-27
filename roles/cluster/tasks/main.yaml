@@ -13,22 +13,10 @@
     - name: Cluster Configuration
       ansible.builtin.import_tasks:
         file: configuration.yaml
-      notify: Reboot
 
-    - name: Device Configuration
-      ansible.builtin.import_tasks:
-        file: device.yaml
-
-    - name: Distribution Upgrade
+    - name: Cluster Upgrade
       ansible.builtin.import_tasks:
         file: upgrade.yaml
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-
-- name: Trim disks
-  ansible.builtin.command:
-    cmd: fstrim -v /
-  changed_when: command.stdout.find('trimmed') != -1
-  register: command
-  when: disk_trim in ['y', 'Y']
