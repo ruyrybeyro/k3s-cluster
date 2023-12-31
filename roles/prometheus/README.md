@@ -2,9 +2,16 @@
 
 ## Releases
 
-- [kube-prometheus-stack Helm Chart](https://github.com/prometheus-community/helm-charts/releases)
+- [ArtifactHUB](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
+- [GitHub](https://github.com/prometheus-community/helm-charts/releases)
 
-## Uninstall
+## Chart
+
+Set Grafana password:
+
+```shell
+ansible-vault encrypt_string '<yourpassword>' --name 'prometheus_grafana_password'
+```
 
 Uninstall chart:
 

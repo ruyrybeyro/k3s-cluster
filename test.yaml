@@ -1,0 +1,14 @@
+---
+- name: Playbook
+  hosts: apollo
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Set authorized key
+      ansible.posix.authorized_key:
+        key: '{{ ansible_ssh_public_key_file }}'
+        user: '{{ ansible_user }}'
+
+    - name: Debug
+      ansible.builtin.debug:
+        var: '{{ ansible_ssh_public_key_file }}'

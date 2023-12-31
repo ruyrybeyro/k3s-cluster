@@ -2,7 +2,8 @@
 
 ## Releases
 
-- [bitnami-labs/sealed-secrets](https://github.com/bitnami-labs/sealed-secrets/releases)
+- [ArtifactHUB](https://artifacthub.io/packages/helm/bitnami-labs/sealed-secrets)
+- [GitHub](https://github.com/bitnami-labs/sealed-secrets/releases)
 
 ## Upgrade
 

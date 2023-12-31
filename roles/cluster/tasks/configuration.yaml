@@ -90,7 +90,6 @@
               when: prompt_disk_trim in ['y', 'Y']
 
 - name: OS Configuration
-  notify: Reboot
   block:
     - name: Get host fqdn
       ansible.builtin.command:
@@ -100,9 +99,9 @@
 
     - name: Set cluster host fact
       ansible.builtin.set_fact:
-        host: {
-          'fqdn': '{{ host_fqdn.stdout | trim }}',
-          'domain': "{{ host_fqdn.stdout | trim | split('.') | last }}",
+        cluster_host: {
+          'fqdn': '{{ host_fqdn.stdout | split | first }}',
+          'domain': "{{ host_fqdn.stdout | split | first | split('.') | last }}",
           'ipv4': "{{ ansible_default_ipv4['address'] }}",
           'name': '{{ ansible_host }}'
         }
@@ -110,12 +109,13 @@
     - name: Set host fqdn
       ansible.builtin.replace:
         path: /etc/hosts
-        regexp: ^127.0.1.1 {{ host['name'] }} {{ host['name'] }}
-        replace: 127.0.1.1 {{ host['fqdn'] }} {{ host['name'] }}
+        regexp: ^127.0.1.1 {{ cluster_host['name'] }} {{ cluster_host['name'] }}
+        replace: 127.0.1.1 {{ cluster_host['fqdn'] }} {{ cluster_host['name'] }}
+      notify: Reboot
 
     - name: Set root full name
       ansible.builtin.command:
-        cmd: chfn -f "{{ host['name'] }}" root
+        cmd: chfn -f "{{ cluster_host['name'] }}" root
       changed_when: false
 
     - name: Disable access time updates
@@ -123,6 +123,7 @@
         path: /etc/fstab
         regexp: discard,errors
         replace: discard,noatime,errors
+      notify: Reboot
 
     - name: Disable cloud-init service
       ansible.builtin.file:
@@ -133,6 +134,7 @@
         owner: root
         group: root
         mode: '0644'
+      notify: Reboot
 
     - name: Disable firewall service
       ansible.builtin.systemd_service:
@@ -171,15 +173,49 @@
         - snapd.seeded.service
         - snapd.socket
 
-    # - name: Unattended Upgrade
-    #   block:
-    #     - name: Disable access time updates
-    #       ansible.builtin.replace:
-    #         path: /etc/apt/apt.conf.d/50unattended-upgrades
-    #         regexp: ''
-    #         replace: ''
+    - name: Unattended Upgrade
+      notify: Restart unattended upgrades service
+      block:
+        - name: Install history notification package
+          ansible.builtin.apt:
+            name: apt-listchanges
+            autoremove: true
+            update_cache: true
+
+        - name: Set unattended upgrades time-lapse fact
+          ansible.builtin.set_fact:
+            timelapse: '{{ 10 * period }}'
+          delegate_facts: true
+          delegate_to: '{{ item }}'
+          loop: '{{ ansible_play_hosts }}'
+          loop_control:
+            index_var: period
+
+        - name: Set unattended upgrades reboot time
+          ansible.builtin.command:
+            cmd: date -d '02:00 {{ timelapse }}min' +'%H:%M'
+          changed_when: false
+          register: reboot_time
+
+        - name: Update unattended upgrades configuration
+          ansible.builtin.replace:
+            path: /etc/apt/apt.conf.d/50unattended-upgrades
+            regexp: '{{ item.regexp }}'
+            replace: '{{ item.replace }}'
+          loop:
+            - regexp: ^\/\/(\s+\"\${distro_id}:\${distro_codename}-updates\";)$
+              replace: '  \g<1>'
+            - regexp: ^\/\/(Unattended-Upgrade::Mail) "";$
+              replace: '\g<1> "{{ cluster_mail_user_alias }}";'
+            - regexp: ^\/\/(Unattended-Upgrade::Remove-Unused-Dependencies) "false";$
+              replace: '\g<1> "true";'
+            - regexp: ^\/\/(Unattended-Upgrade::Automatic-Reboot) "false";$
+              replace: '\g<1> "true";'
+            - regexp: ^\/\/(Unattended-Upgrade::Automatic-Reboot-Time) "02:00";$
+              replace: '\g<1> "{{ reboot_time.stdout }}";'
 
 - name: Mail Configuration
+  notify: Reload mail service
   block:
     - name: Set mail configuration
       ansible.builtin.debconf:
@@ -187,8 +223,8 @@
         question: postfix/{{ item.question }}
         value: '{{ item.value }}'
         vtype: '{{ item.vtype }}'
-      when: item.enabled is true
-      with_items:
+      when: item.enabled | default(false)
+      loop:
         # General mail configuration type
         - question: main_mailer_type
           value: 'Satellite system'
@@ -196,7 +232,7 @@
           enabled: true
         # System mail name
         - question: mailname
-          value: "{{ host['fqdn'] }}"
+          value: "{{ cluster_host['fqdn'] }}"
           vtype: string
           enabled: true
         # SMTP relay host
@@ -206,13 +242,13 @@
           enabled: true
         # Recipient for root and postmaster mail
         - question: root_address
-          value: "root@{{ host['fqdn'] }}"
+          value: "root@{{ cluster_host['fqdn'] }}"
           vtype: string
           enabled: true
         # Other destinations to accept mail for (blank for none)
         # Disabled, host name wrongly set as fqdn by postfix
         - question: destinations
-          value: "$myhostname, {{ host['name'] }}, localhost.{{ host['domain'] }}, localhost"
+          value: "$myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['domain'] }}, localhost"
           vtype: string
           enabled: false
         # Force synchronous updates on mail queue
@@ -222,11 +258,11 @@
           enabled: true
         # Local networks
         - question: mynetworks
-          value: "127.0.0.1/32, 127.0.1.1/32, {{ host['ipv4'] }}/32"
+          value: "127.0.0.1/32, 127.0.1.1/32, {{ cluster_host['ipv4'] }}/32"
           vtype: string
           enabled: true
         # Local address extension character
-        # Disabled, default value, kept as reference
+        # Disabled, using default value, kept as reference
         - question: recipient_delim
           value: '+'
           vtype: string
@@ -244,7 +280,7 @@
 
     - name: Install mail package
       ansible.builtin.apt:
-        name: postfix
+        name: bsd-mailx
         autoremove: true
         update_cache: true
       environment:
@@ -252,7 +288,7 @@
 
     - name: Create generic map
       ansible.builtin.copy:
-        content: "root@{{ host['fqdn'] }} {{ prompt_mail_alias }}\n"
+        content: "root@{{ cluster_host['fqdn'] }} {{ cluster_mail_user_alias }}\n"
         dest: /etc/postfix/generic
         owner: root
         group: root
@@ -260,7 +296,7 @@
 
     - name: Create sasl password map
       ansible.builtin.copy:
-        content: "[{{ cluster_mail_relay_host }}]:{{ cluster_mail_relay_port }} {{ prompt_mail_username }}:{{ prompt_mail_password }}\n"
+        content: "[{{ cluster_mail_relay_host }}]:{{ cluster_mail_relay_port }} {{ cluster_mail_user_name }}:{{ cluster_mail_user_password }}\n"
         dest: /etc/postfix/sasl/password
         owner: root
         group: root
@@ -286,11 +322,11 @@
 
     - name: Update mail configuration
       ansible.builtin.command:
-        cmd: "postconf -e '{{ item.name }} = {{ item.value }}'"
+        cmd: postconf -e '{{ item.name }} = {{ item.value }}'
       changed_when: true
-      with_items:
+      loop:
         - name: mydestination
-          value: $myhostname, {{ host['name'] }}, localhost.{{ host['domain'] }}, localhost
+          value: $myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['domain'] }}, localhost
         - name: smtp_generic_maps
           value: hash:/etc/postfix/generic
         - name: smtp_sasl_auth_enable
@@ -304,26 +340,14 @@
         - name: smtp_tls_security_level
           value: encrypt
 
-    - name: Reload mail service
-      ansible.builtin.systemd_service:
-        name: postfix.service
-        state: reloaded
-        enabled: true
-
 - name: Kubernetes Configuration
   block:
     - name: Enable cpuset and memory cgroups
       ansible.builtin.lineinfile:
         path: /boot/firmware/cmdline.txt
+        regexp: ^((?!.+\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).+)$
         line: \g<1> cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
-        regexp: ^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$
         backrefs: true
-
-    # - name: Enable cpuset and memory cgroups
-    #   ansible.builtin.replace:
-    #     path: /boot/firmware/cmdline.txt
-    #     regexp: console=tty1 root
-    #     replace: console=tty1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory root
 
     - name: Install extra modules package
       ansible.builtin.apt:

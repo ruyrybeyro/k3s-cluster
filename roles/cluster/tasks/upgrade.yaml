@@ -38,6 +38,3 @@
         get_checksum: false
       changed_when: reboot.stat.exists
       register: reboot
-
-- name: Flush handlers
-  ansible.builtin.meta: flush_handlers

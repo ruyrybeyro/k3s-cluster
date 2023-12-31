@@ -3,12 +3,16 @@
   hosts: cluster
   become: true
   gather_facts: true
+  serial: 1
   tags: cluster
   tasks:
     - name: Upgrade distribution
       ansible.builtin.import_role:
         name: cluster
         tasks_from: upgrade
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
 
 - name: Kubernetes Upgrade
   hosts: server

@@ -1,13 +1,13 @@
 ---
 - name: Set authorized key
   ansible.posix.authorized_key:
-    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/' + raspberry_pi_user_key) }}"
-    user: '{{ raspberry_pi_user }}'
+    key: '{{ ansible_ssh_public_key_file }}'
+    user: '{{ ansible_user }}'
 
 - name: Create sudoers file
   ansible.builtin.copy:
-    content: "{{ raspberry_pi_user }} ALL=(ALL:ALL) NOPASSWD:ALL\n"
-    dest: '/etc/sudoers.d/{{ raspberry_pi_user }}'
+    content: "{{ ansible_user }} ALL=(ALL:ALL) NOPASSWD:ALL\n"
+    dest: '/etc/sudoers.d/{{ ansible_user }}'
     owner: root
     group: root
     mode: '0440'

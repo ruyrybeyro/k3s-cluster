@@ -3,16 +3,13 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Add repository
   kubernetes.core.helm_repository:
     name: prometheus
     repo_url: https://prometheus-community.github.io/helm-charts
-  tags: repo
 
 - name: Helm Chart
-  tags: chart
   when: ansible_host == k3s_default_host
   block:
     - name: Create namespace
@@ -75,6 +72,7 @@
             prometheusSpec:
               enableAdminAPI: true
               replicaExternalLabelName: replica
+              # serviceMonitorSelectorNilUsesHelmValues: false
               storageSpec:
                 volumeClaimTemplate:
                   spec:
@@ -92,4 +90,58 @@
               requests:
                 cpu: 100m
                 memory: 64Mi
+        wait: true
+
+    - name: Get clilium chart variables
+      ansible.builtin.include_vars:
+        file: ./roles/cilium/defaults/main.yaml
+
+    - name: Update cilium chart
+      kubernetes.core.helm:
+        chart_ref: cilium/cilium
+        chart_version: '{{ cilium_chart_version }}'
+        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        name: cilium
+        namespace: kube-system
+        reset_values: false
+        reuse_values: true
+        values:
+          dashboards:
+            enabled: true
+          envoy:
+            enabled: true
+            prometheus:
+              serviceMonitor:
+                enabled: true
+                namespace: monitoring-system
+          hubble:
+            metrics:
+              dashboards:
+                enabled: true
+              enabled:
+                - dns:query;ignoreAAAA
+                - drop
+                - http
+                - flow
+                - icmp
+                - port-distribution
+                - tcp
+              serviceMonitor:
+                enabled: true
+                namespace: monitoring-system
+            relay:
+              prometheus:
+                serviceMonitor:
+                  enabled: true
+                  namespace: monitoring-system
+          operator:
+            prometheus:
+              enabled: true
+              serviceMonitor:
+                enabled: true
+                namespace: monitoring-system
+          prometheus:
+            enabled: true
+            serviceMonitor:
+              enabled: true
         wait: true

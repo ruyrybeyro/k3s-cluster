@@ -1,4 +1,10 @@
 ---
+- name: Validate disk trim prompt
+  ansible.builtin.assert:
+    that: prompt_disk_trim in ['n', 'N', 'y', 'Y']
+    fail_msg: 'Valid entries: n, N, y, Y'
+    quiet: true
+
 - name: Get Raspberry Pi model
   ansible.builtin.command:
     cmd: grep 'Raspberry Pi' /proc/device-tree/model

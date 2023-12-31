@@ -2,7 +2,10 @@
 
 ## Releases
 
-- [Longhorn Helm Chart](https://github.com/longhorn/longhorn/releases)
+- [ArtifactHUB](https://artifacthub.io/packages/helm/longhorn/longhorn)
+- [GitHub](https://github.com/longhorn/longhorn/releases)
+
+## Setup
 
 Uninstall chart:
 

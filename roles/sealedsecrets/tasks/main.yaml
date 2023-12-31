@@ -3,60 +3,61 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Install Dependencies
-  tags: deps
   when: ansible_host in k3s_server_hosts
   block:
-    - name: Set chart fact
+    - name: Set binary fact
       ansible.builtin.set_fact:
-        chart: {
-          'name': sealed-secrets,
-          'version': '{{ sealedsecrets_chart_version }}',
-          'file': '{{ sealedsecrets_kubeseal_filename }}'
-        }
+        binary:
+          name: sealed-secrets
+          org: bitnami-labs
+          version: '{{ sealedsecrets_kubeseal_version }}'
+          tarball: 'kubeseal-{{ sealedsecrets_kubeseal_version[1:] }}-linux-arm64.tar.gz'
 
     - name: Download archive
       ansible.builtin.get_url:
-        url: https://github.com/bitnami-labs/{{ chart['name'] }}/releases/download/{{ chart['version'] }}/{{ chart['file'] }}.tar.gz
-        checksum: md5:https://github.com/bitnami-labs/{{ chart['name'] }}/releases/download/{{ chart['version'] }}/{{ chart['version'] }}.tar.gz.sig
+        url: https://github.com/{{ binary['org'] }}/{{ binary['name'] }}/releases/download/{{ binary['version'] }}/{{ binary['tarball'] }}
+        # checksum: sha256:https://github.com/{{ binary['org'] }}/{{ binary['name'] }}/releases/download/{{ binary['version'] }}/{{ binary['tarball'] }}.sig
         dest: /tmp
         owner: root
         group: root
         mode: '0644'
-      tags: binary
+
+    - name: Get checksum
+      ansible.builtin.stat:
+        path: /opt/script.db.sh
 
     - name: Install binary
       ansible.builtin.unarchive:
-        src: /tmp/{{ chart['file'] }}.tar.gz
+        src: /tmp/{{ binary['tarball'] }}
         dest: /usr/local/bin
         owner: root
         group: root
         mode: '0755'
         remote_src: true
-      tags: binary
 
     - name: Delete archive
       ansible.builtin.file:
-        path: /tmp/{{ chart['file'] }}.tar.gz
+        path: /tmp/{{ item }}
         state: absent
-      tags: binary
+      loop:
+        - "{{ binary['tarball'] }}"
+        - LICENSE
+        - README.md
 
     - name: Add repository
       kubernetes.core.helm_repository:
-        name: "{{ chart['name'] }}"
-        repo_url: https://bitnami-labs.github.io/{{ chart['name'] }}
-      tags: repo
+        name: sealed-secrets
+        repo_url: https://bitnami-labs.github.io/sealed-secrets
 
 - name: Install chart
   kubernetes.core.helm:
-    chart_ref: "{{ chart['name'] }}/{{ chart['name'] }}"
-    chart_version: "{{ chart['version'] }}"
+    chart_ref: sealed-secrets/sealed-secrets
+    chart_version: '{{ sealedsecrets_chart_version }}'
     kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
-    name: "{{ chart['name'] }}"
+    name: sealed-secrets
     namespace: kube-system
     update_repo_cache: true
     wait: true
-  tags: chart
   when: ansible_host == k3s_default_host

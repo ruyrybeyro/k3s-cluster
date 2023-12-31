@@ -2,9 +2,13 @@
 
 [Cilium](https://github.com/cilium/cilium) is a networking, observability, and security solution with an eBPF-based dataplane.
 
+- https://luislogs.com/posts/re-engineering-the-homelab-with-iac-and-kubernetes-an-overview/
+- https://blog.stonegarden.dev/articles/2023/12/migrating-from-metallb-to-cilium/
+
 ## Releases
 
-- [Cilium Helm Chart](https://helm.cilium.io)
+- [ArtifactHUB](https://artifacthub.io/packages/helm/cilium/cilium)
+- [GitHub](https://github.com/cilium/cilium/releases)
 - [Cilium CLI](https://github.com/cilium/cilium-cli/releases)
 - [Cilium Hubble](https://github.com/cilium/hubble/releases)
 
@@ -27,5 +31,5 @@ kubeProxyReplacement: true
 Validate the setup:
 
 ```shell
-$ sudo kubectl -n kube-system exec ds/cilium -- cilium status --verbose
+sudo kubectl -n kube-system exec ds/cilium -- cilium status --verbose
 ```

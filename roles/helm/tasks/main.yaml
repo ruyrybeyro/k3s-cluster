@@ -3,7 +3,6 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Install Dependencies
   when: ansible_host in k3s_server_hosts
