@@ -17,7 +17,7 @@
 
     - name: Create configuration directory
       ansible.builtin.file:
-        path: '{{ k3s_conf_dir }}'
+        path: '{{ k3s_dir_config }}'
         state: directory
         owner: root
         group: root
@@ -26,7 +26,7 @@
     - name: Create configuration file
       ansible.builtin.template:
         src: config.j2
-        dest: '{{ k3s_conf_dir }}/config.yaml'
+        dest: '{{ k3s_dir_config }}/config.yaml'
         owner: root
         group: root
         mode: '0600'
@@ -58,7 +58,7 @@
     - name: Add variable to environment
       ansible.builtin.lineinfile:
         path: /etc/environment
-        line: KUBECONFIG={{ k3s_conf_dir }}/k3s.yaml
+        line: KUBECONFIG={{ k3s_dir_config }}/k3s.yaml
         regexp: ^KUBECONFIG
 
     - name: Create symlinks
@@ -76,11 +76,11 @@
       block:
         - name: Wait for token creation
           ansible.builtin.wait_for:
-            path: '{{ k3s_lib_dir }}/server/node-token'
+            path: '{{ k3s_dir_lib }}/server/node-token'
 
         - name: Read token
           ansible.builtin.slurp:
-            path: '{{ k3s_lib_dir }}/server/node-token'
+            path: '{{ k3s_dir_lib }}/server/node-token'
           register: node_token
 
         - name: Set token fact
@@ -103,7 +103,7 @@
 
     - name: Copy kubeconfig file
       ansible.builtin.copy:
-        src: '{{ k3s_conf_dir }}/k3s.yaml'
+        src: '{{ k3s_dir_config }}/k3s.yaml'
         dest: '{{ user_info.home }}/.kube/config'
         owner: '{{ user_info.name }}'
         group: '{{ user_info.name }}'

@@ -9,15 +9,15 @@
     name: prometheus
     repo_url: https://prometheus-community.github.io/helm-charts
 
-- name: Helm Chart
-  when: ansible_host == k3s_default_host
+- name: Chart Setup
+  when: ansible_host == k3s_server_default_host
   block:
     - name: Create namespace
       kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: monitoring-system
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
     - name: Create secret
       kubernetes.core.k8s:
@@ -28,16 +28,16 @@
             name: grafana-credentials
             namespace: monitoring-system
           stringData:
-            password: '{{ prometheus_grafana_password }}'
-            username: '{{ prometheus_grafana_username }}'
+            password: '{{ prometheus_grafana_user_password }}'
+            username: '{{ prometheus_grafana_user_name }}'
           type: Opaque
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: prometheus/kube-prometheus-stack
-        chart_version: '{{ prometheus_chart_version }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        chart_version: '{{ prometheus_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: monitoring
         namespace: monitoring-system
         update_repo_cache: true
@@ -58,8 +58,6 @@
               existingSecret: grafana-credentials
               passwordKey: password
               userKey: username
-            service:
-              type: LoadBalancer
           kubeControllerManager:
             endpoints: '{{ k3s_server_ips }}'
           kubeEtcd:
@@ -72,7 +70,7 @@
             prometheusSpec:
               enableAdminAPI: true
               replicaExternalLabelName: replica
-              # serviceMonitorSelectorNilUsesHelmValues: false
+              serviceMonitorSelectorNilUsesHelmValues: false
               storageSpec:
                 volumeClaimTemplate:
                   spec:
@@ -92,56 +90,20 @@
                 memory: 64Mi
         wait: true
 
-    - name: Get clilium chart variables
-      ansible.builtin.include_vars:
-        file: ./roles/cilium/defaults/main.yaml
-
-    - name: Update cilium chart
-      kubernetes.core.helm:
-        chart_ref: cilium/cilium
-        chart_version: '{{ cilium_chart_version }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
-        name: cilium
-        namespace: kube-system
-        reset_values: false
-        reuse_values: true
-        values:
-          dashboards:
-            enabled: true
-          envoy:
-            enabled: true
-            prometheus:
-              serviceMonitor:
-                enabled: true
-                namespace: monitoring-system
-          hubble:
-            metrics:
-              dashboards:
-                enabled: true
-              enabled:
-                - dns:query;ignoreAAAA
-                - drop
-                - http
-                - flow
-                - icmp
-                - port-distribution
-                - tcp
-              serviceMonitor:
-                enabled: true
-                namespace: monitoring-system
-            relay:
-              prometheus:
-                serviceMonitor:
-                  enabled: true
-                  namespace: monitoring-system
-          operator:
-            prometheus:
-              enabled: true
-              serviceMonitor:
-                enabled: true
-                namespace: monitoring-system
-          prometheus:
-            enabled: true
-            serviceMonitor:
-              enabled: true
-        wait: true
+    - name: Set monitoring-grafana loadbalancer ip
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: monitoring-grafana
+            namespace: monitoring-system
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_grafana }}'
+              io.cilium/lb-ipam-sharing-key: monitoring-grafana
+          spec:
+            selector:
+              app.kubernetes.io/instance: monitoring
+              app.kubernetes.io/name: grafana
+            type: LoadBalancer
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

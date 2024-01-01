@@ -49,7 +49,7 @@
     state: absent
   loop:
     - '{{ user_info.home }}/.kube'
-    - '{{ k3s_conf_dir }}'
+    - '{{ k3s_dir_config }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
     - /usr/local/bin/crictl

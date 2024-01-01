@@ -19,7 +19,7 @@
         - "'python3-kubernetes' in ansible_facts.packages"
 
     - name: Remove Packages
-      when: remove_packages in ['y', 'Y']
+      when: prompt_remove_packages in ['y', 'Y']
       block:
         - name: Remove packages
           ansible.builtin.apt:

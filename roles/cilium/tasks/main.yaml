@@ -12,11 +12,11 @@
         binary:
           - name: cilium-cli
             org: cilium
-            version: '{{ cilium_cli_version }}'
+            version: '{{ cilium_version_cli }}'
             tarball: cilium-linux-arm64.tar.gz
           - name: hubble
             org: cilium
-            version: '{{ cilium_hubble_version }}'
+            version: '{{ cilium_version_hubble }}'
             tarball: hubble-linux-arm64.tar.gz
 
     - name: Download archive
@@ -50,14 +50,14 @@
         name: cilium
         repo_url: https://helm.cilium.io
 
-- name: Helm Chart
-  when: ansible_host == k3s_default_host
+- name: Chart Setup
+  when: ansible_host == k3s_server_default_host
   block:
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: cilium/cilium
-        chart_version: '{{ cilium_chart_version }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        chart_version: '{{ cilium_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: cilium
         namespace: kube-system
         update_repo_cache: true
@@ -105,7 +105,7 @@
           rollOutCiliumPods: true
         wait: true
 
-    - name: Install announcement manifest
+    - name: Install l2 announcement policy manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -115,10 +115,12 @@
             namespace: kube-system
           spec:
             externalIPs: true
+            interfaces:
+              - ^eth[0-9]+
             loadBalancerIPs: true
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
-    - name: Install pool manifest
+    - name: Install loadbalancer ip pool manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -128,5 +130,5 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: '{{ cilium_ip_pool }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+              - cidr: '{{ cilium_ip_pool_cidr }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

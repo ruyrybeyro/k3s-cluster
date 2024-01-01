@@ -7,8 +7,8 @@
     - role: cluster
   tags: cluster
   vars_prompt:
-    - name: prompt_disk_trim
-      prompt: Trim SSD disks? [Y/n]
+    - name: prompt_trim_device
+      prompt: Trim cluster disks? [Y/n]
       default: 'n'
       private: false
 
@@ -29,6 +29,11 @@
   hosts: server
   become: true
   gather_facts: true
+  post_tasks:
+    - name: Update cilium chart settings
+      ansible.builtin.import_role:
+        name: cilium
+        tasks_from: settings
   roles:
     - role: cilium
     - role: certmanager

@@ -3,7 +3,7 @@
   notify: Reboot
   block:
     - name: Bluetooth Configuration
-      when: cluster_disable_service_bluetooth | default(false)
+      when: cluster_service_disable_bluetooth | default(false)
       block:
         - name: Disable bluetooth firmware
           ansible.builtin.lineinfile:
@@ -22,7 +22,7 @@
             - hciuart.service
 
     - name: WiFi Configuration
-      when: cluster_disable_service_wifi | default(false)
+      when: cluster_service_disable_wifi | default(false)
       block:
         - name: Disable wifi firmware
           ansible.builtin.lineinfile:
@@ -87,7 +87,7 @@
                 cmd: fstrim -v /
               changed_when: command.stdout.find('trimmed') != -1
               register: command
-              when: prompt_disk_trim in ['y', 'Y']
+              when: prompt_trim_device in ['y', 'Y']
 
 - name: OS Configuration
   block:
@@ -184,7 +184,7 @@
 
         - name: Set unattended upgrades time-lapse fact
           ansible.builtin.set_fact:
-            timelapse: '{{ 10 * period }}'
+            timelapse: '{{ cluster_unattended_upgrades_reboot_timelapse * period }}'
           delegate_facts: true
           delegate_to: '{{ item }}'
           loop: '{{ ansible_play_hosts }}'
@@ -193,7 +193,7 @@
 
         - name: Set unattended upgrades reboot time
           ansible.builtin.command:
-            cmd: date -d '02:00 {{ timelapse }}min' +'%H:%M'
+            cmd: date -d '{{ cluster_unattended_upgrades_reboot_time }} {{ timelapse }}min' +'%H:%M'
           changed_when: false
           register: reboot_time
 
@@ -205,13 +205,13 @@
           loop:
             - regexp: ^\/\/(\s+\"\${distro_id}:\${distro_codename}-updates\";)$
               replace: '  \g<1>'
-            - regexp: ^\/\/(Unattended-Upgrade::Mail) "";$
+            - regexp: ^(?:.*)(Unattended-Upgrade::Mail)\s.*;$
               replace: '\g<1> "{{ cluster_mail_user_alias }}";'
             - regexp: ^\/\/(Unattended-Upgrade::Remove-Unused-Dependencies) "false";$
               replace: '\g<1> "true";'
             - regexp: ^\/\/(Unattended-Upgrade::Automatic-Reboot) "false";$
               replace: '\g<1> "true";'
-            - regexp: ^\/\/(Unattended-Upgrade::Automatic-Reboot-Time) "02:00";$
+            - regexp: ^(?:.*)(Unattended-Upgrade::Automatic-Reboot-Time)\s.*;$
               replace: '\g<1> "{{ reboot_time.stdout }}";'
 
 - name: Mail Configuration

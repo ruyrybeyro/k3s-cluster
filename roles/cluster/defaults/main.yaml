@@ -1,8 +1,6 @@
 ---
 cluster_device_id: '2:2'
 cluster_device_name: ASMedia
-cluster_disable_service_bluetooth: true
-cluster_disable_service_wifi: true
 cluster_mail_protocols: ipv4
 cluster_mail_relay_host: smtp.mail.me.com
 cluster_mail_relay_port: 587
@@ -15,3 +13,7 @@ cluster_mail_user_password: !vault |
           30333337633834623962643533373562666365643930626361613162366338343831643231323339
           3864653332333038300a663733636137643964323439643439343863336332393835356365363563
           61313538623030313638626534386636393063613231343734386137356134353961
+cluster_service_disable_bluetooth: true
+cluster_service_disable_wifi: true
+cluster_unattended_upgrades_reboot_time: '02:00'
+cluster_unattended_upgrades_reboot_timelapse: 10

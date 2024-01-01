@@ -13,13 +13,13 @@
 - name: Install chart
   kubernetes.core.helm:
     chart_ref: jetstack/cert-manager
-    chart_version: '{{ certmanager_chart_version }}'
+    chart_version: '{{ certmanager_version_chart }}'
     create_namespace: true
-    kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+    kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
     name: cert-manager
     namespace: cert-manager
     update_repo_cache: true
     values:
       installCRDs: true
     wait: true
-  when: ansible_host == k3s_default_host
+  when: ansible_host == k3s_server_default_host

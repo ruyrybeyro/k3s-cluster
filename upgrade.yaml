@@ -41,10 +41,10 @@
             name: prometheus
           tags: prometheus
 
-        # - name: Upgrade sealed-secrets chart
-        #   ansible.builtin.import_role:
-        #     name: sealedsecrets
-        #   tags: sealedsecrets
+        - name: Upgrade sealed-secrets chart
+          ansible.builtin.import_role:
+            name: sealedsecrets
+          tags: sealedsecrets
 
     - name: Upgrade helm
       ansible.builtin.import_role:

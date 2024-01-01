@@ -12,8 +12,8 @@
         binary:
           name: sealed-secrets
           org: bitnami-labs
-          version: '{{ sealedsecrets_kubeseal_version }}'
-          tarball: 'kubeseal-{{ sealedsecrets_kubeseal_version[1:] }}-linux-arm64.tar.gz'
+          version: '{{ sealedsecrets_version_kubeseal }}'
+          tarball: 'kubeseal-{{ sealedsecrets_version_kubeseal[1:] }}-linux-arm64.tar.gz'
 
     - name: Download archive
       ansible.builtin.get_url:
@@ -23,10 +23,6 @@
         owner: root
         group: root
         mode: '0644'
-
-    - name: Get checksum
-      ansible.builtin.stat:
-        path: /opt/script.db.sh
 
     - name: Install binary
       ansible.builtin.unarchive:
@@ -54,10 +50,10 @@
 - name: Install chart
   kubernetes.core.helm:
     chart_ref: sealed-secrets/sealed-secrets
-    chart_version: '{{ sealedsecrets_chart_version }}'
-    kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+    chart_version: '{{ sealedsecrets_version_chart }}'
+    kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
     name: sealed-secrets
     namespace: kube-system
     update_repo_cache: true
     wait: true
-  when: ansible_host == k3s_default_host
+  when: ansible_host == k3s_server_default_host
