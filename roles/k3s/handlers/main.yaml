@@ -8,6 +8,10 @@
     state: started
     daemon_reload: true
     enabled: true
+  register: service
+  until: service.status.ActiveState == 'active'
+  delay: 5
+  retries: 5
 
 - name: Stop service
   ansible.builtin.systemd_service:

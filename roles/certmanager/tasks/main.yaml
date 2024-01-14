@@ -21,5 +21,9 @@
     update_repo_cache: true
     values:
       installCRDs: true
+      prometheus:
+        serviceMonitor:
+          enabled: true
+          namespace: monitoring-system
     wait: true
   when: ansible_host == k3s_server_default_host

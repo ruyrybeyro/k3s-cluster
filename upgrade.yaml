@@ -26,10 +26,17 @@
             name: certmanager
           tags: certmanager
 
-        - name: Upgrade cilium chart
-          ansible.builtin.import_role:
-            name: cilium
+        - name: Cilium
           tags: cilium
+          block:
+            - name: Upgrade cilium chart
+              ansible.builtin.import_role:
+                name: cilium
+
+            - name: Update cilium chart settings
+              ansible.builtin.import_role:
+                name: cilium
+                tasks_from: settings
 
         - name: Upgrade longhorn chart
           ansible.builtin.import_role:

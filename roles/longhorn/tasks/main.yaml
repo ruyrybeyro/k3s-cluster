@@ -25,6 +25,18 @@
         values:
           defaultSettings:
             nodeDownPodDeletionPolicy: '{{ longhorn_pod_deletion_policy }}'
+          longhornDriver:
+            tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/master
+                operator: Equal
+                value: true
+          longhornManager:
+            tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/master
+                operator: Equal
+                value: true
         wait: true
 
     - name: Set longhorn-frontend loadbalancer ip
@@ -33,11 +45,11 @@
           apiVersion: v1
           kind: Service
           metadata:
-            name: longhorn-frontend
-            namespace: longhorn-system
             annotations:
               io.cilium/lb-ipam-ips: '{{ longhorn_loadbalancer_ip_frontend }}'
               io.cilium/lb-ipam-sharing-key: longhorn-frontend
+            name: longhorn-frontend
+            namespace: longhorn-system
           spec:
             selector:
               app: longhorn-ui

@@ -36,8 +36,8 @@
         tasks_from: settings
   roles:
     - role: cilium
-    - role: certmanager
     - role: longhorn
     - role: prometheus
+    - role: certmanager
     - role: sealedsecrets
   tags: charts

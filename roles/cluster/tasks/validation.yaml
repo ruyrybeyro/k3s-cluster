@@ -16,6 +16,6 @@
     raspberry_pi: true
   when:
     - ansible_facts.lsb.id == 'Ubuntu'
-    - ansible_facts.lsb.release is version('20.10', '>=')
+    - ansible_facts.lsb.release is version('22.04', '>=')
     - ansible_facts.machine == 'aarch64'
     - raspberry_pi_model.rc == 0

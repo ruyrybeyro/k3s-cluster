@@ -39,8 +39,8 @@
         state: absent
       loop:
         - "{{ binary['tarball'] }}"
-        - LICENSE
-        - README.md
+        - /usr/local/bin/LICENSE
+        - /usr/local/bin/README.md
 
     - name: Add repository
       kubernetes.core.helm_repository:

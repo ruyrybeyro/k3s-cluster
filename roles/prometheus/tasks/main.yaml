@@ -44,6 +44,7 @@
         values:
           alertmanager:
             alertmanagerSpec:
+              replicas: 2
               storage:
                 volumeClaimTemplate:
                   spec:
@@ -53,11 +54,25 @@
                     resources:
                       requests:
                         storage: 5Gi
+            service:
+              additionalPorts:
+                - name: http-web-lb
+                  port: 80
+                  targetPort: http-web
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_alertmanager }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-alertmanager
+              type: LoadBalancer
           grafana:
             admin:
               existingSecret: grafana-credentials
               passwordKey: password
               userKey: username
+            service:
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_grafana }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-grafana
+              type: LoadBalancer
           kubeControllerManager:
             endpoints: '{{ k3s_server_ips }}'
           kubeEtcd:
@@ -80,6 +95,15 @@
                     resources:
                       requests:
                         storage: 50Gi
+            service:
+              additionalPorts:
+                - name: http-web-lb
+                  port: 80
+                  targetPort: http-web
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-prometheus
+              type: LoadBalancer
           prometheus-node-exporter:
             resources:
               limits:
@@ -89,21 +113,3 @@
                 cpu: 100m
                 memory: 64Mi
         wait: true
-
-    - name: Set monitoring-grafana loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: monitoring-grafana
-            namespace: monitoring-system
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_grafana }}'
-              io.cilium/lb-ipam-sharing-key: monitoring-grafana
-          spec:
-            selector:
-              app.kubernetes.io/instance: monitoring
-              app.kubernetes.io/name: grafana
-            type: LoadBalancer
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
