@@ -13,7 +13,7 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Install chart
+    - name: Install tainted chart
       kubernetes.core.helm:
         chart_ref: longhorn/longhorn
         chart_version: '{{ longhorn_version_chart }}'
@@ -25,21 +25,38 @@
         values:
           defaultSettings:
             nodeDownPodDeletionPolicy: '{{ longhorn_pod_deletion_policy }}'
+            taintToleration: node-role.kubernetes.io/master=true:NoSchedule
           longhornDriver:
             tolerations:
-              - effect: NoSchedule
-                key: node-role.kubernetes.io/master
+              - key: node-role.kubernetes.io/master
                 operator: Equal
-                value: true
+                value: 'true'
+                effect: NoSchedule
           longhornManager:
             tolerations:
-              - effect: NoSchedule
-                key: node-role.kubernetes.io/master
+              - key: node-role.kubernetes.io/master
                 operator: Equal
-                value: true
+                value: 'true'
+                effect: NoSchedule
         wait: true
+      when: k3s_controlplane_tainted
 
-    - name: Set longhorn-frontend loadbalancer ip
+    - name: Install non-tainted chart
+      kubernetes.core.helm:
+        chart_ref: longhorn/longhorn
+        chart_version: '{{ longhorn_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        name: longhorn
+        namespace: longhorn-system
+        create_namespace: true
+        update_repo_cache: true
+        values:
+          defaultSettings:
+            nodeDownPodDeletionPolicy: '{{ longhorn_pod_deletion_policy }}'
+        wait: true
+      when: not k3s_controlplane_tainted
+
+    - name: Configure frontend
       kubernetes.core.k8s:
         definition:
           apiVersion: v1

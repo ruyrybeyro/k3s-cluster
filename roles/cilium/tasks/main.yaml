@@ -78,6 +78,9 @@
             enabled: true
           externalIPs:
             enabled: true
+          ipam:
+            operator:
+              clusterPoolIPv4PodCIDRList: '{{ cilium_ip_pool_pod }}'
           hubble:
             relay:
               enabled: true
@@ -116,7 +119,7 @@
           spec:
             externalIPs: true
             interfaces:
-              - ^eth[0-9]+
+              - '{{ k3s_network_interface }}'
             loadBalancerIPs: true
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
@@ -130,5 +133,5 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: '{{ cilium_ip_pool_cidr }}'
+              - cidr: '{{ cilium_ip_pool_loadbalancer }}'
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

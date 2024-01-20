@@ -71,6 +71,11 @@
         - ctr
         - kubectl
 
+    - name: Wait for drained port
+      ansible.builtin.wait_for:
+        port: '{{ k3s_api_port }}'
+        state: drained
+
     - name: Set Token
       when: k3s_token | length == 0
       block:
@@ -114,5 +119,5 @@
       ansible.builtin.command:
         cmd: kubectl config set-cluster default
               --kubeconfig={{ user_info.home }}/.kube/config
-              --server=https://{{ ansible_host }}:{{ k3s_api_port }}
+              --server=https://{{ k3s_api_host if k3s_loadbalancer_enabled else ansible_host }}:{{ k3s_api_port }}
       changed_when: true

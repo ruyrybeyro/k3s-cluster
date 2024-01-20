@@ -181,7 +181,7 @@
         - snapd.seeded.service
         - snapd.socket
 
-    - name: Unattended Upgrade
+    - name: Unattended Upgrades
       notify: Restart unattended upgrades service
       block:
         - name: Install history notification package
