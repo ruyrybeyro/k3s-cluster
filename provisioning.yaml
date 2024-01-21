@@ -3,33 +3,47 @@
   hosts: cluster
   become: true
   gather_facts: true
-  vars_prompt:
-    - name: trim_disks
-      prompt: Trim SSD disks? [Y/n]
-      default: 'n'
-      private: false
+  post_tasks:
+    - name: Setup loadbalancer
+      ansible.builtin.import_role:
+        name: k3s
+        tasks_from: loadbalancer
   roles:
     - role: cluster
+  tags: cluster
+  vars_prompt:
+    - name: prompt_trim_device
+      prompt: Trim cluster disks? [Y/n]
+      default: 'n'
+      private: false
 
-# - name: Kubernetes Provisioning
-#   hosts: cluster
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: helm
-#     - role: k3s
-#   serial:
-#     - 1
-#     - 2
-#     - 5
+- name: Kubernetes Provisioning
+  hosts: cluster
+  become: true
+  gather_facts: true
+  roles:
+    - role: helm
+    - role: k3s
+  serial:
+    - 1
+    - 2
+    - 5
+  tags: kubernetes
 
-# - name: Charts Provisioning
-#   hosts: server
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: cilium
-#     - role: certmanager
-#     - role: longhorn
-#     - role: prometheus
-#     # - role: sealedsecrets
+- name: Charts Provisioning
+  hosts: server
+  become: true
+  gather_facts: true
+  post_tasks:
+    - name: Update cilium chart settings
+      ansible.builtin.import_role:
+        name: cilium
+        tasks_from: settings
+  roles:
+    - role: cilium
+    - role: longhorn
+    - role: prometheus
+    - role: argocd
+    - role: certmanager
+    - role: sealedsecrets
+  tags: charts

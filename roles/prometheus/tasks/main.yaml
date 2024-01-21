@@ -3,25 +3,15 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Add repository
   kubernetes.core.helm_repository:
     name: prometheus
     repo_url: https://prometheus-community.github.io/helm-charts
-  tags: repo
 
-- name: Helm Chart
-  tags: chart
-  when: ansible_host == k3s_default_host
+- name: Chart Setup
+  when: ansible_host == k3s_server_default_host
   block:
-    - name: Create namespace
-      kubernetes.core.k8s:
-        api_version: v1
-        kind: Namespace
-        name: monitoring-system
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
-
     - name: Create secret
       kubernetes.core.k8s:
         definition:
@@ -29,24 +19,25 @@
           kind: Secret
           metadata:
             name: grafana-credentials
-            namespace: monitoring-system
+            namespace: kube-system
           stringData:
-            password: '{{ prometheus_grafana_password }}'
-            username: '{{ prometheus_grafana_username }}'
+            password: '{{ prometheus_grafana_user_password }}'
+            username: '{{ prometheus_grafana_user_name }}'
           type: Opaque
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: prometheus/kube-prometheus-stack
-        chart_version: '{{ prometheus_chart_version }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        chart_version: '{{ prometheus_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: monitoring
-        namespace: monitoring-system
+        namespace: kube-system
         update_repo_cache: true
         values:
           alertmanager:
             alertmanagerSpec:
+              replicas: 2
               storage:
                 volumeClaimTemplate:
                   spec:
@@ -56,12 +47,24 @@
                     resources:
                       requests:
                         storage: 5Gi
+            service:
+              additionalPorts:
+                - name: http-web-lb
+                  port: 80
+                  targetPort: http-web
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_alertmanager }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-alertmanager
+              type: LoadBalancer
           grafana:
             admin:
               existingSecret: grafana-credentials
               passwordKey: password
               userKey: username
             service:
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_grafana }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-grafana
               type: LoadBalancer
           kubeControllerManager:
             endpoints: '{{ k3s_server_ips }}'
@@ -75,6 +78,7 @@
             prometheusSpec:
               enableAdminAPI: true
               replicaExternalLabelName: replica
+              serviceMonitorSelectorNilUsesHelmValues: false
               storageSpec:
                 volumeClaimTemplate:
                   spec:
@@ -84,6 +88,15 @@
                     resources:
                       requests:
                         storage: 50Gi
+            service:
+              additionalPorts:
+                - name: http-web-lb
+                  port: 80
+                  targetPort: http-web
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip }}'
+                io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-prometheus
+              type: LoadBalancer
           prometheus-node-exporter:
             resources:
               limits:

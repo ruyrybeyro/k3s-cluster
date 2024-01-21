@@ -3,62 +3,62 @@
   ansible.builtin.import_role:
     name: k3s
     tasks_from: facts
-  tags: always
 
 - name: Install Dependencies
-  tags: deps
   when: ansible_host in k3s_server_hosts
   block:
+    - name: Set binary fact
+      ansible.builtin.set_fact:
+        binary:
+          - org: cilium
+            repo: cilium-cli
+            version: '{{ cilium_version_cli }}'
+            name: cilium-linux-arm64.tar.gz
+          - org: cilium
+            repo: hubble
+            version: '{{ cilium_version_hubble }}'
+            name: hubble-linux-arm64.tar.gz
+      run_once: true
+
     - name: Download archive
       ansible.builtin.get_url:
-        url: https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}.tar.gz
-        checksum: sha256:https://github.com/cilium/{{ item[0] }}/releases/download/{{ item[1] }}/{{ item[2] }}.tar.gz.sha256sum
+        url: https://github.com/{{ item.org }}/{{ item.repo }}/releases/download/{{ item.version }}/{{ item.name }}
+        checksum: sha256:https://github.com/{{ item.org }}/{{ item.repo }}/releases/download/{{ item.version }}/{{ item.name }}.sha256sum
         dest: /tmp
         owner: root
         group: root
         mode: '0644'
-      loop:
-        - ['cilium-cli', '{{ cilium_cli_version }}', '{{ cilium_cli_filename }}']
-        - ['hubble', '{{ cilium_hubble_version }}', '{{ cilium_hubble_filename }}']
-      tags: binary
+      loop: '{{ binary }}'
 
     - name: Install binary
       ansible.builtin.unarchive:
-        src: /tmp/{{ item }}.tar.gz
+        src: /tmp/{{ item.name }}
         dest: /usr/local/bin
         owner: root
         group: root
         mode: '0755'
         remote_src: true
-      loop:
-        - '{{ cilium_cli_filename }}'
-        - '{{ cilium_hubble_filename }}'
-      tags: binary
+      loop: '{{ binary }}'
 
     - name: Delete archive
       ansible.builtin.file:
-        path: /tmp/{{ item }}.tar.gz
+        path: /tmp/{{ item.name }}
         state: absent
-      loop:
-        - '{{ cilium_cli_filename }}'
-        - '{{ cilium_hubble_filename }}'
-      tags: binary
+      loop: '{{ binary }}'
 
     - name: Add repository
       kubernetes.core.helm_repository:
         name: cilium
         repo_url: https://helm.cilium.io
-      tags: repo
 
-- name: Helm Chart
-  tags: chart
-  when: ansible_host == k3s_default_host
+- name: Chart Setup
+  when: ansible_host == k3s_server_default_host
   block:
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: cilium/cilium
-        chart_version: '{{ cilium_chart_version }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        chart_version: '{{ cilium_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: cilium
         namespace: kube-system
         update_repo_cache: true
@@ -67,7 +67,6 @@
             enabled: true
           enableCiliumEndpointSlice: true
           envoy:
-            enabled: true
             resources:
               limits:
                 cpu: 400m
@@ -76,8 +75,13 @@
                 cpu: 100m
                 memory: 64Mi
             rollOutPods: true
+          envoyConfig:
+            enabled: true
           externalIPs:
             enabled: true
+          ipam:
+            operator:
+              clusterPoolIPv4PodCIDRList: '{{ cilium_pod_ip_pool }}'
           hubble:
             relay:
               enabled: true
@@ -105,7 +109,7 @@
           rollOutCiliumPods: true
         wait: true
 
-    - name: Install announcement manifest
+    - name: Install l2 announcement policy manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -115,10 +119,12 @@
             namespace: kube-system
           spec:
             externalIPs: true
+            interfaces:
+              - '{{ k3s_network_interface }}'
             loadBalancerIPs: true
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
 
-    - name: Install pool manifest
+    - name: Install loadbalancer ip pool manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -128,5 +134,5 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: '{{ cilium_ip_pool }}'
-        kubeconfig: '{{ k3s_conf_dir }}/k3s.yaml'
+              - cidr: '{{ cilium_loadbalancer_ip_pool }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

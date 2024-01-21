@@ -2,4 +2,4 @@
 
 ## Releases
 
-- [Helm](https://github.com/helm/helm/releases)
+- [GitHub](https://github.com/helm/helm/releases)

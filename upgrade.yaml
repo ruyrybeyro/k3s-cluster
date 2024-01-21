@@ -3,12 +3,16 @@
   hosts: cluster
   become: true
   gather_facts: true
+  serial: 1
   tags: cluster
   tasks:
     - name: Upgrade distribution
       ansible.builtin.import_role:
         name: cluster
         tasks_from: upgrade
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
 
 - name: Kubernetes Upgrade
   hosts: server
@@ -22,10 +26,17 @@
             name: certmanager
           tags: certmanager
 
-        - name: Upgrade cilium chart
-          ansible.builtin.import_role:
-            name: cilium
+        - name: Cilium
           tags: cilium
+          block:
+            - name: Upgrade cilium chart
+              ansible.builtin.import_role:
+                name: cilium
+
+            - name: Update cilium chart settings
+              ansible.builtin.import_role:
+                name: cilium
+                tasks_from: settings
 
         - name: Upgrade longhorn chart
           ansible.builtin.import_role:
@@ -37,10 +48,10 @@
             name: prometheus
           tags: prometheus
 
-        # - name: Upgrade sealed-secrets chart
-        #   ansible.builtin.import_role:
-        #     name: sealedsecrets
-        #   tags: sealedsecrets
+        - name: Upgrade sealed-secrets chart
+          ansible.builtin.import_role:
+            name: sealedsecrets
+          tags: sealedsecrets
 
     - name: Upgrade helm
       ansible.builtin.import_role:

@@ -1,7 +1,7 @@
 ---
-cilium_chart_version: v1.14.5
-cilium_cli_filename: cilium-linux-arm64
-cilium_cli_version: v0.15.18
-cilium_hubble_filename: hubble-linux-arm64
-cilium_hubble_version: v0.12.3
-cilium_ip_pool: '192.168.4.16/28'
+cilium_loadbalancer_ip_hubble: 192.168.4.18
+cilium_loadbalancer_ip_pool: '192.168.4.16/28'
+cilium_pod_ip_pool: '10.42.0.0/16'
+cilium_version_chart: v1.14.5
+cilium_version_cli: v0.15.19
+cilium_version_hubble: v0.12.3

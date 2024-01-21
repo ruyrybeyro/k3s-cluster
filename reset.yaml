@@ -7,14 +7,22 @@
     - 3
     - 5
   vars_prompt:
-    - name: remove_packages
-      prompt: Remove APT packages? [Y/n]
+    - name: prompt_remove_packages
+      prompt: Remove installed apt packages? [Y/n]
       default: 'n'
       private: false
   tasks:
     - name: Reset kubernetes
       ansible.builtin.import_role:
         name: k3s
+        tasks_from: reset
+
+    - name: Get packages information
+      ansible.builtin.package_facts:
+
+    - name: Reset argo-cd chart
+      ansible.builtin.import_role:
+        name: argocd
         tasks_from: reset
 
     - name: Reset cert-manager chart

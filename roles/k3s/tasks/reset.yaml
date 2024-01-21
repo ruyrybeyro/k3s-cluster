@@ -3,6 +3,30 @@
   ansible.builtin.import_tasks:
     file: facts.yaml
 
+- name: Remove Loadbalancer
+  when:
+    - not k3s_loadbalancer_enabled
+    - ansible_host in k3s_loadbalancer_hosts
+  block:
+    - name: Remove packages
+      ansible.builtin.apt:
+        name: '{{ item }}'
+        state: absent
+        autoremove: true
+        clean: true
+        purge: true
+      loop:
+        - haproxy
+        - keepalived
+
+    - name: Remove files
+      ansible.builtin.file:
+        name: '{{ item }}'
+        state: absent
+      loop:
+        - /etc/keepalived
+        - /etc/sysctl.d/90-ip-nonlocal-bind.conf
+
 - name: Stop service
   ansible.builtin.assert:
     quiet: true
@@ -40,7 +64,7 @@
 
 - name: Get user info
   ansible.builtin.user:
-    name: '{{ raspberry_pi_user }}'
+    name: '{{ ansible_user }}'
   register: user_info
 
 - name: Remove generic files
@@ -49,10 +73,18 @@
     state: absent
   loop:
     - '{{ user_info.home }}/.kube'
-    - '{{ k3s_conf_dir }}'
+    - '{{ k3s_dir_config }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
     - /usr/local/bin/crictl
     - /usr/local/bin/ctr
     - /usr/local/bin/k3s
     - /usr/local/bin/kubectl
+
+- name: Reset systemd
+  ansible.builtin.command:
+    cmd: systemctl reset-failed # noqa command-instead-of-module
+  changed_when: true
+  loop:
+    - daemon-reload
+    - reset-failed

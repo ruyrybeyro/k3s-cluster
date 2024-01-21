@@ -9,11 +9,11 @@
   block:
     - name: Remove repository
       kubernetes.core.helm_repository:
-        name: sealed-secrets
+        name: argoproj
         repo_state: absent
       when: "'helm' in ansible_facts.packages"
 
     - name: Remove file
       ansible.builtin.file:
-        name: /usr/local/bin/kubeseal
+        name: /usr/local/bin/argocd
         state: absent

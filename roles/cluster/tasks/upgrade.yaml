@@ -4,6 +4,8 @@
     state: fixed
     upgrade: dist
     autoremove: true
+    clean: true
+    purge: true
     update_cache: true
 
 - name: Firmware Files Cleanup
@@ -36,6 +38,3 @@
         get_checksum: false
       changed_when: reboot.stat.exists
       register: reboot
-
-- name: Flush handlers
-  ansible.builtin.meta: flush_handlers

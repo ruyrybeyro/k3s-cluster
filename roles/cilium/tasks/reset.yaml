@@ -11,6 +11,7 @@
       kubernetes.core.helm_repository:
         name: cilium
         repo_state: absent
+      when: "'helm' in ansible_facts.packages"
 
     - name: Remove files
       ansible.builtin.file:
