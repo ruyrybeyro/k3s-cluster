@@ -16,7 +16,7 @@ ansible-vault encrypt_string '<yourpassword>' --name 'prometheus_grafana_user_pa
 Uninstall chart:
 
 ```shell
-helm uninstall monitoring -n monitoring-system --wait
+helm uninstall monitoring -n kube-system --wait
 kubectl delete crd alertmanagerconfigs.monitoring.coreos.com
 kubectl delete crd alertmanagers.monitoring.coreos.com
 kubectl delete crd podmonitors.monitoring.coreos.com
@@ -25,6 +25,6 @@ kubectl delete crd prometheuses.monitoring.coreos.com
 kubectl delete crd prometheusrules.monitoring.coreos.com
 kubectl delete crd servicemonitors.monitoring.coreos.com
 kubectl delete crd thanosrulers.monitoring.coreos.com
-kubectl delete secret grafana-credentials -n monitoring-system
-kubectl delete namespace monitoring-system
+kubectl delete secret grafana-credentials -n kube-system
+kubectl delete namespace kube-system
 ```

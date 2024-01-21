@@ -1,4 +1,4 @@
 ---
-longhorn_loadbalancer_ip_frontend: 192.168.4.18
+longhorn_loadbalancer_ip_frontend: 192.168.4.19
 longhorn_pod_deletion_policy: delete-both-statefulset-and-deployment-pod
 longhorn_version_chart: v1.5.3

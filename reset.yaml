@@ -20,6 +20,11 @@
     - name: Get packages information
       ansible.builtin.package_facts:
 
+    - name: Reset argo-cd chart
+      ansible.builtin.import_role:
+        name: argocd
+        tasks_from: reset
+
     - name: Reset cert-manager chart
       ansible.builtin.import_role:
         name: certmanager

@@ -10,19 +10,20 @@
     - name: Set binary fact
       ansible.builtin.set_fact:
         binary:
-          - name: cilium-cli
-            org: cilium
+          - org: cilium
+            repo: cilium-cli
             version: '{{ cilium_version_cli }}'
-            tarball: cilium-linux-arm64.tar.gz
-          - name: hubble
-            org: cilium
+            name: cilium-linux-arm64.tar.gz
+          - org: cilium
+            repo: hubble
             version: '{{ cilium_version_hubble }}'
-            tarball: hubble-linux-arm64.tar.gz
+            name: hubble-linux-arm64.tar.gz
+      run_once: true
 
     - name: Download archive
       ansible.builtin.get_url:
-        url: https://github.com/{{ item.org }}/{{ item.name }}/releases/download/{{ item.version }}/{{ item.tarball }}
-        checksum: sha256:https://github.com/{{ item.org }}/{{ item.name }}/releases/download/{{ item.version }}/{{ item.tarball }}.sha256sum
+        url: https://github.com/{{ item.org }}/{{ item.repo }}/releases/download/{{ item.version }}/{{ item.name }}
+        checksum: sha256:https://github.com/{{ item.org }}/{{ item.repo }}/releases/download/{{ item.version }}/{{ item.name }}.sha256sum
         dest: /tmp
         owner: root
         group: root
@@ -31,7 +32,7 @@
 
     - name: Install binary
       ansible.builtin.unarchive:
-        src: /tmp/{{ item.tarball }}
+        src: /tmp/{{ item.name }}
         dest: /usr/local/bin
         owner: root
         group: root
@@ -41,7 +42,7 @@
 
     - name: Delete archive
       ansible.builtin.file:
-        path: /tmp/{{ item.tarball }}
+        path: /tmp/{{ item.name }}
         state: absent
       loop: '{{ binary }}'
 
@@ -80,7 +81,7 @@
             enabled: true
           ipam:
             operator:
-              clusterPoolIPv4PodCIDRList: '{{ cilium_ip_pool_pod }}'
+              clusterPoolIPv4PodCIDRList: '{{ cilium_pod_ip_pool }}'
           hubble:
             relay:
               enabled: true
@@ -133,5 +134,5 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: '{{ cilium_ip_pool_loadbalancer }}'
+              - cidr: '{{ cilium_loadbalancer_ip_pool }}'
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

@@ -14,16 +14,15 @@
   kubernetes.core.helm:
     chart_ref: jetstack/cert-manager
     chart_version: '{{ certmanager_version_chart }}'
-    create_namespace: true
     kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
     name: cert-manager
-    namespace: cert-manager
+    namespace: kube-system
     update_repo_cache: true
     values:
       installCRDs: true
       prometheus:
         serviceMonitor:
           enabled: true
-          namespace: monitoring-system
+          namespace: kube-system
     wait: true
   when: ansible_host == k3s_server_default_host

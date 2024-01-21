@@ -12,13 +12,6 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Create namespace
-      kubernetes.core.k8s:
-        api_version: v1
-        kind: Namespace
-        name: monitoring-system
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
-
     - name: Create secret
       kubernetes.core.k8s:
         definition:
@@ -26,7 +19,7 @@
           kind: Secret
           metadata:
             name: grafana-credentials
-            namespace: monitoring-system
+            namespace: kube-system
           stringData:
             password: '{{ prometheus_grafana_user_password }}'
             username: '{{ prometheus_grafana_user_name }}'
@@ -39,7 +32,7 @@
         chart_version: '{{ prometheus_version_chart }}'
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: monitoring
-        namespace: monitoring-system
+        namespace: kube-system
         update_repo_cache: true
         values:
           alertmanager:

@@ -1,0 +1,95 @@
+---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+
+- name: Install Dependencies
+  when: ansible_host in k3s_server_hosts
+  block:
+    - name: Set binary fact
+      ansible.builtin.set_fact:
+        binary:
+          org: argoproj
+          repo: argo-cd
+          version: '{{ argocd_version }}'
+          checksums: cli_checksums.txt
+          name: argocd-linux-arm64
+      run_once: true
+
+    - name: Set checksums fact
+      ansible.builtin.uri:
+        url: https://github.com/{{ binary['org'] }}/{{ binary['repo'] }}/releases/download/{{ binary['version'] }}/{{ binary['checksums'] }}
+        return_content: true
+      register: checksums
+      run_once: true
+
+    - name: Set sha256 checksum fact
+      ansible.builtin.set_fact:
+        sha256_checksum: "{{ item.split(' ')[0] }}"
+      loop: "{{ checksums.content.split('\n') }}"
+      when: "'linux-arm64' in item"
+      run_once: true
+
+    - name: Install binary
+      ansible.builtin.get_url:
+        url: https://github.com/{{ binary['org'] }}/{{ binary['repo'] }}/releases/download/{{ binary['version'] }}/{{ binary['name'] }}
+        checksum: sha256:{{ sha256_checksum }}
+        dest: /usr/local/bin/argocd
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Add repository
+      kubernetes.core.helm_repository:
+        name: argoproj
+        repo_url: https://argoproj.github.io/argo-helm
+
+- name: Chart Setup
+  when: ansible_host == k3s_server_default_host
+  block:
+    - name: Install chart
+      kubernetes.core.helm:
+        chart_ref: argoproj/argo-cd
+        chart_version: '{{ argocd_version_chart }}'
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        name: argo-cd
+        namespace: kube-system
+        update_repo_cache: true
+        values:
+          applicationSet:
+            replicas: 2
+          configs:
+            secret:
+              argocdServerAdminPassword: "{{ argocd_admin_password | string | ansible.builtin.password_hash('blowfish') }}"
+          redis-ha:
+            enabled: true
+            # exporter:
+            #   enabled: true
+          repoServer:
+            autoscaling:
+              enabled: true
+              minReplicas: 2
+          server:
+            autoscaling:
+              enabled: true
+              minReplicas: 2
+        wait: true
+
+    - name: Configure frontend
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ argocd_loadbalancer_ip_frontend }}'
+              io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
+            name: argo-cd-argocd-server
+            namespace: kube-system
+          spec:
+            selector:
+              app.kubernetes.io/instance: argo-cd
+              app.kubernetes.io/name: argocd-server
+            type: LoadBalancer
+        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'

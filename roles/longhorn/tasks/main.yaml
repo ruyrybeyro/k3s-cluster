@@ -19,8 +19,7 @@
         chart_version: '{{ longhorn_version_chart }}'
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: longhorn
-        namespace: longhorn-system
-        create_namespace: true
+        namespace: kube-system
         update_repo_cache: true
         values:
           defaultSettings:
@@ -47,8 +46,7 @@
         chart_version: '{{ longhorn_version_chart }}'
         kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
         name: longhorn
-        namespace: longhorn-system
-        create_namespace: true
+        namespace: kube-system
         update_repo_cache: true
         values:
           defaultSettings:
@@ -66,7 +64,7 @@
               io.cilium/lb-ipam-ips: '{{ longhorn_loadbalancer_ip_frontend }}'
               io.cilium/lb-ipam-sharing-key: longhorn-frontend
             name: longhorn-frontend
-            namespace: longhorn-system
+            namespace: kube-system
           spec:
             selector:
               app: longhorn-ui

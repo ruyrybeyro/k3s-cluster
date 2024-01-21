@@ -10,15 +10,31 @@
     - name: Set binary fact
       ansible.builtin.set_fact:
         binary:
-          name: sealed-secrets
           org: bitnami-labs
+          repo: sealed-secrets
           version: '{{ sealedsecrets_version_kubeseal }}'
-          tarball: 'kubeseal-{{ sealedsecrets_version_kubeseal[1:] }}-linux-arm64.tar.gz'
+          checksums: 'sealed-secrets_{{ sealedsecrets_version_kubeseal[1:] }}_checksums.txt'
+          name: 'kubeseal-{{ sealedsecrets_version_kubeseal[1:] }}-linux-arm64.tar.gz'
+      run_once: true
+
+    - name: Set checksums fact
+      ansible.builtin.uri:
+        url: https://github.com/{{ binary['org'] }}/{{ binary['repo'] }}/releases/download/{{ binary['version'] }}/{{ binary['checksums'] }}
+        return_content: true
+      register: checksums
+      run_once: true
+
+    - name: Set sha256 checksum fact
+      ansible.builtin.set_fact:
+        sha256_checksum: "{{ item.split(' ')[0] }}"
+      loop: "{{ checksums.content.split('\n') }}"
+      when: "'linux-arm64' in item"
+      run_once: true
 
     - name: Download archive
       ansible.builtin.get_url:
-        url: https://github.com/{{ binary['org'] }}/{{ binary['name'] }}/releases/download/{{ binary['version'] }}/{{ binary['tarball'] }}
-        # checksum: sha256:https://github.com/{{ binary['org'] }}/{{ binary['name'] }}/releases/download/{{ binary['version'] }}/{{ binary['tarball'] }}.sig
+        url: https://github.com/{{ binary['org'] }}/{{ binary['repo'] }}/releases/download/{{ binary['version'] }}/{{ binary['name'] }}
+        checksum: sha256:{{ sha256_checksum }}
         dest: /tmp
         owner: root
         group: root
@@ -26,7 +42,7 @@
 
     - name: Install binary
       ansible.builtin.unarchive:
-        src: /tmp/{{ binary['tarball'] }}
+        src: /tmp/{{ binary['name'] }}
         dest: /usr/local/bin
         owner: root
         group: root
@@ -35,10 +51,10 @@
 
     - name: Delete archive
       ansible.builtin.file:
-        path: /tmp/{{ item }}
+        path: '{{ item }}'
         state: absent
       loop:
-        - "{{ binary['tarball'] }}"
+        - /tmp/{{ binary['name'] }}
         - /usr/local/bin/LICENSE
         - /usr/local/bin/README.md
 

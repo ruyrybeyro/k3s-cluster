@@ -43,6 +43,7 @@
     - role: cilium
     - role: longhorn
     - role: prometheus
+    - role: argocd
     - role: certmanager
     - role: sealedsecrets
   tags: charts
