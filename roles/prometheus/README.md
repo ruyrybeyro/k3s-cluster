@@ -10,7 +10,7 @@
 Set Grafana password:
 
 ```shell
-ansible-vault encrypt_string '<yourpassword>' --name 'prometheus_grafana_user_password'
+ansible-vault encrypt_string '<yourpassword>' --name 'prometheus_vars.grafana.user.password'
 ```
 
 Uninstall chart:

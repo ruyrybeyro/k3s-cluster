@@ -25,7 +25,7 @@
     - name: Helm Package
       when: not gpg_key.stat.exists
       block:
-        - name: Get key
+        - name: Download key
           ansible.builtin.get_url:
             url: https://baltocdn.com/helm/signing.asc
             dest: /tmp/signing.asc

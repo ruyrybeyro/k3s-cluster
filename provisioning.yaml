@@ -44,6 +44,6 @@
     - role: longhorn
     - role: prometheus
     - role: argocd
-    - role: certmanager
-    - role: sealedsecrets
+    # - role: certmanager
+    # - role: sealedsecrets
   tags: charts

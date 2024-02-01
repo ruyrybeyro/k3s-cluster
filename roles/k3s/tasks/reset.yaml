@@ -5,7 +5,7 @@
 
 - name: Remove Loadbalancer
   when:
-    - not k3s_loadbalancer_enabled
+    - not k3s_vars.loadbalancer.enabled
     - ansible_host in k3s_loadbalancer_hosts
   block:
     - name: Remove packages
@@ -73,7 +73,7 @@
     state: absent
   loop:
     - '{{ user_info.home }}/.kube'
-    - '{{ k3s_dir_config }}'
+    - '{{ k3s_vars.directory.config }}'
     - /etc/systemd/system/{{ k3s_service_name }}.service
     - /etc/systemd/system/{{ k3s_service_name }}.service.env
     - /usr/local/bin/crictl

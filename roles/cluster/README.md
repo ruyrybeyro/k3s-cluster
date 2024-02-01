@@ -42,7 +42,7 @@ systemctl list-dependencies --reverse snapd.socket
 Set iCloud user password:
 
 ```shell
-ansible-vault encrypt_string '<yourpassword>' --name 'cluster_mail_user_password'
+ansible-vault encrypt_string '<yourpassword>' --name 'cluster_vars.mail.user.password'
 ```
 
 Show `debconf` configuration settings:

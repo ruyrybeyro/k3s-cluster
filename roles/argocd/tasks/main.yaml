@@ -12,7 +12,7 @@
         binary:
           org: argoproj
           repo: argo-cd
-          version: '{{ argocd_version }}'
+          version: '{{ argocd_vars.version.binary }}'
           checksums: cli_checksums.txt
           name: argocd-linux-arm64
       run_once: true
@@ -51,8 +51,8 @@
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: argoproj/argo-cd
-        chart_version: '{{ argocd_version_chart }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        chart_version: '{{ argocd_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: argo-cd
         namespace: kube-system
         update_repo_cache: true
@@ -61,7 +61,7 @@
             replicas: 2
           configs:
             secret:
-              argocdServerAdminPassword: "{{ argocd_admin_password | string | ansible.builtin.password_hash('blowfish') }}"
+              argocdServerAdminPassword: "{{ argocd_vars.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
           redis-ha:
             enabled: true
             # exporter:
@@ -83,7 +83,7 @@
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_loadbalancer_ip_frontend }}'
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.loadbalancer.ip.frontend }}'
               io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
             name: argo-cd-argocd-server
             namespace: kube-system
@@ -92,4 +92,4 @@
               app.kubernetes.io/instance: argo-cd
               app.kubernetes.io/name: argocd-server
             type: LoadBalancer
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

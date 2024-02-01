@@ -1,17 +1,27 @@
 ---
-k3s_api_host: 192.168.4.10
-k3s_api_port: 6443
-k3s_cluster_dns: 10.43.0.10
-k3s_cluster_domain: cluster.local
-k3s_controlplane_tainted: true
-k3s_loadbalancer_enabled: true
-k3s_dir_config: /etc/rancher/k3s
-k3s_dir_lib: /var/lib/rancher/k3s
-k3s_network_interface: eth0
-k3s_proxy_host: 127.0.0.1
-k3s_proxy_port: 6444
-k3s_service_agent_args: ''
-k3s_service_server_args: ''
-k3s_version: v1.29.0+k3s1
-k3s_version_controller: v0.13.2
-k3s_version_kubectl: v1.29.0
+k3s_vars:
+  api:
+    host: 192.168.4.10
+    port: 6443
+  cluster:
+    dns: 10.43.0.10
+    domain: cluster.local
+  controlplane:
+    tainted: true
+  directory:
+    config: /etc/rancher/k3s
+    lib: /var/lib/rancher/k3s
+  loadbalancer:
+    enabled: true
+    server:
+      host: 127.0.0.1
+      port: 6444
+  network:
+    interface: eth0
+  service:
+    agent_args: ''
+    server_args: ''
+  version:
+    controller: v0.13.2
+    kubectl: v1.29.0
+    release: v1.29.0+k3s1

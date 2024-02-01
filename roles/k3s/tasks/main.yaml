@@ -8,8 +8,8 @@
   block:
     - name: Install k3s binary
       ansible.builtin.get_url:
-        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.version.release }}/k3s-arm64
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.version.release }}/sha256sum-arm64.txt
         dest: /usr/local/bin/k3s
         owner: root
         group: root
@@ -17,7 +17,7 @@
 
     - name: Create configuration directory
       ansible.builtin.file:
-        path: '{{ k3s_dir_config }}'
+        path: '{{ k3s_vars.directory.config }}'
         state: directory
         owner: root
         group: root
@@ -26,7 +26,7 @@
     - name: Create configuration file
       ansible.builtin.template:
         src: config.j2
-        dest: '{{ k3s_dir_config }}/config.yaml'
+        dest: '{{ k3s_vars.directory.config }}/config.yaml'
         owner: root
         group: root
         mode: '0600'
@@ -58,7 +58,7 @@
     - name: Add variable to environment
       ansible.builtin.lineinfile:
         path: /etc/environment
-        line: KUBECONFIG={{ k3s_dir_config }}/k3s.yaml
+        line: KUBECONFIG={{ k3s_vars.directory.config }}/k3s.yaml
         regexp: ^KUBECONFIG
 
     - name: Create symlinks
@@ -73,7 +73,7 @@
 
     - name: Wait for drained port
       ansible.builtin.wait_for:
-        port: '{{ k3s_api_port }}'
+        port: '{{ k3s_vars.api.port }}'
         state: drained
 
     - name: Set Token
@@ -81,11 +81,11 @@
       block:
         - name: Wait for token creation
           ansible.builtin.wait_for:
-            path: '{{ k3s_dir_lib }}/server/node-token'
+            path: '{{ k3s_vars.directory.lib }}/server/node-token'
 
         - name: Read token
           ansible.builtin.slurp:
-            path: '{{ k3s_dir_lib }}/server/node-token'
+            path: '{{ k3s_vars.directory.lib }}/server/node-token'
           register: node_token
 
         - name: Set token fact
@@ -108,7 +108,7 @@
 
     - name: Copy kubeconfig file
       ansible.builtin.copy:
-        src: '{{ k3s_dir_config }}/k3s.yaml'
+        src: '{{ k3s_vars.directory.config }}/k3s.yaml'
         dest: '{{ user_info.home }}/.kube/config'
         owner: '{{ user_info.name }}'
         group: '{{ user_info.name }}'
@@ -119,5 +119,12 @@
       ansible.builtin.command:
         cmd: kubectl config set-cluster default
               --kubeconfig={{ user_info.home }}/.kube/config
-              --server=https://{{ k3s_api_host if k3s_loadbalancer_enabled else ansible_host }}:{{ k3s_api_port }}
+              --server=https://{{ k3s_vars.api.host if k3s_vars.loadbalancer.enabled else ansible_host }}:{{ k3s_vars.api.port }}
       changed_when: true
+
+    - name: Copy kubeconfig file locally
+      ansible.builtin.fetch:
+        src: '{{ user_info.home }}/.kube/config'
+        dest: "{{ lookup('ansible.builtin.env', 'HOME') + '/.kube/' }}"
+        flat: true
+      when: ansible_host == k3s_server_default_host
