@@ -3,7 +3,7 @@
   notify: Reboot
   block:
     - name: Bluetooth Configuration
-      when: cluster_service_disable_bluetooth | default(false)
+      when: not cluster_vars.service.bluetooth.enabled | default(false)
       block:
         - name: Disable bluetooth firmware
           ansible.builtin.lineinfile:
@@ -22,7 +22,7 @@
             - hciuart.service
 
     - name: WiFi Configuration
-      when: cluster_service_disable_wifi | default(false)
+      when: not cluster_vars.service.wifi.enabled | default(false)
       block:
         - name: Disable wifi firmware
           ansible.builtin.lineinfile:
@@ -41,16 +41,16 @@
       block:
         - name: Set device id
           ansible.builtin.command:
-            cmd: lsusb -s {{ cluster_device_id }}
+            cmd: lsusb -s {{ cluster_vars.device.id }}
           changed_when: false
           register: device_id
 
         - name: Device Trim
-          when: device_id.stdout.find(cluster_device_name) != -1
+          when: device_id.stdout.find(cluster_vars.device.name) != -1
           block:
             - name: Set device attributes
               ansible.builtin.set_fact:
-                device_attributes: "{{ device_id.stdout | regex_search('ID\\s+(.*)\\s+' + cluster_device_name, '\\1') | join | trim | split(':') }}"
+                device_attributes: "{{ device_id.stdout | regex_search('ID\\s+(.*)\\s+' + cluster_vars.device.name, '\\1') | join | trim | split(':') }}"
 
             - name: Device Rule Setup
               when:
@@ -192,7 +192,7 @@
 
         - name: Set unattended upgrades time-lapse fact
           ansible.builtin.set_fact:
-            timelapse: '{{ cluster_unattended_upgrades_reboot_timelapse * period }}'
+            timelapse: '{{ cluster_vars.unattended_upgrades.reboot.timelapse * period }}'
           delegate_facts: true
           delegate_to: '{{ item }}'
           loop: '{{ ansible_play_hosts }}'
@@ -201,7 +201,7 @@
 
         - name: Set unattended upgrades reboot time
           ansible.builtin.command:
-            cmd: date -d '{{ cluster_unattended_upgrades_reboot_time }} {{ timelapse }}min' +'%H:%M'
+            cmd: date -d '{{ cluster_vars.unattended_upgrades.reboot.time }} {{ timelapse }}min' +'%H:%M'
           changed_when: false
           register: reboot_time
 
@@ -214,7 +214,7 @@
             - regexp: ^\/\/(\s+\"\${distro_id}:\${distro_codename}-updates\";)$
               replace: '  \g<1>'
             - regexp: ^(?:.*)(Unattended-Upgrade::Mail)\s.*;$
-              replace: '\g<1> "{{ cluster_mail_user_alias }}";'
+              replace: '\g<1> "{{ cluster_vars.mail.user.alias }}";'
             - regexp: ^\/\/(Unattended-Upgrade::Remove-Unused-Dependencies) "false";$
               replace: '\g<1> "true";'
             - regexp: ^\/\/(Unattended-Upgrade::Automatic-Reboot) "false";$
@@ -245,7 +245,7 @@
           enabled: true
         # SMTP relay host
         - question: relayhost
-          value: '[{{ cluster_mail_relay_host }}]:{{ cluster_mail_relay_port }}'
+          value: '[{{ cluster_vars.mail.relay.host }}]:{{ cluster_vars.mail.relay.port }}'
           vtype: string
           enabled: true
         # Recipient for root and postmaster mail
@@ -282,7 +282,7 @@
           enabled: true
         # Internet protocols to use
         - question: protocols
-          value: '{{ cluster_mail_protocols }}'
+          value: '{{ cluster_vars.mail.protocols }}'
           vtype: select
           enabled: true
 
@@ -296,7 +296,7 @@
 
     - name: Create generic map
       ansible.builtin.copy:
-        content: "root@{{ cluster_host['fqdn'] }} {{ cluster_mail_user_alias }}\n"
+        content: "root@{{ cluster_host['fqdn'] }} {{ cluster_vars.mail.user.alias }}\n"
         dest: /etc/postfix/generic
         owner: root
         group: root
@@ -304,7 +304,7 @@
 
     - name: Create sasl password map
       ansible.builtin.copy:
-        content: "[{{ cluster_mail_relay_host }}]:{{ cluster_mail_relay_port }} {{ cluster_mail_user_name }}:{{ cluster_mail_user_password }}\n"
+        content: "[{{ cluster_vars.mail.relay.host }}]:{{ cluster_vars.mail.relay.port }} {{ cluster_vars.mail.user.name }}:{{ cluster_vars.mail.user.password }}\n"
         dest: /etc/postfix/sasl/password
         owner: root
         group: root

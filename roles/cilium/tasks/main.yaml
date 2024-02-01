@@ -12,11 +12,11 @@
         binary:
           - org: cilium
             repo: cilium-cli
-            version: '{{ cilium_version_cli }}'
+            version: '{{ cilium_vars.version.cli }}'
             name: cilium-linux-arm64.tar.gz
           - org: cilium
             repo: hubble
-            version: '{{ cilium_version_hubble }}'
+            version: '{{ cilium_vars.version.hubble }}'
             name: hubble-linux-arm64.tar.gz
       run_once: true
 
@@ -54,11 +54,17 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
+    - name: Apply gateway api crds manifest
+      kubernetes.core.k8s:
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway.api.version }}/experimental-install.yaml
+        state: present
+
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: cilium/cilium
-        chart_version: '{{ cilium_version_chart }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        chart_version: '{{ cilium_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: cilium
         namespace: kube-system
         update_repo_cache: true
@@ -67,6 +73,7 @@
             enabled: true
           enableCiliumEndpointSlice: true
           envoy:
+            enabled: true
             resources:
               limits:
                 cpu: 400m
@@ -75,13 +82,14 @@
                 cpu: 100m
                 memory: 64Mi
             rollOutPods: true
-          envoyConfig:
-            enabled: true
           externalIPs:
+            enabled: true
+          gatewayAPI:
+            default: true
             enabled: true
           ipam:
             operator:
-              clusterPoolIPv4PodCIDRList: '{{ cilium_pod_ip_pool }}'
+              clusterPoolIPv4PodCIDRList: '{{ cilium_vars.pod.ip.pool }}'
           hubble:
             relay:
               enabled: true
@@ -92,11 +100,14 @@
           k8sClientRateLimit:
             burst: 100
             qps: 50
-          k8sServiceHost: '{{ k3s_proxy_host }}'
-          k8sServicePort: '{{ k3s_proxy_port }}'
+          k8sServiceHost: '{{ k3s_vars.loadbalancer.server.host }}'
+          k8sServicePort: '{{ k3s_vars.loadbalancer.server.port }}'
           kubeProxyReplacement: true
           l2announcements:
             enabled: true
+          loadBalancer:
+            l7:
+              backend: envoy
           operator:
             resources:
               limits:
@@ -109,7 +120,7 @@
           rollOutCiliumPods: true
         wait: true
 
-    - name: Install l2 announcement policy manifest
+    - name: Apply l2 announcement policy manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -120,11 +131,12 @@
           spec:
             externalIPs: true
             interfaces:
-              - '{{ k3s_network_interface }}'
+              - '{{ k3s_vars.network.interface }}'
             loadBalancerIPs: true
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        state: present
 
-    - name: Install loadbalancer ip pool manifest
+    - name: Apply loadbalancer ip pool manifest
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -134,5 +146,6 @@
             namespace: kube-system
           spec:
             cidrs:
-              - cidr: '{{ cilium_loadbalancer_ip_pool }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+              - cidr: '{{ cilium_vars.loadbalancer.ip.pool }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        state: present

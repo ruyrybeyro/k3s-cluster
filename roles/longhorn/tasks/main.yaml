@@ -16,14 +16,14 @@
     - name: Install tainted chart
       kubernetes.core.helm:
         chart_ref: longhorn/longhorn
-        chart_version: '{{ longhorn_version_chart }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        chart_version: '{{ longhorn_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: longhorn
         namespace: kube-system
         update_repo_cache: true
         values:
           defaultSettings:
-            nodeDownPodDeletionPolicy: '{{ longhorn_pod_deletion_policy }}'
+            nodeDownPodDeletionPolicy: '{{ longhorn_vars.pod.deletion_policy }}'
             taintToleration: node-role.kubernetes.io/master=true:NoSchedule
           longhornDriver:
             tolerations:
@@ -38,21 +38,21 @@
                 value: 'true'
                 effect: NoSchedule
         wait: true
-      when: k3s_controlplane_tainted
+      when: k3s_vars.controlplane.tainted
 
     - name: Install non-tainted chart
       kubernetes.core.helm:
         chart_ref: longhorn/longhorn
-        chart_version: '{{ longhorn_version_chart }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        chart_version: '{{ longhorn_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: longhorn
         namespace: kube-system
         update_repo_cache: true
         values:
           defaultSettings:
-            nodeDownPodDeletionPolicy: '{{ longhorn_pod_deletion_policy }}'
+            nodeDownPodDeletionPolicy: '{{ longhorn_vars.pod.deletion_policy }}'
         wait: true
-      when: not k3s_controlplane_tainted
+      when: not k3s_vars.controlplane.tainted
 
     - name: Configure frontend
       kubernetes.core.k8s:
@@ -61,7 +61,7 @@
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ longhorn_loadbalancer_ip_frontend }}'
+              io.cilium/lb-ipam-ips: '{{ longhorn_vars.loadbalancer.ip.frontend }}'
               io.cilium/lb-ipam-sharing-key: longhorn-frontend
             name: longhorn-frontend
             namespace: kube-system
@@ -69,4 +69,4 @@
             selector:
               app: longhorn-ui
             type: LoadBalancer
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

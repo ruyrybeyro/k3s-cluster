@@ -2,7 +2,7 @@ global_defs {
     enable_script_security
     max_auto_priority 99
     notification_email {
-        {{ cluster_mail_user_alias }}
+        {{ cluster_vars.mail.user.alias }}
     }
     notification_email_from root@{{ ansible_host }}
     script_user haproxy
@@ -19,7 +19,7 @@ vrrp_instance haproxy-vip {
         auth_type AH
         auth_pass {{ k3s_loadbalancer_password }}
     }
-    interface {{ k3s_network_interface }}
+    interface {{ k3s_vars.network.interface }}
 {% if ansible_host == k3s_loadbalancer_hosts[0] %}
     priority 200
     state MASTER 
@@ -41,6 +41,6 @@ vrrp_instance haproxy-vip {
     }
     virtual_router_id 10
     virtual_ipaddress {
-        {{ k3s_api_host }}
+        {{ k3s_vars.api.host }}
     }
 }

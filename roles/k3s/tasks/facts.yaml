@@ -7,6 +7,7 @@
 - name: Set server ips fact
   ansible.builtin.set_fact:
     k3s_server_ips: "{{ k3s_server_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+  when: ansible_host in k3s_server_hosts
 
 - name: Set server default host fact
   ansible.builtin.set_fact:

@@ -16,7 +16,7 @@
             name: upgrade-system
             labels:
               pod-security.kubernetes.io/enforce: privileged
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install service account
       kubernetes.core.k8s:
@@ -26,7 +26,7 @@
           metadata:
             name: upgrade-system
             namespace: upgrade-system
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install cluster role binding
       kubernetes.core.k8s:
@@ -43,7 +43,7 @@
             - kind: ServiceAccount
               name: upgrade-system
               namespace: upgrade-system
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install config map manifest
       kubernetes.core.k8s:
@@ -59,11 +59,11 @@
             SYSTEM_UPGRADE_JOB_ACTIVE_DEADLINE_SECONDS: '900'
             SYSTEM_UPGRADE_JOB_BACKOFF_LIMIT: '99'
             SYSTEM_UPGRADE_JOB_IMAGE_PULL_POLICY: 'Always'
-            SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: 'rancher/kubectl:{{ k3s_version_kubectl }}'
+            SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: 'rancher/kubectl:{{ k3s_vars.version.kubectl }}'
             SYSTEM_UPGRADE_JOB_PRIVILEGED: 'true'
             SYSTEM_UPGRADE_JOB_TTL_SECONDS_AFTER_FINISH: '900'
             SYSTEM_UPGRADE_PLAN_POLLING_INTERVAL: '15m'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install deployment
       kubernetes.core.k8s:
@@ -107,7 +107,7 @@
                     effect: 'NoExecute'
                 containers:
                   - name: upgrade-system-controller
-                    image: rancher/upgrade-system-controller:{{ k3s_version_controller }}
+                    image: rancher/upgrade-system-controller:{{ k3s_vars.version.controller }}
                     imagePullPolicy: IfNotPresent
                     securityContext:
                       runAsNonRoot: true
@@ -158,7 +158,7 @@
                       type: DirectoryOrCreate
                   - name: tmp
                     emptyDir: {}
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install server plan
       kubernetes.core.k8s:
@@ -172,7 +172,7 @@
               k3s-upgrade: server
           spec:
             concurrency: 1
-            version: '{{ k3s_version }}'
+            version: '{{ k3s_vars.version.release }}'
             nodeSelector:
               matchExpressions:
                 - { key: k3s-upgrade, operator: Exists }
@@ -183,7 +183,7 @@
             cordon: true
             upgrade:
               image: rancher/k3s-upgrade
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install agent plan
       kubernetes.core.k8s:
@@ -197,7 +197,7 @@
               k3s-upgrade: agent
           spec:
             concurrency: 2
-            version: '{{ k3s_version }}'
+            version: '{{ k3s_vars.version.release }}'
             nodeSelector:
               matchExpressions:
                 - { key: k3s-upgrade, operator: Exists }
@@ -213,4 +213,4 @@
               skipWaitForDeleteTimeout: 60
             upgrade:
               image: rancher/k3s-upgrade
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

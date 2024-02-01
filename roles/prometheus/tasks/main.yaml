@@ -21,16 +21,16 @@
             name: grafana-credentials
             namespace: kube-system
           stringData:
-            password: '{{ prometheus_grafana_user_password }}'
-            username: '{{ prometheus_grafana_user_name }}'
+            password: '{{ prometheus_vars.grafana.user.password }}'
+            username: '{{ prometheus_vars.grafana.user.name }}'
           type: Opaque
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: prometheus/kube-prometheus-stack
-        chart_version: '{{ prometheus_version_chart }}'
-        kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+        chart_version: '{{ prometheus_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: monitoring
         namespace: kube-system
         update_repo_cache: true
@@ -53,7 +53,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_alertmanager }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.alertmanager }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-alertmanager
               type: LoadBalancer
           grafana:
@@ -63,7 +63,7 @@
               userKey: username
             service:
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip_grafana }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.grafana }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-grafana
               type: LoadBalancer
           kubeControllerManager:
@@ -94,7 +94,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_loadbalancer_ip }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.frontend }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-prometheus
               type: LoadBalancer
           prometheus-node-exporter:

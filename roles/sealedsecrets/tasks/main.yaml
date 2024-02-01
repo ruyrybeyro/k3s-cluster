@@ -67,7 +67,7 @@
   kubernetes.core.helm:
     chart_ref: sealed-secrets/sealed-secrets
     chart_version: '{{ sealedsecrets_version_chart }}'
-    kubeconfig: '{{ k3s_dir_config }}/k3s.yaml'
+    kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
     name: sealed-secrets
     namespace: kube-system
     update_repo_cache: true

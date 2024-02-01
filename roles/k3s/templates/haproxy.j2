@@ -5,11 +5,11 @@ backend k3s-backend
 	option		tcplog
 	option		tcp-check
 {% for host, ip in k3s_server_hosts | zip(k3s_server_ips) %}
-	server {{ host }}	{{ ip }}:{{ k3s_api_port }}
+	server {{ host }}	{{ ip }}:{{ k3s_vars.api.port }}
 {% endfor %}
 
 frontend k3s-frontend
-	bind		{{ k3s_api_host }}:{{ k3s_api_port }}
+	bind		{{ k3s_vars.api.host }}:{{ k3s_vars.api.port }}
 	default_backend	k3s-backend
 	mode		tcp
 	option		tcplog

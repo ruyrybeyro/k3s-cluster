@@ -1,7 +1,23 @@
 ---
-cilium_loadbalancer_ip_hubble: 192.168.4.18
-cilium_loadbalancer_ip_pool: '192.168.4.16/28'
-cilium_pod_ip_pool: '10.42.0.0/16'
-cilium_version_chart: v1.14.5
-cilium_version_cli: v0.15.19
-cilium_version_hubble: v0.12.3
+cilium_vars:
+  kubernetes:
+    gateway:
+      api:
+        version: v1.0.0
+  ingress:
+    controller:
+      loadbalancer:
+        ip: 192.168.4.18
+  loadbalancer:
+    ip:
+      controller_ingress: 192.168.4.18
+      hubble_ui: 192.168.4.19
+      pool: 192.168.4.16/28
+    mode: dedicated
+  pod:
+    ip:
+      pool: 10.42.0.0/16
+  version:
+    chart: v1.14.6
+    cli: v0.15.21
+    hubble: v0.13.0

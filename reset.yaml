@@ -25,10 +25,10 @@
         name: argocd
         tasks_from: reset
 
-    - name: Reset cert-manager chart
-      ansible.builtin.import_role:
-        name: certmanager
-        tasks_from: reset
+    # - name: Reset cert-manager chart
+    #   ansible.builtin.import_role:
+    #     name: certmanager
+    #     tasks_from: reset
 
     - name: Reset cilium chart
       ansible.builtin.import_role:
@@ -44,6 +44,11 @@
       ansible.builtin.import_role:
         name: prometheus
         tasks_from: reset
+
+    # - name: Reset sealed-secrets chart
+    #   ansible.builtin.import_role:
+    #     name: sealedsecrets
+    #     tasks_from: reset
 
     - name: Reset helm
       ansible.builtin.import_role:
