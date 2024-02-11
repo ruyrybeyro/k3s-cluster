@@ -53,7 +53,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.alertmanager }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.alertmanager.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-alertmanager
               type: LoadBalancer
           grafana:
@@ -63,7 +63,7 @@
               userKey: username
             service:
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.grafana }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.grafana.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-grafana
               type: LoadBalancer
           kubeControllerManager:
@@ -94,7 +94,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.loadbalancer.ip.frontend }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.prometheus.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-prometheus
               type: LoadBalancer
           prometheus-node-exporter:

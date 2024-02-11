@@ -74,6 +74,13 @@
             autoscaling:
               enabled: true
               minReplicas: 2
+            resources:
+              limits:
+                cpu: 100m
+                memory: 128Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
         wait: true
 
     - name: Configure frontend
@@ -83,7 +90,7 @@
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.loadbalancer.ip.frontend }}'
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
             name: argo-cd-argocd-server
             namespace: kube-system

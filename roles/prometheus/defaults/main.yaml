@@ -1,6 +1,11 @@
 ---
 prometheus_vars:
+  alertmanager:
+    loadbalancer:
+      ip: 192.168.4.21
   grafana:
+    loadbalancer:
+      ip: 192.168.4.22
     user:
       name: admin
       password: !vault |
@@ -10,10 +15,8 @@ prometheus_vars:
           38323135393830336132393239363236373961336464623432363338616266626334393233366263
           6164623332633535310a626532356161363563303036353838306234306562303333333231643432
           38383463653931373134663230383033666264646364316563663636303736326630
-  loadbalancer:
-    ip:
-      alertmanager: 192.168.4.22
-      frontend: 192.168.4.23
-      grafana: 192.168.4.21
+  prometheus:
+    loadbalancer:
+      ip: 192.168.4.23
   version:
-    chart: v55.8.1
+    chart: v56.6.2

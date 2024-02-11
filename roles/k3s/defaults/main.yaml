@@ -23,5 +23,5 @@ k3s_vars:
     server_args: ''
   version:
     controller: v0.13.2
-    kubectl: v1.29.0
-    release: v1.29.0+k3s1
+    kubectl: v1.29.1
+    release: v1.29.1+k3s2

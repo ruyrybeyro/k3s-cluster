@@ -1,23 +1,23 @@
 ---
 cilium_vars:
   kubernetes:
-    gateway:
-      api:
-        version: v1.0.0
-  ingress:
-    controller:
-      loadbalancer:
-        ip: 192.168.4.18
+    gateway_api:
+      version: v1.0.0
+  hubble_ui:
+    loadbalancer:
+      ip: 192.168.4.18
+  ingress_controller:
+    loadbalancer:
+      ip: 192.168.4.19
+      mode: dedicated
+  ipam:
+    operator:
+      cluster:
+        pool: 10.42.0.0/16
   loadbalancer:
     ip:
-      controller_ingress: 192.168.4.18
-      hubble_ui: 192.168.4.19
       pool: 192.168.4.16/28
-    mode: dedicated
-  pod:
-    ip:
-      pool: 10.42.0.0/16
   version:
-    chart: v1.14.6
-    cli: v0.15.21
+    chart: v1.15.0
+    cli: v0.15.22
     hubble: v0.13.0

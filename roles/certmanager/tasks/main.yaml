@@ -13,12 +13,14 @@
 - name: Install chart
   kubernetes.core.helm:
     chart_ref: jetstack/cert-manager
-    chart_version: '{{ certmanager_version_chart }}'
+    chart_version: '{{ certmanager_vars.version.chart }}'
     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
     name: cert-manager
     namespace: kube-system
     update_repo_cache: true
     values:
+      extraArgs:
+        - --feature-gates=ExperimentalGatewayAPISupport=true
       installCRDs: true
       prometheus:
         serviceMonitor:

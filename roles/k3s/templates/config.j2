@@ -12,6 +12,7 @@ disable:
 disable-cloud-controller: true
 disable-kube-proxy: true
 disable-network-policy: true
+embedded-registry: true
 etcd-expose-metrics: true
 flannel-backend: none
 {% if k3s_ha_cluster and k3s_vars.loadbalancer.enabled %}

@@ -6,7 +6,6 @@ Raspberry Pi k3s high-availability cluster deployed with Ansible.
 brew install ansible ansible-lint
 brew tap esolitos/ipa
 brew install esolitos/ipa/sshpass
-ansible-playbook -kK provisioning.yaml
 ```
 
 Delete successful jobs:
@@ -36,26 +35,4 @@ Ignore `ansible-lint` warnings:
   ansible.builtin.command:
     cmd: systemctl disable snapd.socket # noqa command-instead-of-module
   changed_when: false
-```
-
-Execute task when multiple files are missing:
-
-```yaml
-- name: Set binary fact
-  ansible.builtin.set_fact:
-    binary:
-      - name: cilium-cli
-        file: cilium
-      - name: hubble
-        file: hubble
-
-- name: Verify binary files presence
-  ansible.builtin.stat:
-    path: /usr/local/bin/{{ item.file }}
-  loop: '{{ binary }}'
-  register: binary_file
-
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ not (binary_file.results | map(attribute='stat.exists')) is all }}"
 ```

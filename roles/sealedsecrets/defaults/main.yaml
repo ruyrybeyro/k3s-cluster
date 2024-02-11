@@ -1,3 +1,5 @@
 ---
-sealedsecrets_version_chart: v2.14.2
-sealedsecrets_version_kubeseal: v0.25.0
+sealedsecrets_vars:
+  version:
+    binary: v0.25.0
+    chart: v2.14.2
