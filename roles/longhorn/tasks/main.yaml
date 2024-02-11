@@ -61,7 +61,7 @@
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ longhorn_vars.loadbalancer.ip.frontend }}'
+              io.cilium/lb-ipam-ips: '{{ longhorn_vars.frontend.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: longhorn-frontend
             name: longhorn-frontend
             namespace: kube-system

@@ -57,7 +57,7 @@
     - name: Apply gateway api crds manifest
       kubernetes.core.k8s:
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway.api.version }}/experimental-install.yaml
+        src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway_api.version }}/experimental-install.yaml
         state: present
 
     - name: Install chart
@@ -89,7 +89,7 @@
             enabled: true
           ipam:
             operator:
-              clusterPoolIPv4PodCIDRList: '{{ cilium_vars.pod.ip.pool }}'
+              clusterPoolIPv4PodCIDRList: '{{ cilium_vars.ipam.operator.cluster.pool }}'
           hubble:
             relay:
               enabled: true

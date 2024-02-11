@@ -1,9 +1,9 @@
 ---
 longhorn_vars:
-  loadbalancer:
-    ip:
-      frontend: 192.168.4.20
+  frontend:
+    loadbalancer:
+      ip: 192.168.4.20
   pod:
     deletion_policy: delete-both-statefulset-and-deployment-pod
   version:
-    chart: v1.5.3
+    chart: v1.6.0

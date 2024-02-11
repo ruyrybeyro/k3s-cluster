@@ -48,7 +48,7 @@
         - name: Device Trim
           when: device_id.stdout.find(cluster_vars.device.name) != -1
           block:
-            - name: Set device attributes
+            - name: Set device attributes fact
               ansible.builtin.set_fact:
                 device_attributes: "{{ device_id.stdout | regex_search('ID\\s+(.*)\\s+' + cluster_vars.device.name, '\\1') | join | trim | split(':') }}"
 
@@ -57,7 +57,7 @@
                 - device_attributes is iterable
                 - device_attributes | length == 2
               block:
-                - name: Set device rule
+                - name: Set device rule fact
                   ansible.builtin.set_fact:
                     device_rule:
                       - ACTION=="add|change"
@@ -120,8 +120,8 @@
 
     - name: Create firmware purge configuration
       ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/90rpi-firmware-purge
         content: "APT::Update::Post-Invoke-Success {\"find /boot/firmware -type f -name '*.bak' -delete 2>/dev/null || true\";};\n"
+        dest: /etc/apt/apt.conf.d/90rpi-firmware-purge
         owner: root
         group: root
         mode: '0644'
@@ -302,9 +302,16 @@
         group: root
         mode: '0600'
 
+    - name: Set sasl password fact
+      ansible.builtin.set_fact:
+        sasl_password:
+          - '[{{ cluster_vars.mail.relay.host }}]'
+          - '{{ cluster_vars.mail.relay.port }} {{ cluster_vars.mail.user.name }}'
+          - '{{ cluster_vars.mail.user.password }}'
+
     - name: Create sasl password map
       ansible.builtin.copy:
-        content: "[{{ cluster_vars.mail.relay.host }}]:{{ cluster_vars.mail.relay.port }} {{ cluster_vars.mail.user.name }}:{{ cluster_vars.mail.user.password }}\n"
+        content: "{{ sasl_password | join(':') }}\n"
         dest: /etc/postfix/sasl/password
         owner: root
         group: root

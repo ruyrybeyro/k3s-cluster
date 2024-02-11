@@ -47,9 +47,9 @@
                   namespace: kube-system
           ingressController:
             enabled: true
-            loadbalancerMode: '{{ cilium_vars.loadbalancer.mode }}'
+            loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
             service:
-              loadBalancerIP: '{{ cilium_vars.loadbalancer.ip.controller_ingress }}'
+              loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
           operator:
             prometheus:
               enabled: true
@@ -71,7 +71,7 @@
             name: hubble-ui
             namespace: kube-system
             annotations:
-              io.cilium/lb-ipam-ips: '{{ cilium_vars.loadbalancer.ip.hubble_ui }}'
+              io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: hubble-ui
           spec:
             selector:

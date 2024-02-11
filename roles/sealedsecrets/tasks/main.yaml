@@ -12,9 +12,9 @@
         binary:
           org: bitnami-labs
           repo: sealed-secrets
-          version: '{{ sealedsecrets_version_kubeseal }}'
-          checksums: 'sealed-secrets_{{ sealedsecrets_version_kubeseal[1:] }}_checksums.txt'
-          name: 'kubeseal-{{ sealedsecrets_version_kubeseal[1:] }}-linux-arm64.tar.gz'
+          version: '{{ sealedsecrets_vars.version.binary }}'
+          checksums: 'sealed-secrets_{{ sealedsecrets_vars.version.binary[1:] }}_checksums.txt'
+          name: 'kubeseal-{{ sealedsecrets_vars.version.binary[1:] }}-linux-arm64.tar.gz'
       run_once: true
 
     - name: Set checksums fact
@@ -66,7 +66,7 @@
 - name: Install chart
   kubernetes.core.helm:
     chart_ref: sealed-secrets/sealed-secrets
-    chart_version: '{{ sealedsecrets_version_chart }}'
+    chart_version: '{{ sealedsecrets_vars.version.chart }}'
     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
     name: sealed-secrets
     namespace: kube-system

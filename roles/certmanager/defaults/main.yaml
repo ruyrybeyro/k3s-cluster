@@ -1,2 +1,4 @@
 ---
-certmanager_version_chart: v1.13.3
+certmanager_vars:
+  version:
+    chart: v1.14.2

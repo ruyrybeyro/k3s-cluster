@@ -31,6 +31,15 @@
         group: root
         mode: '0600'
 
+    - name: Create registries file
+      ansible.builtin.template:
+        src: registries.j2
+        dest: '{{ k3s_vars.directory.config }}/registries.yaml'
+        owner: root
+        group: root
+        mode: '0600'
+      when: (k3s_vars.controlplane.tainted and ansible_host not in k3s_server_hosts) or not k3s_vars.controlplane.tainted
+
     - name: Create service file
       ansible.builtin.template:
         src: service.j2
