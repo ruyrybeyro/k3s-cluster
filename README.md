@@ -22,7 +22,7 @@ Deploy cluster:
 ansible-playbook --ask-vault-pass provisioning.yaml
 ```
 
-Upgrade [kubernes.core](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_module.rst) [collection](https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html):
+Upgrade [kubernetes.core](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_module.rst) [collection](https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html):
 
 ```shell
 ansible-galaxy collection install -U kubernetes.core
