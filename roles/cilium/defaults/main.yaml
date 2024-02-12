@@ -1,8 +1,5 @@
 ---
 cilium_vars:
-  kubernetes:
-    gateway_api:
-      version: v1.0.0
   hubble_ui:
     loadbalancer:
       ip: 192.168.4.18
@@ -14,6 +11,9 @@ cilium_vars:
     operator:
       cluster:
         pool: 10.42.0.0/16
+  kubernetes:
+    gateway_api:
+      version: v1.0.0
   loadbalancer:
     ip:
       pool: 192.168.4.16/28

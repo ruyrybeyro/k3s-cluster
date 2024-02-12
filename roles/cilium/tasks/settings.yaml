@@ -20,7 +20,6 @@
           dashboards:
             enabled: true
           envoy:
-            enabled: true
             prometheus:
               serviceMonitor:
                 enabled: true
