@@ -12,6 +12,11 @@
       default: 'n'
       private: false
   tasks:
+    - name: Reset cluster
+      ansible.builtin.import_role:
+        name: cluster
+        tasks_from: reset
+
     - name: Reset kubernetes
       ansible.builtin.import_role:
         name: k3s

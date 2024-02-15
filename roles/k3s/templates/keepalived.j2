@@ -4,10 +4,11 @@ global_defs {
     notification_email {
         {{ cluster_vars.mail.user.alias }}
     }
-    notification_email_from root@{{ ansible_host }}
+    notification_email_from {{ cluster_vars.mail.user.alias }}
     script_user haproxy
     smtp_connect_timeout 30
     smtp_server 127.0.0.1
+    vrrp_startup_delay 10
 }
 
 vrrp_script chk_haproxy {
