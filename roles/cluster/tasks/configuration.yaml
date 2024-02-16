@@ -120,7 +120,7 @@
 
     - name: Create firmware purge configuration
       ansible.builtin.copy:
-        content: "APT::Update::Post-Invoke-Success {\"find /boot/firmware -type f -name '*.bak' -delete 2>/dev/null || true\";};\n"
+        content: "DPkg::Post-Invoke {\"/usr/bin/find /boot/firmware -type f -name '*.bak' -delete 2>/dev/null || true\";};\n"
         dest: /etc/apt/apt.conf.d/90rpi-firmware-purge
         owner: root
         group: root
