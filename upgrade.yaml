@@ -38,6 +38,11 @@
                 name: cilium
                 tasks_from: settings
 
+        - name: Update cloudflare settings
+          ansible.builtin.import_role:
+            name: cloudflare
+          tags: cloudflare
+
         - name: Upgrade longhorn chart
           ansible.builtin.import_role:
             name: longhorn

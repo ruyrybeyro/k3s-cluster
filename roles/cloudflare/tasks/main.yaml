@@ -1,0 +1,69 @@
+---
+- name: Import facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+
+- name: Cloudflare Setup
+  when: ansible_host == k3s_server_default_host
+  block:
+    - name: Create secret
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: cloudflare-api-token
+            namespace: kube-system
+          stringData:
+            token: '{{ cloudflare_vars.api.token }}'
+          type: Opaque
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+
+    - name: Create issuer
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: Issuer
+          metadata:
+            name: cloudflare-issuer
+            namespace: kube-system
+          spec:
+            acme:
+              server: https://acme-v02.api.letsencrypt.org/directory
+              email: '{{ cloudflare_vars.acme.email }}'
+              privateKeySecretRef:
+                name: cloudflare-key
+              solvers:
+                - dns01:
+                    cloudflare:
+                      apiTokenSecretRef:
+                        name: cloudflare-api-token
+                        key: token
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+
+    - name: Create gateway
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: Gateway
+          metadata:
+            annotations:
+              cert-manager.io/issuer: cloudflare-issuer
+            name: cilium-gateway
+            namespace: kube-system
+          spec:
+            gatewayClassName: cilium
+            listeners:
+              - protocol: HTTPS
+                port: 443
+                name: https-gateway
+                hostname: '{{ cloudflare_vars.gateway.hostname }}'
+                tls:
+                  certificateRefs:
+                    - kind: Secret
+                      name: cloudflare-cert
+                allowedRoutes:
+                  namespaces:
+                    from: All
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
