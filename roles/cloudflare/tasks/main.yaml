@@ -62,7 +62,7 @@
                 tls:
                   certificateRefs:
                     - kind: Secret
-                      name: cloudflare-cert
+                      name: cloudflare-certificate
                 allowedRoutes:
                   namespaces:
                     from: All
