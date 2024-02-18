@@ -30,16 +30,16 @@
             namespace: kube-system
           spec:
             acme:
-              server: https://acme-v02.api.letsencrypt.org/directory
               email: '{{ cloudflare_vars.acme.email }}'
               privateKeySecretRef:
                 name: cloudflare-tls-key
+              server: https://acme-v02.api.letsencrypt.org/directory
               solvers:
                 - dns01:
                     cloudflare:
                       apiTokenSecretRef:
-                        name: cloudflare-api-token
                         key: token
+                        name: cloudflare-api-token
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
     - name: Create gateway
