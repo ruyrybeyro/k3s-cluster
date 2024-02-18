@@ -1,7 +1,5 @@
 ---
 cloudflare_vars:
-  acme:
-    email: k3slab@icloud.com
   api:
     token: !vault |
           $ANSIBLE_VAULT;1.1;AES256
