@@ -20,20 +20,20 @@
           type: Opaque
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
-    - name: Create issuer
+    - name: Create cluster issuer
       kubernetes.core.k8s:
         definition:
           apiVersion: cert-manager.io/v1
-          kind: Issuer
+          kind: ClusterIssuer
           metadata:
-            name: cloudflare-issuer
+            name: cloudflare-cluster-issuer
             namespace: kube-system
           spec:
             acme:
               server: https://acme-v02.api.letsencrypt.org/directory
               email: '{{ cloudflare_vars.acme.email }}'
               privateKeySecretRef:
-                name: cloudflare-key
+                name: cloudflare-tls-key
               solvers:
                 - dns01:
                     cloudflare:
@@ -49,7 +49,7 @@
           kind: Gateway
           metadata:
             annotations:
-              cert-manager.io/issuer: cloudflare-issuer
+              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
             name: cilium-gateway
             namespace: kube-system
           spec:
@@ -62,7 +62,7 @@
                 tls:
                   certificateRefs:
                     - kind: Secret
-                      name: cloudflare-certificate
+                      name: cloudflare-tls-certificate
                 allowedRoutes:
                   namespaces:
                     from: All
