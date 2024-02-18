@@ -80,12 +80,6 @@
               io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: hubble-ui
           spec:
-            ports:
-              - name: https
-                protocol: TCP
-                port: 443
-                targetPort: http
-                nodePort: http
             selector:
               k8s-app: hubble-ui
             type: LoadBalancer
