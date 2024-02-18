@@ -7,7 +7,7 @@
 - name: Chart Settings
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Enable ingress controller and prometheus monitoring
+    - name: Enable additional features
       kubernetes.core.helm:
         chart_ref: cilium/cilium
         chart_version: '{{ cilium_vars.version.chart }}'
@@ -44,6 +44,8 @@
                 serviceMonitor:
                   enabled: true
                   namespace: kube-system
+            tls:
+              enabled: true
           ingressController:
             enabled: true
             loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
