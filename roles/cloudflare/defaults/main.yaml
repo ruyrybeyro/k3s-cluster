@@ -1,5 +1,7 @@
 ---
 cloudflare_vars:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
   api:
     token: !vault |
           $ANSIBLE_VAULT;1.1;AES256

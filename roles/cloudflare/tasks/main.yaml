@@ -36,7 +36,7 @@
               email: '{{ cluster_mail_user_alias }}'
               privateKeySecretRef:
                 name: cloudflare-tls-key
-              server: https://acme-v02.api.letsencrypt.org/directory
+              server: '{{ cloudflare_vars.acme.server }}'
               solvers:
                 - dns01:
                     cloudflare:
