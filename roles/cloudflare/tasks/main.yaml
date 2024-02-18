@@ -1,6 +1,6 @@
 ---
 - name: Import facts
-  ansible.builtin.import_role:
+  ansible.builtin.include_role:
     name: '{{ item }}'
     tasks_from: facts
   loop:

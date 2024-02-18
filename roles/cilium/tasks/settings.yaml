@@ -53,9 +53,9 @@
                 method: certmanager
           ingressController:
             enabled: true
-            loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
+            loadbalancerMode: '{{ cilium_vars.ingress.controller.loadbalancer.mode }}'
             service:
-              loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
+              loadBalancerIP: '{{ cilium_vars.ingress.controller.loadbalancer.ip }}'
           operator:
             prometheus:
               enabled: true
