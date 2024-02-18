@@ -1,8 +1,11 @@
 ---
 - name: Import facts
   ansible.builtin.import_role:
-    name: k3s
+    name: '{{ item }}'
     tasks_from: facts
+  loop:
+    - cluster
+    - k3s
 
 - name: Cloudflare Setup
   when: ansible_host == k3s_server_default_host
@@ -30,7 +33,7 @@
             namespace: kube-system
           spec:
             acme:
-              email: '{{ cloudflare_vars.acme.email }}'
+              email: '{{ cluster_mail_user_alias }}'
               privateKeySecretRef:
                 name: cloudflare-tls-key
               server: https://acme-v02.api.letsencrypt.org/directory

@@ -1,0 +1,5 @@
+---
+- name: Set mail user alias fact
+  ansible.builtin.set_fact:
+    cluster_mail_user_alias: '{{ cluster_vars.mail.user.alias }}'
+  run_once: true
