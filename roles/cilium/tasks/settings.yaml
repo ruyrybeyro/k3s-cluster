@@ -46,7 +46,10 @@
                   namespace: kube-system
             tls:
               auto:
-                certManagerIssuerRef: cloudflare-cluster-issuer
+                certManagerIssuerRef:
+                  group: cert-manager.io
+                  kind: ClusterIssuer
+                  name: cloudflare-cluster-issuer
                 method: certmanager
           ingressController:
             enabled: true
@@ -77,6 +80,12 @@
               io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: hubble-ui
           spec:
+            ports:
+              - name: https
+                protocol: TCP
+                port: 443
+                targetPort: http
+                nodePort: http
             selector:
               k8s-app: hubble-ui
             type: LoadBalancer
