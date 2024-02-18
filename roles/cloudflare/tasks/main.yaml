@@ -20,11 +20,6 @@
           type: Opaque
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
 
-    - name: Set fact
-      ansible.builtin.set_fact:
-        certificate_suffix: "{{ cloudflare_vars.gateway.hostname | regex_replace('[\\W_]+', '') }}"
-      run_once: true
-
     - name: Create issuer
       kubernetes.core.k8s:
         definition:
@@ -38,7 +33,7 @@
               server: https://acme-v02.api.letsencrypt.org/directory
               email: '{{ cloudflare_vars.acme.email }}'
               privateKeySecretRef:
-                name: cloudflare-key-{{ certificate_suffix }}
+                name: cloudflare-key
               solvers:
                 - dns01:
                     cloudflare:
@@ -67,7 +62,7 @@
                 tls:
                   certificateRefs:
                     - kind: Secret
-                      name: cloudflare-certificate-{{ certificate_suffix }}
+                      name: cloudflare-certificate
                 allowedRoutes:
                   namespaces:
                     from: All
