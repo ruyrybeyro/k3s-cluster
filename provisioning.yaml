@@ -41,10 +41,10 @@
         tasks_from: settings
   roles:
     - role: cilium
-    - role: cloudflare
     - role: longhorn
     - role: prometheus
     - role: certmanager
+    - role: cloudflare
     - role: sealedsecrets
     - role: argocd
   tags: charts
