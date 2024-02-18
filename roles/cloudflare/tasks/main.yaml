@@ -30,7 +30,6 @@
           kind: ClusterIssuer
           metadata:
             name: cloudflare-cluster-issuer
-            namespace: kube-system
           spec:
             acme:
               email: '{{ cluster_mail_user_alias }}'
@@ -43,30 +42,4 @@
                       apiTokenSecretRef:
                         key: token
                         name: cloudflare-api-token
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-
-    - name: Create gateway
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: gateway.networking.k8s.io/v1
-          kind: Gateway
-          metadata:
-            annotations:
-              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
-            name: cilium-gateway
-            namespace: kube-system
-          spec:
-            gatewayClassName: cilium
-            listeners:
-              - protocol: HTTPS
-                port: 443
-                name: https-gateway
-                hostname: '{{ cloudflare_vars.gateway.hostname }}'
-                tls:
-                  certificateRefs:
-                    - kind: Secret
-                      name: cloudflare-tls-certificate
-                allowedRoutes:
-                  namespaces:
-                    from: All
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
