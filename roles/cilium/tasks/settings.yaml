@@ -45,7 +45,9 @@
                   enabled: true
                   namespace: kube-system
             tls:
-              enabled: true
+              auto:
+                certManagerIssuerRef: cloudflare-cluster-issuer
+                method: certmanager
           ingressController:
             enabled: true
             loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
