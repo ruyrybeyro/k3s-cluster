@@ -1,8 +1,11 @@
 ---
 - name: Import facts
-  ansible.builtin.import_role:
-    name: k3s
+  ansible.builtin.include_role:
+    name: '{{ item }}'
     tasks_from: facts
+  loop:
+    - cloudflare
+    - k3s
 
 - name: Install Dependencies
   when: ansible_host in k3s_server_hosts
@@ -64,8 +67,6 @@
               argocdServerAdminPassword: "{{ argocd_vars.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
           redis-ha:
             enabled: true
-            # exporter:
-            #   enabled: true
           repoServer:
             autoscaling:
               enabled: true
@@ -83,7 +84,7 @@
                 memory: 64Mi
         wait: true
 
-    - name: Configure frontend
+    - name: Set frontend loadbalancer ip
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
@@ -99,4 +100,33 @@
               app.kubernetes.io/instance: argo-cd
               app.kubernetes.io/name: argocd-server
             type: LoadBalancer
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+
+    - name: Create frontend ingress
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: argo-cd-argocd-server-tls-ingress
+            namespace: kube-system
+            annotations:
+              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
+          spec:
+            ingressClassName: cilium
+            rules:
+              - host: argocd.{{ cloudflare_vars.ingress.domain }}
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: argo-cd-argocd-server
+                          port:
+                            number: 8080
+                      path: /
+                      pathType: Prefix
+            tls:
+              - hosts:
+                  - argocd.{{ cloudflare_vars.ingress.domain }}
+                secretName: argo-cd-argocd-server-tls-certificate
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

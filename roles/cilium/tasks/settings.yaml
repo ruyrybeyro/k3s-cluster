@@ -1,8 +1,11 @@
 ---
 - name: Import facts
-  ansible.builtin.import_role:
-    name: k3s
+  ansible.builtin.include_role:
+    name: '{{ item }}'
     tasks_from: facts
+  loop:
+    - cloudflare
+    - k3s
 
 - name: Chart Settings
   when: ansible_host == k3s_server_default_host
@@ -44,18 +47,6 @@
                 serviceMonitor:
                   enabled: true
                   namespace: kube-system
-            tls:
-              auto:
-                certManagerIssuerRef:
-                  group: cert-manager.io
-                  kind: ClusterIssuer
-                  name: cloudflare-cluster-issuer
-                method: certmanager
-          ingressController:
-            enabled: true
-            loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
-            service:
-              loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
           operator:
             prometheus:
               enabled: true
@@ -68,7 +59,7 @@
               enabled: true
         wait: true
 
-    - name: Set hubble ui loadbalancer ip
+    - name: Set hubble ui loadbalancer ip and https port
       kubernetes.core.k8s:
         definition:
           apiVersion: v1

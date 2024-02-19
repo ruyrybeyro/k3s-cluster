@@ -58,7 +58,6 @@
       kubernetes.core.k8s:
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway_api.version }}/experimental-install.yaml
-        state: present
 
     - name: Install chart
       kubernetes.core.helm:
@@ -120,7 +119,7 @@
           rollOutCiliumPods: true
         wait: true
 
-    - name: Apply l2 announcement policy manifest
+    - name: Create l2 announcement policy
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -134,9 +133,8 @@
               - '{{ k3s_vars.network.interface }}'
             loadBalancerIPs: true
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        state: present
 
-    - name: Apply loadbalancer ip pool manifest
+    - name: Create loadbalancer ip pool
       kubernetes.core.k8s:
         definition:
           apiVersion: cilium.io/v2alpha1
@@ -148,4 +146,3 @@
             cidrs:
               - cidr: '{{ cilium_vars.loadbalancer.ip.pool }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        state: present

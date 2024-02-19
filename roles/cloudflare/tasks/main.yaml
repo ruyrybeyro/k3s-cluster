@@ -4,6 +4,7 @@
     name: '{{ item }}'
     tasks_from: facts
   loop:
+    - cilium
     - cluster
     - k3s
 
@@ -32,7 +33,7 @@
             name: cloudflare-cluster-issuer
           spec:
             acme:
-              email: '{{ cluster_mail_user_alias }}'
+              email: '{{ cluster_vars.mail.user.alias }}'
               privateKeySecretRef:
                 name: cloudflare-tls-key
               server: '{{ cloudflare_vars.acme.server }}'
@@ -43,3 +44,29 @@
                         key: token
                         name: cloudflare-api-token
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+
+    - name: Set hubble tls and ingress controller
+      kubernetes.core.helm:
+        chart_ref: cilium/cilium
+        chart_version: '{{ cilium_vars.version.chart }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        name: cilium
+        namespace: kube-system
+        reset_values: false
+        reuse_values: true
+        values:
+          hubble:
+            tls:
+              auto:
+                certManagerIssuerRef:
+                  group: cert-manager.io
+                  kind: ClusterIssuer
+                  name: cloudflare-cluster-issuer
+                method: certmanager
+          ingressController:
+            defaultSecretNamespace: kube-system
+            enabled: true
+            loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
+            service:
+              loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
+        wait: true
