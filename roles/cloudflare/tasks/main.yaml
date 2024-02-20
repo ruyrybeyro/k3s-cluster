@@ -64,6 +64,7 @@
                   name: cloudflare-cluster-issuer
                 method: certmanager
           ingressController:
+            defaultSecretNamespace: kube-system
             enabled: true
             loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
             service:
