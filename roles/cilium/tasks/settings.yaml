@@ -10,7 +10,7 @@
 - name: Chart Settings
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Enable additional features
+    - name: Enable prometheus metrics
       kubernetes.core.helm:
         chart_ref: cilium/cilium
         chart_version: '{{ cilium_vars.version.chart }}'
@@ -26,7 +26,6 @@
             prometheus:
               serviceMonitor:
                 enabled: true
-                namespace: kube-system
           hubble:
             metrics:
               dashboards:
@@ -41,37 +40,48 @@
                 - tcp
               serviceMonitor:
                 enabled: true
-                namespace: kube-system
             relay:
               prometheus:
                 serviceMonitor:
                   enabled: true
-                  namespace: kube-system
           operator:
             prometheus:
               enabled: true
               serviceMonitor:
                 enabled: true
-                namespace: kube-system
           prometheus:
             enabled: true
             serviceMonitor:
               enabled: true
         wait: true
 
-    - name: Set hubble ui loadbalancer ip and https port
+    - name: Create hubble ui ingress
       kubernetes.core.k8s:
         definition:
-          apiVersion: v1
-          kind: Service
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
           metadata:
             name: hubble-ui
             namespace: kube-system
             annotations:
+              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
               io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: hubble-ui
           spec:
-            selector:
-              k8s-app: hubble-ui
-            type: LoadBalancer
+            ingressClassName: cilium
+            rules:
+              - host: hubble.{{ cloudflare_vars.ingress.domain }}
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: hubble-ui
+                          port:
+                            number: 8081
+                      path: /
+                      pathType: Prefix
+            tls:
+              - hosts:
+                  - hubble.{{ cloudflare_vars.ingress.domain }}
+                secretName: cloudflare-tls-hubble-ui
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

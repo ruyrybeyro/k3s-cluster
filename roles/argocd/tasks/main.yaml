@@ -84,34 +84,18 @@
                 memory: 64Mi
         wait: true
 
-    - name: Set frontend loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
-            name: argo-cd-argocd-server
-            namespace: kube-system
-          spec:
-            selector:
-              app.kubernetes.io/instance: argo-cd
-              app.kubernetes.io/name: argocd-server
-            type: LoadBalancer
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-
     - name: Create frontend ingress
       kubernetes.core.k8s:
         definition:
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: argo-cd-argocd-server-tls-ingress
+            name: argo-cd-argocd-server
             namespace: kube-system
             annotations:
               cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
+              io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
           spec:
             ingressClassName: cilium
             rules:
@@ -128,5 +112,5 @@
             tls:
               - hosts:
                   - argocd.{{ cloudflare_vars.ingress.domain }}
-                secretName: argo-cd-argocd-server-tls-certificate
+                secretName: cloudflare-tls-argo-cd-argocd-server
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

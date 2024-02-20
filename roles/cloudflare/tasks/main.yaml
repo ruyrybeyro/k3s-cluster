@@ -69,3 +69,34 @@
             service:
               loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
         wait: true
+
+    - name: Create hubble ui ingress
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: hubble-ui
+            namespace: kube-system
+            annotations:
+              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
+              io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
+              io.cilium/lb-ipam-sharing-key: hubble-ui
+          spec:
+            ingressClassName: cilium
+            rules:
+              - host: hubble.{{ cloudflare_vars.ingress.domain }}
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: hubble-ui
+                          port:
+                            number: 8081
+                      path: /
+                      pathType: Prefix
+            tls:
+              - hosts:
+                  - hubble.{{ cloudflare_vars.ingress.domain }}
+                secretName: cloudflare-tls-hubble-ui
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

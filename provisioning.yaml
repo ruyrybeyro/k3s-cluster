@@ -34,11 +34,11 @@
   hosts: server
   become: true
   gather_facts: true
-  post_tasks:
-    - name: Update cilium chart settings
-      ansible.builtin.import_role:
-        name: cilium
-        tasks_from: settings
+  # post_tasks:
+  #   - name: Update cilium chart settings
+  #     ansible.builtin.import_role:
+  #       name: cilium
+  #       tasks_from: settings
   roles:
     - role: cilium
     - role: certmanager
