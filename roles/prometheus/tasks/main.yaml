@@ -153,3 +153,4 @@
             enabled: true
             serviceMonitor:
               enabled: true
+        wait: true
