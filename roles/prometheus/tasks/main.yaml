@@ -28,6 +28,7 @@
             username: '{{ prometheus_vars.grafana.user.name }}'
           type: Opaque
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
 
     - name: Install chart
       kubernetes.core.helm:
@@ -110,47 +111,47 @@
                 memory: 64Mi
         wait: true
 
-    - name: Enable prometheus metrics
-      kubernetes.core.helm:
-        chart_ref: cilium/cilium
-        chart_version: '{{ cilium_vars.version.chart }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        name: cilium
-        namespace: kube-system
-        reset_values: false
-        reuse_values: true
-        values:
-          dashboards:
-            enabled: true
-          envoy:
-            prometheus:
-              serviceMonitor:
-                enabled: true
-          hubble:
-            metrics:
-              dashboards:
-                enabled: true
-              enabled:
-                - dns:query;ignoreAAAA
-                - drop
-                - http
-                - flow
-                - icmp
-                - port-distribution
-                - tcp
-              serviceMonitor:
-                enabled: true
-            relay:
-              prometheus:
-                serviceMonitor:
-                  enabled: true
-          operator:
-            prometheus:
-              enabled: true
-              serviceMonitor:
-                enabled: true
-          prometheus:
-            enabled: true
-            serviceMonitor:
-              enabled: true
-        wait: true
+    # - name: Enable prometheus metrics
+    #   kubernetes.core.helm:
+    #     chart_ref: cilium/cilium
+    #     chart_version: '{{ cilium_vars.version.chart }}'
+    #     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+    #     name: cilium
+    #     namespace: kube-system
+    #     reset_values: false
+    #     reuse_values: true
+    #     values:
+    #       dashboards:
+    #         enabled: true
+    #       envoy:
+    #         prometheus:
+    #           serviceMonitor:
+    #             enabled: true
+    #       hubble:
+    #         metrics:
+    #           dashboards:
+    #             enabled: true
+    #           enabled:
+    #             - dns:query;ignoreAAAA
+    #             - drop
+    #             - http
+    #             - flow
+    #             - icmp
+    #             - port-distribution
+    #             - tcp
+    #           serviceMonitor:
+    #             enabled: true
+    #         relay:
+    #           prometheus:
+    #             serviceMonitor:
+    #               enabled: true
+    #       operator:
+    #         prometheus:
+    #           enabled: true
+    #           serviceMonitor:
+    #             enabled: true
+    #       prometheus:
+    #         enabled: true
+    #         serviceMonitor:
+    #           enabled: true
+    #     wait: true

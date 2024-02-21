@@ -133,6 +133,7 @@
               - '{{ k3s_vars.network.interface }}'
             loadBalancerIPs: true
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
 
     - name: Create loadbalancer ip pool
       kubernetes.core.k8s:
@@ -146,3 +147,4 @@
             cidrs:
               - cidr: '{{ cilium_vars.loadbalancer.ip.pool }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true

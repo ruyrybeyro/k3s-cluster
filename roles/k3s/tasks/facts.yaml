@@ -53,3 +53,8 @@
   ansible.builtin.set_fact:
     k3s_token: "{{ hostvars[k3s_server_default_host]['token'] | default('') }}"
   run_once: true
+
+- name: Set variables fact
+  ansible.builtin.set_fact:
+    k3s_vars: '{{ k3s_vars }}'
+  run_once: true
