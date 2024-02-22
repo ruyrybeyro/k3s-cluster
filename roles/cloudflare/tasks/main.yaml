@@ -84,8 +84,6 @@
             namespace: kube-system
             annotations:
               cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
-              io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: hubble-ui
           spec:
             ingressClassName: cilium
             rules:
@@ -96,12 +94,26 @@
                         service:
                           name: hubble-ui
                           port:
-                            number: 8081
+                            number: 80
                       path: /
                       pathType: Prefix
             tls:
               - hosts:
                   - hubble.{{ cloudflare_vars.ingress.domain }}
                 secretName: cloudflare-tls-hubble-ui
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    - name: Set hubble ui loadbalancer ip
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: cilium-ingress-hubble-ui
+            namespace: kube-system
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
+              io.cilium/lb-ipam-sharing-key: cilium-ingress-hubble-ui
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true

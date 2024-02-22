@@ -94,8 +94,6 @@
             namespace: kube-system
             annotations:
               cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
           spec:
             ingressClassName: cilium
             rules:
@@ -106,7 +104,7 @@
                         service:
                           name: argo-cd-argocd-server
                           port:
-                            number: 8080
+                            number: 80
                       path: /
                       pathType: Prefix
             tls:
@@ -114,3 +112,18 @@
                   - argocd.{{ cloudflare_vars.ingress.domain }}
                 secretName: cloudflare-tls-argo-cd-argocd-server
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    - name: Set frontend loadbalancer ip
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
+              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argocd-server
+            name: cilium-ingress-argo-cd-argocd-server
+            namespace: kube-system
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
