@@ -12,12 +12,12 @@
         binary:
           - org: cilium
             repo: cilium-cli
-            version: '{{ cilium_vars.version.cli }}'
-            name: cilium-linux-arm64.tar.gz
+            version: '{{ cilium_vars.cli.version }}'
+            name: '{{ cilium_vars.cli.name }}'
           - org: cilium
             repo: hubble
-            version: '{{ cilium_vars.version.hubble }}'
-            name: hubble-linux-arm64.tar.gz
+            version: '{{ cilium_vars.hubble.version }}'
+            name: '{{ cilium_vars.hubble.name }}'
       run_once: true
 
     - name: Download archive
@@ -48,8 +48,8 @@
 
     - name: Add repository
       kubernetes.core.helm_repository:
-        name: cilium
-        repo_url: https://helm.cilium.io
+        name: '{{ cilium_vars.kubernetes.helm.repository.name }}'
+        repo_url: '{{ cilium_vars.kubernetes.helm.repository.url }}'
 
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
@@ -57,15 +57,15 @@
     - name: Apply gateway api crds manifest
       kubernetes.core.k8s:
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway_api.version }}/experimental-install.yaml
+        src: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ cilium_vars.kubernetes.gateway.api.version }}/experimental-install.yaml
 
     - name: Install chart
       kubernetes.core.helm:
-        chart_ref: cilium/cilium
-        chart_version: '{{ cilium_vars.version.chart }}'
+        chart_ref: '{{ cilium_vars.kubernetes.helm.repository.name }}/{{ cilium_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ cilium_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        name: cilium
-        namespace: kube-system
+        name: '{{ cilium_vars.kubernetes.helm.chart.name }}'
+        namespace: '{{ cilium_vars.kubernetes.namespace }}'
         update_repo_cache: true
         values:
           bgpControlPlane:
@@ -88,7 +88,7 @@
             enabled: true
           ipam:
             operator:
-              clusterPoolIPv4PodCIDRList: '{{ cilium_vars.ipam.operator.cluster.pool }}'
+              clusterPoolIPv4PodCIDRList: '{{ cilium_vars.kubernetes.ipam.operator.cluster.pool }}'
           hubble:
             relay:
               enabled: true
@@ -126,7 +126,7 @@
           kind: CiliumL2AnnouncementPolicy
           metadata:
             name: default-l2-announcement-policy
-            namespace: kube-system
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
           spec:
             externalIPs: true
             interfaces:
@@ -142,9 +142,9 @@
           kind: CiliumLoadBalancerIPPool
           metadata:
             name: default-pool
-            namespace: kube-system
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
           spec:
             cidrs:
-              - cidr: '{{ cilium_vars.loadbalancer.ip.pool }}'
+              - cidr: '{{ cilium_vars.kubernetes.loadbalancer.ip.pool }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true

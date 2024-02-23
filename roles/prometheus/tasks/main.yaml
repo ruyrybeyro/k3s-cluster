@@ -9,8 +9,8 @@
 
 - name: Add repository
   kubernetes.core.helm_repository:
-    name: prometheus
-    repo_url: https://prometheus-community.github.io/helm-charts
+    name: '{{ prometheus_vars.kubernetes.helm.repository.name }}'
+    repo_url: '{{ prometheus_vars.kubernetes.helm.repository.url }}'
 
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
@@ -22,21 +22,21 @@
           kind: Secret
           metadata:
             name: grafana-credentials
-            namespace: kube-system
+            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
           stringData:
-            password: '{{ prometheus_vars.grafana.user.password }}'
-            username: '{{ prometheus_vars.grafana.user.name }}'
+            password: '{{ prometheus_vars.kubernetes.grafana.user.password }}'
+            username: '{{ prometheus_vars.kubernetes.grafana.user.name }}'
           type: Opaque
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
     - name: Install chart
       kubernetes.core.helm:
-        chart_ref: prometheus/kube-prometheus-stack
-        chart_version: '{{ prometheus_vars.version.chart }}'
+        chart_ref: '{{ prometheus_vars.kubernetes.helm.repository.name }}/{{ prometheus_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ prometheus_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         name: monitoring
-        namespace: kube-system
+        namespace: '{{ prometheus_vars.kubernetes.namespace }}'
         update_repo_cache: true
         values:
           alertmanager:
@@ -57,7 +57,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.alertmanager.loadbalancer.ip }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-alertmanager
               type: LoadBalancer
           grafana:
@@ -67,7 +67,7 @@
               userKey: username
             service:
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.grafana.loadbalancer.ip }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-grafana
               type: LoadBalancer
           kubeControllerManager:
@@ -98,7 +98,7 @@
                   port: 80
                   targetPort: http-web
               annotations:
-                io.cilium/lb-ipam-ips: '{{ prometheus_vars.prometheus.loadbalancer.ip }}'
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
                 io.cilium/lb-ipam-sharing-key: monitoring-kube-prometheus-prometheus
               type: LoadBalancer
           prometheus-node-exporter:
@@ -113,11 +113,11 @@
 
     # - name: Enable prometheus metrics
     #   kubernetes.core.helm:
-    #     chart_ref: cilium/cilium
-    #     chart_version: '{{ cilium_vars.version.chart }}'
+    #     chart_ref: '{{ cilium_vars.kubernetes.helm.repository.name }}/{{ cilium_vars.kubernetes.helm.chart.name }}'
+    #     chart_version: '{{ cilium_vars.kubernetes.helm.chart.version }}'
     #     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-    #     name: cilium
-    #     namespace: kube-system
+    #     name: '{{ cilium_vars.kubernetes.helm.chart.name }}'
+    #     namespace: '{{ cilium_vars.kubernetes.namespace }}'
     #     reset_values: false
     #     reuse_values: true
     #     values:

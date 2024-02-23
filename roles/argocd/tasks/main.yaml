@@ -15,9 +15,9 @@
         binary:
           org: argoproj
           repo: argo-cd
-          version: '{{ argocd_vars.version.binary }}'
+          version: '{{ argocd_vars.argocd.version }}'
           checksums: cli_checksums.txt
-          name: argocd-linux-arm64
+          name: '{{ argocd_vars.argocd.name }}'
       run_once: true
 
     - name: Set checksums fact
@@ -45,26 +45,26 @@
 
     - name: Add repository
       kubernetes.core.helm_repository:
-        name: argoproj
-        repo_url: https://argoproj.github.io/argo-helm
+        name: '{{ argocd_vars.kubernetes.helm.repository.name }}'
+        repo_url: '{{ argocd_vars.kubernetes.helm.repository.url }}'
 
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
     - name: Install chart
       kubernetes.core.helm:
-        chart_ref: argoproj/argo-cd
-        chart_version: '{{ argocd_vars.version.chart }}'
+        chart_ref: '{{ argocd_vars.kubernetes.helm.repository.name }}/{{ argocd_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ argocd_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        name: argo-cd
-        namespace: kube-system
+        name: '{{ argocd_vars.kubernetes.helm.chart.name }}'
+        namespace: '{{ argocd_vars.kubernetes.namespace }}'
         update_repo_cache: true
         values:
           applicationSet:
             replicas: 2
           configs:
             secret:
-              argocdServerAdminPassword: "{{ argocd_vars.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+              argocdServerAdminPassword: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
           redis-ha:
             enabled: true
           repoServer:
@@ -90,27 +90,27 @@
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: argo-cd-argocd-server
-            namespace: kube-system
+            name: argo-cd-argo-cd-server
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
             annotations:
-              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
+              cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
           spec:
             ingressClassName: cilium
             rules:
-              - host: argocd.{{ cloudflare_vars.ingress.domain }}
+              - host: argocd.{{ cloudflare_vars.kubernetes.ingress.domain }}
                 http:
                   paths:
                     - backend:
                         service:
-                          name: argo-cd-argocd-server
+                          name: argo-cd-argo-cd-server
                           port:
                             number: 80
                       path: /
                       pathType: Prefix
             tls:
               - hosts:
-                  - argocd.{{ cloudflare_vars.ingress.domain }}
-                secretName: cloudflare-tls-argo-cd-argocd-server
+                  - argocd.{{ cloudflare_vars.kubernetes.ingress.domain }}
+                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-argo-cd-argo-cd-server'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
@@ -121,9 +121,9 @@
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argocd-server
-            name: cilium-ingress-argo-cd-argocd-server
-            namespace: kube-system
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
+              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argo-cd-server
+            name: cilium-ingress-argo-cd-argo-cd-server
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true

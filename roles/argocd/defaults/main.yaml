@@ -1,16 +1,25 @@
 ---
 argocd_vars:
-  server:
-    admin:
-      password: !vault |
+  argocd:
+    name: argocd-linux-arm64
+    version: v2.10.0
+  kubernetes:
+    helm:
+      chart:
+        name: argo-cd
+        version: 6.0.3
+      repository:
+        name: argoproj
+        url: https://argoproj.github.io/argo-helm
+    namespace: kube-system
+    server:
+      admin:
+        password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           34393938613865616665666136616561313166303463366665313630383439343035356161663963
           6332616639663533643535333334656436386533386665660a663137326437326461373766623864
           30633935616331333363346633633533346438353536356265323866363064653731376266306665
           3138643266396539330a663132393231646265316330393765323631333838333432333531316639
           62333838313937393162373537353632613866313161343366343361653738366265
-    loadbalancer:
-      ip: 192.168.4.18
-  version:
-    binary: v2.10.0
-    chart: 6.0.3
+      loadbalancer:
+        ip: 192.168.4.18

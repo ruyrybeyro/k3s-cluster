@@ -18,9 +18,9 @@
           kind: Secret
           metadata:
             name: cloudflare-api-token
-            namespace: kube-system
+            namespace: '{{ cloudflare_vars.kubernetes.namespace }}'
           stringData:
-            token: '{{ cloudflare_vars.api.token }}'
+            token: '{{ cloudflare_vars.kubernetes.api.token }}'
           type: Opaque
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
@@ -31,13 +31,13 @@
           apiVersion: cert-manager.io/v1
           kind: ClusterIssuer
           metadata:
-            name: cloudflare-cluster-issuer
+            name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
           spec:
             acme:
               email: '{{ cluster_vars.mail.user.alias }}'
               privateKeySecretRef:
-                name: cloudflare-tls-key
-              server: '{{ cloudflare_vars.acme.server }}'
+                name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-key'
+              server: '{{ cloudflare_vars.kubernetes.acme.server }}'
               solvers:
                 - dns01:
                     cloudflare:
@@ -49,11 +49,11 @@
 
     - name: Set hubble tls and ingress controller
       kubernetes.core.helm:
-        chart_ref: cilium/cilium
-        chart_version: '{{ cilium_vars.version.chart }}'
+        chart_ref: '{{ cilium_vars.kubernetes.helm.repository.name }}/{{ cilium_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ cilium_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        name: cilium
-        namespace: kube-system
+        name: '{{ cilium_vars.kubernetes.helm.chart.name }}'
+        namespace: '{{ cilium_vars.kubernetes.namespace }}'
         reset_values: false
         reuse_values: true
         values:
@@ -63,13 +63,13 @@
                 certManagerIssuerRef:
                   group: cert-manager.io
                   kind: ClusterIssuer
-                  name: cloudflare-cluster-issuer
+                  name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
                 method: certmanager
           ingressController:
             enabled: true
-            loadbalancerMode: '{{ cilium_vars.ingress_controller.loadbalancer.mode }}'
+            loadbalancerMode: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.mode }}'
             service:
-              loadBalancerIP: '{{ cilium_vars.ingress_controller.loadbalancer.ip }}'
+              loadBalancerIP: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.ip }}'
           peerService:
             clusterDomain: '{{ k3s_vars.cluster.domain }}'
         wait: true
@@ -81,13 +81,13 @@
           kind: Ingress
           metadata:
             name: hubble-ui
-            namespace: kube-system
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
-              cert-manager.io/cluster-issuer: cloudflare-cluster-issuer
+              cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
           spec:
             ingressClassName: cilium
             rules:
-              - host: hubble.{{ cloudflare_vars.ingress.domain }}
+              - host: hubble.{{ cloudflare_vars.kubernetes.ingress.domain }}
                 http:
                   paths:
                     - backend:
@@ -99,8 +99,8 @@
                       pathType: Prefix
             tls:
               - hosts:
-                  - hubble.{{ cloudflare_vars.ingress.domain }}
-                secretName: cloudflare-tls-hubble-ui
+                  - hubble.{{ cloudflare_vars.kubernetes.ingress.domain }}
+                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-hubble-ui'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
@@ -111,9 +111,9 @@
           kind: Service
           metadata:
             name: cilium-ingress-hubble-ui
-            namespace: kube-system
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
-              io.cilium/lb-ipam-ips: '{{ cilium_vars.hubble_ui.loadbalancer.ip }}'
+              io.cilium/lb-ipam-ips: '{{ cilium_vars.kubernetes.hubble.ui.loadbalancer.ip }}'
               io.cilium/lb-ipam-sharing-key: cilium-ingress-hubble-ui
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
