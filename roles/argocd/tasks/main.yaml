@@ -90,7 +90,7 @@
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: argo-cd-argo-cd-server
+            name: argo-cd-argocd-server
             namespace: '{{ argocd_vars.kubernetes.namespace }}'
             annotations:
               cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
@@ -102,7 +102,7 @@
                   paths:
                     - backend:
                         service:
-                          name: argo-cd-argo-cd-server
+                          name: argo-cd-argocd-server
                           port:
                             number: 80
                       path: /
@@ -110,7 +110,7 @@
             tls:
               - hosts:
                   - argocd.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-argo-cd-argo-cd-server'
+                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-argo-cd-argocd-server'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
@@ -122,8 +122,8 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argo-cd-server
-            name: cilium-ingress-argo-cd-argo-cd-server
+              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argocd-server
+            name: cilium-ingress-argo-cd-argocd-server
             namespace: '{{ argocd_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
