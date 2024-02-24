@@ -88,6 +88,10 @@
                 cpu: 100m
                 memory: 64Mi
         wait: true
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed
 
     - name: Create alertmanager ingress
       kubernetes.core.k8s:
@@ -265,3 +269,7 @@
             serviceMonitor:
               enabled: true
         wait: true
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed

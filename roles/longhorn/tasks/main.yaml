@@ -41,6 +41,10 @@
                 value: 'true'
                 effect: NoSchedule
         wait: true
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed
       when: k3s_vars.controlplane.tainted
 
     - name: Install non-tainted chart
@@ -55,6 +59,10 @@
           defaultSettings:
             nodeDownPodDeletionPolicy: '{{ longhorn_vars.pod.deletion_policy }}'
         wait: true
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed
       when: not k3s_vars.controlplane.tainted
 
     - name: Create frontend ingress

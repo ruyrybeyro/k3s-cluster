@@ -73,6 +73,10 @@
           peerService:
             clusterDomain: '{{ k3s_vars.cluster.domain }}'
         wait: true
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed
 
     - name: Create hubble ui ingress
       kubernetes.core.k8s:

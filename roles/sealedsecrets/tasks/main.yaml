@@ -76,4 +76,8 @@
     namespace: '{{ sealedsecrets_vars.kubernetes.namespace }}'
     update_repo_cache: true
     wait: true
+  register: result
+  delay: 1
+  retries: 5
+  until: result is not failed
   when: ansible_host == k3s_server_default_host
