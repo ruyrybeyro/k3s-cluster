@@ -72,8 +72,7 @@
         namespace: '{{ cilium_vars.kubernetes.namespace }}'
         update_repo_cache: true
         values:
-          bgpControlPlane:
-            enabled: true
+          autoDirectNodeRoutes: true
           enableCiliumEndpointSlice: true
           envoy:
             enabled: true
@@ -112,7 +111,7 @@
             enabled: true
           loadBalancer:
             l7:
-              backend: envoy
+              backend: '{{ cilium_vars.kubernetes.loadbalancer.l7.backend }}'
           operator:
             resources:
               limits:
@@ -123,6 +122,7 @@
                 memory: 64Mi
             rollOutPods: true
           rollOutCiliumPods: true
+          routingMode: '{{ cilium_vars.kubernetes.routing.mode }}'
         wait: true
       register: result
       delay: 1

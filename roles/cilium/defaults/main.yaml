@@ -35,4 +35,8 @@ cilium_vars:
     loadbalancer:
       ip:
         pool: 192.168.4.16/28
+      l7:
+        backend: envoy
     namespace: kube-system
+    routing:
+      mode: native
