@@ -12,6 +12,9 @@
       default: 'n'
       private: false
   tasks:
+    - name: Get packages information
+      ansible.builtin.package_facts:
+
     - name: Reset cluster
       ansible.builtin.include_role:
         name: '{{ cluster_item }}'
@@ -19,17 +22,6 @@
       loop:
         - cluster
         - k3s
-      loop_control:
-        loop_var: cluster_item
-
-    - name: Get packages information
-      ansible.builtin.package_facts:
-
-    - name: Reset kubernetes charts and dependencies
-      ansible.builtin.include_role:
-        name: '{{ kubernetes_item }}'
-        tasks_from: reset
-      loop:
         - argocd
         - certmanager
         - cilium
@@ -38,4 +30,4 @@
         - sealedsecrets
         - helm
       loop_control:
-        loop_var: kubernetes_item
+        loop_var: cluster_item
