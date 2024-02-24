@@ -41,7 +41,7 @@
         mode: '0644'
       register: result
       delay: 1
-      retries: 5
+      retries: 3
       until: result is not failed
 
     - name: Install binary
@@ -78,6 +78,6 @@
     wait: true
   register: result
   delay: 1
-  retries: 5
+  retries: 3
   until: result is not failed
   when: ansible_host == k3s_server_default_host

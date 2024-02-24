@@ -31,7 +31,7 @@
       loop: '{{ binary }}'
       register: result
       delay: 1
-      retries: 5
+      retries: 3
       until: result is not failed
 
     - name: Install binary
@@ -124,7 +124,7 @@
         wait: true
       register: result
       delay: 1
-      retries: 5
+      retries: 3
       until: result is not failed
 
     - name: Create l2 announcement policy

@@ -75,7 +75,7 @@
         wait: true
       register: result
       delay: 1
-      retries: 5
+      retries: 3
       until: result is not failed
 
     - name: Create hubble ui ingress

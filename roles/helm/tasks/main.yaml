@@ -34,7 +34,7 @@
             mode: '0644'
           register: result
           delay: 1
-          retries: 5
+          retries: 3
           until: result is not failed
 
         - name: Dearmor key
@@ -80,5 +80,5 @@
             plugin_path: https://github.com/databus23/helm-diff
           register: result
           delay: 1
-          retries: 5
+          retries: 3
           until: result is not failed
