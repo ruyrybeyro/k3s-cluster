@@ -3,11 +3,6 @@
   hosts: cluster
   become: true
   gather_facts: true
-  post_tasks:
-    - name: Setup loadbalancer
-      ansible.builtin.import_role:
-        name: k3s
-        tasks_from: loadbalancer
   roles:
     - role: cluster
   tags: cluster
@@ -22,14 +17,9 @@
   become: true
   gather_facts: true
   tags:
+    - cluster
     - kubernetes
-    - never
   tasks:
-    - name: Import facts
-      ansible.builtin.import_role:
-        name: k3s
-        tasks_from: facts
-
     - name: Setup loadbalancer
       ansible.builtin.import_role:
         name: k3s
