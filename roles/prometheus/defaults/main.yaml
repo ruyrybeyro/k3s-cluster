@@ -3,7 +3,7 @@ prometheus_vars:
   kubernetes:
     alertmanager:
       loadbalancer:
-        ip: 192.168.4.21
+        ip: 192.168.4.22
     helm:
       chart:
         name: kube-prometheus-stack
@@ -13,7 +13,7 @@ prometheus_vars:
         url: https://prometheus-community.github.io/helm-charts
     grafana:
       loadbalancer:
-        ip: 192.168.4.22
+        ip: 192.168.4.21
       user:
         name: admin
         password: !vault |

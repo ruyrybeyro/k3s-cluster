@@ -29,6 +29,10 @@
         group: root
         mode: '0644'
       loop: '{{ binary }}'
+      register: result
+      delay: 1
+      retries: 5
+      until: result is not failed
 
     - name: Install binary
       ansible.builtin.unarchive:

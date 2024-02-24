@@ -32,6 +32,10 @@
             owner: root
             group: root
             mode: '0644'
+          register: result
+          delay: 1
+          retries: 5
+          until: result is not failed
 
         - name: Dearmor key
           ansible.builtin.command:
@@ -74,3 +78,7 @@
         - name: Install diff plugin
           kubernetes.core.helm_plugin:
             plugin_path: https://github.com/databus23/helm-diff
+          register: result
+          delay: 1
+          retries: 5
+          until: result is not failed
