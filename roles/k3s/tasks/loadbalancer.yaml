@@ -24,14 +24,12 @@
 
     - name: Install loadbalancer packages
       ansible.builtin.apt:
-        name: '{{ packages_item }}'
+        name: '{{ item }}'
         autoremove: true
         update_cache: true
       loop:
         - haproxy
         - keepalived
-      loop_control:
-        loop_var: packages_item
 
     - name: Update haproxy configuration file
       ansible.builtin.blockinfile:
