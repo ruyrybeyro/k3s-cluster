@@ -47,7 +47,7 @@
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
-    - name: Set hubble tls and ingress controller
+    - name: Set hubble tls
       kubernetes.core.helm:
         chart_ref: '{{ cilium_vars.kubernetes.helm.repository.name }}/{{ cilium_vars.kubernetes.helm.chart.name }}'
         chart_version: '{{ cilium_vars.kubernetes.helm.chart.version }}'
@@ -64,19 +64,13 @@
                   group: cert-manager.io
                   kind: ClusterIssuer
                   name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
-                method: certmanager
-          ingressController:
-            enabled: true
-            loadbalancerMode: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.mode }}'
-            service:
-              loadBalancerIP: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.ip }}'
-          peerService:
-            clusterDomain: '{{ k3s_vars.cluster.domain }}'
+                method: '{{ cilium_vars.kubernetes.hubble.tls.method }}'
         wait: true
       register: result
       delay: 1
       retries: 3
       until: result is not failed
+      when: cilium_vars.kubernetes.hubble.tls.method == 'certmanager'
 
     - name: Create hubble ui ingress
       kubernetes.core.k8s:

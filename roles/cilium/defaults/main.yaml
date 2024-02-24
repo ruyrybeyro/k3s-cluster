@@ -21,6 +21,8 @@ cilium_vars:
       ui:
         loadbalancer:
           ip: 192.168.4.19
+      tls:
+        method: helm
     ingress:
       controller:
         loadbalancer:
