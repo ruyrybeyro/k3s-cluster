@@ -174,9 +174,8 @@
         values:
           ingressController:
             enabled: true
-            loadbalancerMode: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.mode }}'
             service:
-              loadBalancerIP: '{{ cilium_vars.kubernetes.ingress.controller.loadbalancer.ip }}'
+              loadBalancerIP: '{{ cilium_vars.kubernetes.ingress.controller.service.loadbalancer.ip }}'
         wait: true
       register: result
       delay: 1

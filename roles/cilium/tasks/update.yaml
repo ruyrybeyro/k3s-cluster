@@ -50,7 +50,6 @@
             namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
               io.cilium/lb-ipam-ips: '{{ cilium_vars.kubernetes.hubble.ui.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-hubble-ui
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
@@ -102,8 +101,8 @@
               enabled:
                 - dns:query;ignoreAAAA
                 - drop
-                - http
                 - flow
+                - httpV2
                 - icmp
                 - port-distribution
                 - tcp

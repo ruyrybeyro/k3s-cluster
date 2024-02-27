@@ -144,7 +144,6 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-argo-cd-argocd-server
             name: cilium-ingress-argo-cd-argocd-server
             namespace: '{{ argocd_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

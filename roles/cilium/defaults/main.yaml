@@ -46,9 +46,9 @@ cilium_vars:
         method: helm
     ingress:
       controller:
-        loadbalancer:
-          ip: 192.168.4.17
-          mode: dedicated
+        service:
+          loadbalancer:
+            ip: 192.168.4.17
     ipam:
       operator:
         cluster:

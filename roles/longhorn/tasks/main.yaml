@@ -103,7 +103,6 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ longhorn_vars.kubernetes.frontend.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-longhorn-frontend
             name: cilium-ingress-longhorn-frontend
             namespace: '{{ longhorn_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'

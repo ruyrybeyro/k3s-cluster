@@ -136,7 +136,6 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-monitoring-kube-prometheus-alertmanager
             name: cilium-ingress-monitoring-kube-prometheus-alertmanager
             namespace: '{{ prometheus_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
@@ -180,7 +179,6 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-monitoring-grafana
             name: cilium-ingress-monitoring-grafana
             namespace: '{{ prometheus_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
@@ -224,7 +222,6 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: cilium-ingress-monitoring-kube-prometheus-prometheus
             name: cilium-ingress-monitoring-kube-prometheus-prometheus
             namespace: '{{ prometheus_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
