@@ -4,6 +4,15 @@ argocd_vars:
     name: argocd-linux-arm64
     version: v2.10.1
   kubernetes:
+    application_set:
+      replicas: 2
+      resources:
+        limits:
+          cpu: 400m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 64Mi
     helm:
       chart:
         name: argo-cd
@@ -12,6 +21,15 @@ argocd_vars:
         name: argoproj
         url: https://argoproj.github.io/argo-helm
     namespace: kube-system
+    repo_server:
+      min_replicas: 2
+      resources:
+        limits:
+          cpu: 400m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 64Mi
     server:
       admin:
         password: !vault |
@@ -23,3 +41,11 @@ argocd_vars:
           62333838313937393162373537353632613866313161343366343361653738366265
       loadbalancer:
         ip: 192.168.4.18
+      min_replicas: 2
+      resources:
+        limits:
+          cpu: 400m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 64Mi

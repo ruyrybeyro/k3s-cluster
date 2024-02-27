@@ -65,7 +65,14 @@
         update_repo_cache: true
         values:
           applicationSet:
-            replicas: 2
+            replicas: '{{ argocd_vars.kubernetes.application_set.replicas }}'
+            resources:
+              limits:
+                cpu: '{{ argocd_vars.kubernetes.application_set.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.application_set.resources.limits.memory }}'
+              requests:
+                cpu: '{{ argocd_vars.kubernetes.application_set.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.application_set.resources.requests.memory }}'
           configs:
             secret:
               argocdServerAdminPassword: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
@@ -74,18 +81,25 @@
           repoServer:
             autoscaling:
               enabled: true
-              minReplicas: 2
+              minReplicas: '{{ argocd_vars.kubernetes.repo_server.min_replicas }}'
+            resources:
+              limits:
+                cpu: '{{ argocd_vars.kubernetes.repo_server.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.repo_server.resources.limits.memory }}'
+              requests:
+                cpu: '{{ argocd_vars.kubernetes.repo_server.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.repo_server.resources.requests.memory }}'
           server:
             autoscaling:
               enabled: true
-              minReplicas: 2
+              minReplicas: '{{ argocd_vars.kubernetes.server.min_replicas }}'
             resources:
               limits:
-                cpu: 100m
-                memory: 128Mi
+                cpu: '{{ argocd_vars.kubernetes.server.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.server.resources.limits.memory }}'
               requests:
-                cpu: 50m
-                memory: 64Mi
+                cpu: '{{ argocd_vars.kubernetes.server.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.server.resources.requests.memory }}'
         wait: true
       register: result
       delay: 1

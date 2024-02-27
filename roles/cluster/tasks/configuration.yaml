@@ -93,15 +93,21 @@
   block:
     - name: Get host fqdn
       ansible.builtin.command:
-        cmd: hostname --all-fqdns
+        cmd: hostname --fqdn
       changed_when: false
       register: host_fqdn
+
+    - name: Get host all fqdns
+      ansible.builtin.command:
+        cmd: hostname --all-fqdns
+      changed_when: false
+      register: host_all_fqdns
 
     - name: Set cluster host fact
       ansible.builtin.set_fact:
         cluster_host: {
-          'fqdn': '{{ host_fqdn.stdout | split | first }}',
-          'domain': "{{ host_fqdn.stdout | split | first | split('.') | last }}",
+          'extension': "{{ host_all_fqdns.stdout | split | first | split('.') | last }}",
+          'fqdn': '{{ host_all_fqdns.stdout | split | first }}',
           'ipv4': "{{ ansible_default_ipv4['address'] }}",
           'name': '{{ ansible_host }}'
         }
@@ -109,9 +115,10 @@
     - name: Set host fqdn
       ansible.builtin.replace:
         path: /etc/hosts
-        regexp: ^127.0.1.1 {{ cluster_host['name'] }} {{ cluster_host['name'] }}
+        regexp: ^127.0.1.1\s.+\s{{ cluster_host['name'] }}$
         replace: 127.0.1.1 {{ cluster_host['fqdn'] }} {{ cluster_host['name'] }}
       notify: Reboot
+      when: host_fqdn.stdout != host_all_fqdns.stdout
 
     - name: Set root full name
       ansible.builtin.command:
@@ -256,7 +263,7 @@
         # Other destinations to accept mail for (blank for none)
         # Disabled, host name wrongly set as fqdn by postfix
         - question: destinations
-          value: "$myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['domain'] }}, localhost"
+          value: "$myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['extension'] }}, localhost"
           vtype: string
           enabled: false
         # Force synchronous updates on mail queue
@@ -341,7 +348,7 @@
       changed_when: true
       loop:
         - name: mydestination
-          value: $myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['domain'] }}, localhost
+          value: $myhostname, {{ cluster_host['name'] }}, localhost.{{ cluster_host['extension'] }}, localhost
         - name: smtp_generic_maps
           value: hash:/etc/postfix/generic
         - name: smtp_sasl_auth_enable

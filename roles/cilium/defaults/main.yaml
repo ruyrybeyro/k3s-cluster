@@ -7,9 +7,20 @@ cilium_vars:
     name: hubble-linux-arm64.tar.gz
     version: v0.13.0
   kubernetes:
-    gateway:
-      api:
-        version: v1.0.0
+    client:
+      rate_limit:
+        burst: 100
+        qps: 50
+    envoy:
+      resources:
+        limits:
+          cpu: 400m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 64Mi
+    gateway_api:
+      version: v1.0.0
     helm:
       chart:
         name: cilium
@@ -18,6 +29,16 @@ cilium_vars:
         name: cilium
         url: https://helm.cilium.io
     hubble:
+      relay:
+        replicas: 2
+        resources:
+          limits:
+            cpu: 400m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        retry_timeout: 10s
       ui:
         loadbalancer:
           ip: 192.168.4.19
@@ -35,8 +56,14 @@ cilium_vars:
     loadbalancer:
       ip:
         pool: 192.168.4.16/28
-      l7:
-        backend: envoy
     namespace: kube-system
+    operator:
+      resources:
+        limits:
+          cpu: 400m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 64Mi
     routing:
       mode: native
