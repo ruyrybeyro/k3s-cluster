@@ -5,7 +5,6 @@ argocd_vars:
     version: v2.10.1
   kubernetes:
     application_set:
-      replicas: 2
       resources:
         limits:
           cpu: 400m
@@ -22,7 +21,6 @@ argocd_vars:
         url: https://argoproj.github.io/argo-helm
     namespace: kube-system
     repo_server:
-      min_replicas: 2
       resources:
         limits:
           cpu: 400m
@@ -39,9 +37,11 @@ argocd_vars:
           30633935616331333363346633633533346438353536356265323866363064653731376266306665
           3138643266396539330a663132393231646265316330393765323631333838333432333531316639
           62333838313937393162373537353632613866313161343366343361653738366265
+      ingress:
+        service: argo-cd-argocd-server
+        subdomain: argocd
       loadbalancer:
         ip: 192.168.4.18
-      min_replicas: 2
       resources:
         limits:
           cpu: 400m

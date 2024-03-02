@@ -28,7 +28,7 @@
       ansible.builtin.set_fact:
         sha256_checksum: "{{ item.split(' ')[0] }}"
       loop: "{{ checksums.content.split('\n') }}"
-      when: "'linux-arm64' in item"
+      when: sealedsecrets_vars.kubeseal.name in item
       run_once: true
 
     - name: Download archive

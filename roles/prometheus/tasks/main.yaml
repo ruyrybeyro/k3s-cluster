@@ -98,131 +98,171 @@
       retries: 3
       until: result is not failed
 
-    - name: Create alertmanager ingress
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: monitoring-kube-prometheus-alertmanager
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
-            annotations:
-              cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
-          spec:
-            ingressClassName: cilium
-            rules:
-              - host: alertmanager.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: monitoring-kube-prometheus-alertmanager
-                          port:
-                            number: 9093
-                      path: /
-                      pathType: Prefix
-            tls:
-              - hosts:
-                  - alertmanager.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-monitoring-kube-prometheus-alertmanager'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
+    - name: Ingress Setup
+      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+      block:
+        - name: Set secret name prefix fact
+          ansible.builtin.set_fact:
+            secret_name_prefix: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}'
+          run_once: true
 
-    - name: Set alertmanager loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
-            name: cilium-ingress-monitoring-kube-prometheus-alertmanager
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
+        - name: Create alertmanager ingress
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: '{{ prometheus_vars.kubernetes.alertmanager.ingress.service }}'
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                annotations:
+                  cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+              spec:
+                ingressClassName: cilium
+                rules:
+                  - host: '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    http:
+                      paths:
+                        - backend:
+                            service:
+                              name: '{{ prometheus_vars.kubernetes.alertmanager.ingress.service }}'
+                              port:
+                                name: http-web
+                          path: /
+                          pathType: Prefix
+                tls:
+                  - hosts:
+                      - '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.alertmanager.ingress.service }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
 
-    - name: Create grafana ingress
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: monitoring-grafana
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
-            annotations:
-              cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
-          spec:
-            ingressClassName: cilium
-            rules:
-              - host: grafana.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: monitoring-grafana
-                          port:
-                            number: 80
-                      path: /
-                      pathType: Prefix
-            tls:
-              - hosts:
-                  - grafana.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-monitoring-grafana'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
+        - name: Set alertmanager loadbalancer ip
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                annotations:
+                  io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
+                name: cilium-ingress-{{ prometheus_vars.kubernetes.alertmanager.ingress.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
 
-    - name: Set grafana loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
-            name: cilium-ingress-monitoring-grafana
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
+        - name: Create grafana ingress
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: '{{ prometheus_vars.kubernetes.grafana.ingress.service }}'
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                annotations:
+                  cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+              spec:
+                ingressClassName: cilium
+                rules:
+                  - host: '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    http:
+                      paths:
+                        - backend:
+                            service:
+                              name: '{{ prometheus_vars.kubernetes.grafana.ingress.service }}'
+                              port:
+                                name: http-web
+                          path: /
+                          pathType: Prefix
+                tls:
+                  - hosts:
+                      - '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.grafana.ingress.service }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
 
-    - name: Create prometheus ingress
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: monitoring-kube-prometheus-prometheus
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
-            annotations:
-              cert-manager.io/cluster-issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
-          spec:
-            ingressClassName: cilium
-            rules:
-              - host: prometheus.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: monitoring-kube-prometheus-prometheus
-                          port:
-                            number: 9090
-                      path: /
-                      pathType: Prefix
-            tls:
-              - hosts:
-                  - prometheus.{{ cloudflare_vars.kubernetes.ingress.domain }}
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-monitoring-kube-prometheus-prometheus'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
+        - name: Set grafana loadbalancer ip
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                annotations:
+                  io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
+                name: cilium-ingress-{{ prometheus_vars.kubernetes.grafana.ingress.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
 
-    - name: Set prometheus loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
-            name: cilium-ingress-monitoring-kube-prometheus-prometheus
-            namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+        - name: Create prometheus ingress
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: '{{ prometheus_vars.kubernetes.prometheus.ingress.service }}'
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                annotations:
+                  cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+              spec:
+                ingressClassName: cilium
+                rules:
+                  - host: '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    http:
+                      paths:
+                        - backend:
+                            service:
+                              name: '{{ prometheus_vars.kubernetes.prometheus.ingress.service }}'
+                              port:
+                                name: http-web
+                          path: /
+                          pathType: Prefix
+                tls:
+                  - hosts:
+                      - '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                    secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.prometheus.ingress.service }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
+
+        - name: Set prometheus loadbalancer ip
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                annotations:
+                  io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
+                name: cilium-ingress-{{ prometheus_vars.kubernetes.prometheus.ingress.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
+
+    - name: Set service loadbalancer ip
+      kubernetes.core.helm:
+        chart_ref: '{{ prometheus_vars.kubernetes.helm.repository.name }}/{{ prometheus_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ prometheus_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        name: monitoring
+        namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+        reset_values: false
+        reuse_values: true
+        values:
+          alertmanager:
+            service:
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
+              type: LoadBalancer
+          grafana:
+            service:
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
+              type: LoadBalancer
+          prometheus:
+            service:
+              annotations:
+                io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
+              type: LoadBalancer
         wait: true
+      register: result
+      delay: 1
+      retries: 3
+      until: result is not failed
+      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'

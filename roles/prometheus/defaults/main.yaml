@@ -2,6 +2,9 @@
 prometheus_vars:
   kubernetes:
     alertmanager:
+      ingress:
+        service: monitoring-kube-prometheus-alertmanager
+        subdomain: alertmanager
       loadbalancer:
         ip: 192.168.4.22
       replicas: 2
@@ -16,11 +19,14 @@ prometheus_vars:
     helm:
       chart:
         name: kube-prometheus-stack
-        version: v56.12.0
+        version: v56.15.0
       repository:
         name: prometheus
         url: https://prometheus-community.github.io/helm-charts
     grafana:
+      ingress:
+        service: monitoring-grafana
+        subdomain: grafana
       loadbalancer:
         ip: 192.168.4.21
       user:
@@ -34,12 +40,15 @@ prometheus_vars:
           38383463653931373134663230383033666264646364316563663636303736326630
     namespace: kube-system
     prometheus:
+      ingress:
+        service: monitoring-kube-prometheus-prometheus
+        subdomain: prometheus
       loadbalancer:
         ip: 192.168.4.23
       resources:
         limits:
-          cpu: 400m
-          memory: 256Mi
+          cpu: 1
+          memory: 4Gi
         requests:
           cpu: 100m
           memory: 64Mi

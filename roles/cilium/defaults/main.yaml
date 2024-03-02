@@ -40,6 +40,9 @@ cilium_vars:
             memory: 64Mi
         retry_timeout: 10s
       ui:
+        ingress:
+          service: hubble-ui
+          subdomain: hubble
         loadbalancer:
           ip: 192.168.4.19
       tls:
@@ -54,8 +57,10 @@ cilium_vars:
         cluster:
           pool: 10.42.0.0/16
     loadbalancer:
+      algorithm: disabled
       ip:
         pool: 192.168.4.16/28
+      table_size: 16381
     namespace: kube-system
     operator:
       resources:

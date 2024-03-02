@@ -4,11 +4,14 @@
     name: '{{ item }}'
     tasks_from: facts
   loop:
+    - cloudflare
     - cluster
     - k3s
 
 - name: Cloudflare Setup
-  when: ansible_host == k3s_server_default_host
+  when:
+    - ansible_host == k3s_server_default_host
+    - cloudflare_vars.kubernetes.ingress.domain != 'disabled'
   block:
     - name: Create secret
       kubernetes.core.k8s:
@@ -30,13 +33,13 @@
           apiVersion: cert-manager.io/v1
           kind: ClusterIssuer
           metadata:
-            name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}'
+            name: '{{ cloudflare_cluster_issuer }}'
           spec:
             acme:
               email: '{{ cluster_vars.mail.user.alias }}'
               privateKeySecretRef:
                 name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-key'
-              server: '{{ cloudflare_vars.kubernetes.acme.server }}'
+              server: https://acme{{ '-staging' if cloudflare_vars.kubernetes.acme.server == 'staging' }}-v02.api.letsencrypt.org/directory
               solvers:
                 - dns01:
                     cloudflare:

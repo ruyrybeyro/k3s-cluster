@@ -20,12 +20,14 @@
   hosts: server
   become: true
   gather_facts: true
-  tags:
-    - kubernetes
-    - never
   tasks:
     - name: Upgrade Charts
       block:
+        - name: Upgrade argocd chart
+          ansible.builtin.include_role:
+            name: argocd
+          tags: argocd
+
         - name: Upgrade cert-manager chart
           ansible.builtin.import_role:
             name: certmanager
