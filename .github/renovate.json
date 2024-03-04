@@ -33,7 +33,7 @@
     "docker:enableMajor"
   ],
   "includePaths": [
-    "**/roles/**/defaults/main.yaml"
+    "**/roles/argocd/defaults/main.yaml"
   ],
   "labels": [
     "renovate"
