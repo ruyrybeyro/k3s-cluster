@@ -33,7 +33,7 @@
     "docker:enableMajor"
   ],
   "includePaths": [
-    "**/roles/*/defaults/main.yaml"
+    "**/roles/**/defaults/main.yaml"
   ],
   "labels": [
     "renovate"
