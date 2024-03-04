@@ -37,6 +37,7 @@
 - name: Set loadbalancer password fact
   ansible.builtin.set_fact:
     k3s_loadbalancer_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits'], length=8) }}"
+  no_log: true
   run_once: true
 
 - name: Set service name fact
@@ -52,4 +53,9 @@
 - name: Set token fact
   ansible.builtin.set_fact:
     k3s_token: "{{ hostvars[k3s_server_default_host]['token'] | default('') }}"
+  run_once: true
+
+- name: Set variables fact
+  ansible.builtin.set_fact:
+    k3s_vars: '{{ k3s_vars }}'
   run_once: true

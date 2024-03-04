@@ -1,8 +1,11 @@
 ---
 - name: Import facts
-  ansible.builtin.import_role:
-    name: k3s
+  ansible.builtin.include_role:
+    name: '{{ item }}'
     tasks_from: facts
+  loop:
+    - cloudflare
+    - k3s
 
 - name: Install Dependencies
   when: ansible_host in k3s_server_hosts
@@ -12,9 +15,9 @@
         binary:
           org: argoproj
           repo: argo-cd
-          version: '{{ argocd_vars.version.binary }}'
+          version: '{{ argocd_vars.argocd.version }}'
           checksums: cli_checksums.txt
-          name: argocd-linux-arm64
+          name: '{{ argocd_vars.argocd.name }}'
       run_once: true
 
     - name: Set checksums fact
@@ -28,7 +31,7 @@
       ansible.builtin.set_fact:
         sha256_checksum: "{{ item.split(' ')[0] }}"
       loop: "{{ checksums.content.split('\n') }}"
-      when: "'linux-arm64' in item"
+      when: argocd_vars.argocd.name in item
       run_once: true
 
     - name: Install binary
@@ -39,64 +42,201 @@
         owner: root
         group: root
         mode: '0755'
+      register: result
+      delay: 1
+      retries: 3
+      until: result is not failed
 
     - name: Add repository
       kubernetes.core.helm_repository:
-        name: argoproj
-        repo_url: https://argoproj.github.io/argo-helm
+        name: '{{ argocd_vars.kubernetes.helm.repository.name }}'
+        repo_url: '{{ argocd_vars.kubernetes.helm.repository.url }}'
 
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
+    - name: Set server admin password fact
+      ansible.builtin.set_fact:
+        server_admin_password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+      no_log: true
+      run_once: true
+
     - name: Install chart
       kubernetes.core.helm:
-        chart_ref: argoproj/argo-cd
-        chart_version: '{{ argocd_vars.version.chart }}'
+        chart_ref: '{{ argocd_vars.kubernetes.helm.repository.name }}/{{ argocd_vars.kubernetes.helm.chart.name }}'
+        chart_version: '{{ argocd_vars.kubernetes.helm.chart.version }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        name: argo-cd
-        namespace: kube-system
+        name: '{{ argocd_vars.kubernetes.helm.chart.name }}'
+        namespace: '{{ argocd_vars.kubernetes.namespace }}'
         update_repo_cache: true
         values:
           applicationSet:
-            replicas: 2
+            resources:
+              limits:
+                cpu: '{{ argocd_vars.kubernetes.application_set.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.application_set.resources.limits.memory }}'
+              requests:
+                cpu: '{{ argocd_vars.kubernetes.application_set.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.application_set.resources.requests.memory }}'
           configs:
+            cm:
+              exec.enabled: true
+            params:
+              application.namespaces: "{{ argocd_vars.kubernetes.server.application.namespaces | join(', ') }}"
+              rbac:
+                policy.csv: |
+                  g, {{ argocd_vars.kubernetes.server.user.name }}, role:admin
+                policy.default: role:readonly
+              server.insecure: true
             secret:
-              argocdServerAdminPassword: "{{ argocd_vars.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+              argocdServerAdminPassword: '{{ server_admin_password }}'
           redis-ha:
             enabled: true
-            # exporter:
-            #   enabled: true
           repoServer:
             autoscaling:
               enabled: true
-              minReplicas: 2
+            resources:
+              limits:
+                cpu: '{{ argocd_vars.kubernetes.repo_server.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.repo_server.resources.limits.memory }}'
+              requests:
+                cpu: '{{ argocd_vars.kubernetes.repo_server.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.repo_server.resources.requests.memory }}'
           server:
             autoscaling:
               enabled: true
-              minReplicas: 2
             resources:
               limits:
-                cpu: 100m
-                memory: 128Mi
+                cpu: '{{ argocd_vars.kubernetes.server.resources.limits.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.server.resources.limits.memory }}'
               requests:
-                cpu: 50m
-                memory: 64Mi
+                cpu: '{{ argocd_vars.kubernetes.server.resources.requests.cpu }}'
+                memory: '{{ argocd_vars.kubernetes.server.resources.requests.memory }}'
         wait: true
+      register: result
+      delay: 1
+      retries: 3
+      until: result is not failed
 
-    - name: Configure frontend
+    - name: Ingress Setup
+      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+      block:
+        - name: Set server domain fact
+          ansible.builtin.set_fact:
+            server_domain: '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+          run_once: true
+
+        - name: Set global domain
+          kubernetes.core.helm:
+            chart_ref: '{{ argocd_vars.kubernetes.helm.repository.name }}/{{ argocd_vars.kubernetes.helm.chart.name }}'
+            chart_version: '{{ argocd_vars.kubernetes.helm.chart.version }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            name: '{{ argocd_vars.kubernetes.helm.chart.name }}'
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
+            reset_values: false
+            reuse_values: true
+            values:
+              global:
+                domain: '{{ server_domain }}'
+            wait: true
+          register: result
+          delay: 1
+          retries: 3
+          until: result is not failed
+
+        - name: Create server ingress
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                annotations:
+                  cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+                name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+                namespace: '{{ argocd_vars.kubernetes.namespace }}'
+              spec:
+                ingressClassName: cilium
+                rules:
+                  - host: '{{ server_domain }}'
+                    http:
+                      paths:
+                        - backend:
+                            service:
+                              name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+                              port:
+                                name: https
+                          path: /
+                          pathType: Prefix
+                tls:
+                  - hosts:
+                      - '{{ server_domain }}'
+                    secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-{{ argocd_vars.kubernetes.server.ingress.service }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
+
+    - name: Set server loadbalancer ip
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
           metadata:
             annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.server.loadbalancer.ip }}'
-              io.cilium/lb-ipam-sharing-key: argo-cd-argocd-server
-            name: argo-cd-argocd-server
-            namespace: kube-system
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
+            name: cilium-ingress-{{ argocd_vars.kubernetes.server.ingress.service }}
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+
+    - name: Set server loadbalancer ip
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
+            name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
           spec:
-            selector:
-              app.kubernetes.io/instance: argo-cd
-              app.kubernetes.io/name: argocd-server
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+
+    - name: Set server user name
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'user.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    # - name: Set argocd settings fact
+    #   ansible.builtin.set_fact:
+    #     argocd:
+    #       admin:
+    #         name: admin
+    #         password: '{{ argocd_vars.kubernetes.server.admin.password | string }}'
+    #       domain: "{{ server_domain if cloudflare_vars.kubernetes.ingress.domain != 'disabled' else argocd_vars.kubernetes.server.loadbalancer.ip }}"
+    #       user:
+    #         name: '{{ argocd_vars.kubernetes.server.user.name }}'
+    #         password: '{{ argocd_vars.kubernetes.server.user.password | string }}'
+    #   no_log: true
+
+    # - name: Server login
+    #   ansible.builtin.command:
+    #     cmd: argocd login {{ argocd['domain'] }} --username {{ argocd['admin']['name'] }} --password {{ argocd['admin']['password'] }} --insecure
+    #   changed_when: server_login.rc == 0
+    #   register: server_login
+
+    # - name: Set user password command fact
+    #   ansible.builtin.set_fact:
+    #     user_password_command:
+    #       - --account {{ argocd['user']['name'] }}
+    #       - --current-password {{ argocd['admin']['password'] }}
+    #       - --new-password {{ argocd['user']['password'] }}
+    #   no_log: true
+
+    # - name: Set user password
+    #   ansible.builtin.command:
+    #     cmd: argocd account update-password {{ user_password_command | join(' ') }} --insecure
+    #   changed_when: user_password.rc == 0
+    #   register: user_password

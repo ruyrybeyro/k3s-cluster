@@ -4,7 +4,9 @@
   become: true
   gather_facts: true
   serial: 1
-  tags: cluster
+  tags:
+    - cluster
+    - never
   tasks:
     - name: Upgrade distribution
       ansible.builtin.import_role:
@@ -19,46 +21,42 @@
   become: true
   gather_facts: true
   tasks:
-    - name: Upgrade Charts
-      block:
-        - name: Upgrade cert-manager chart
-          ansible.builtin.import_role:
-            name: certmanager
-          tags: certmanager
+    - name: Upgrade argocd chart
+      ansible.builtin.include_role:
+        name: argocd
+      tags: argocd
 
-        - name: Cilium
-          tags: cilium
-          block:
-            - name: Upgrade cilium chart
-              ansible.builtin.import_role:
-                name: cilium
+    - name: Upgrade cert-manager chart
+      ansible.builtin.import_role:
+        name: certmanager
+      tags: certmanager
 
-            - name: Update cilium chart settings
-              ansible.builtin.import_role:
-                name: cilium
-                tasks_from: settings
+    - name: Upgrade cilium chart
+      ansible.builtin.import_role:
+        name: cilium
+      tags: cilium
 
-        - name: Upgrade longhorn chart
-          ansible.builtin.import_role:
-            name: longhorn
-          tags: longhorn
+    - name: Update cloudflare settings
+      ansible.builtin.import_role:
+        name: cloudflare
+      tags: cloudflare
 
-        - name: Upgrade prometheus chart
-          ansible.builtin.import_role:
-            name: prometheus
-          tags: prometheus
+    - name: Upgrade longhorn chart
+      ansible.builtin.import_role:
+        name: longhorn
+      tags: longhorn
 
-        - name: Upgrade sealed-secrets chart
-          ansible.builtin.import_role:
-            name: sealedsecrets
-          tags: sealedsecrets
+    - name: Upgrade prometheus chart
+      ansible.builtin.import_role:
+        name: prometheus
+      tags: prometheus
+
+    - name: Upgrade sealed-secrets chart
+      ansible.builtin.import_role:
+        name: sealedsecrets
+      tags: sealedsecrets
 
     - name: Upgrade helm
       ansible.builtin.import_role:
         name: helm
       tags: helm
-
-    # - name: Upgrade k3s
-    #   ansible.builtin.import_role:
-    #     name: controller
-    #   tags: k3s

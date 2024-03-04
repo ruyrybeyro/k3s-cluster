@@ -59,7 +59,7 @@
             SYSTEM_UPGRADE_JOB_ACTIVE_DEADLINE_SECONDS: '900'
             SYSTEM_UPGRADE_JOB_BACKOFF_LIMIT: '99'
             SYSTEM_UPGRADE_JOB_IMAGE_PULL_POLICY: 'Always'
-            SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: 'rancher/kubectl:{{ k3s_vars.version.kubectl }}'
+            SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: 'rancher/kubectl:{{ k3s_vars.kubectl.version }}'
             SYSTEM_UPGRADE_JOB_PRIVILEGED: 'true'
             SYSTEM_UPGRADE_JOB_TTL_SECONDS_AFTER_FINISH: '900'
             SYSTEM_UPGRADE_PLAN_POLLING_INTERVAL: '15m'
@@ -107,7 +107,7 @@
                     effect: 'NoExecute'
                 containers:
                   - name: upgrade-system-controller
-                    image: rancher/upgrade-system-controller:{{ k3s_vars.version.controller }}
+                    image: rancher/upgrade-system-controller:{{ k3s_vars.controller.version }}
                     imagePullPolicy: IfNotPresent
                     securityContext:
                       runAsNonRoot: true
@@ -166,13 +166,13 @@
           apiVersion: upgrade.cattle.io/v1
           kind: Plan
           metadata:
-            name: k3s-server
-            namespace: upgrade-system
             labels:
               k3s-upgrade: server
+            name: k3s-server
+            namespace: upgrade-system
           spec:
             concurrency: 1
-            version: '{{ k3s_vars.version.release }}'
+            version: '{{ k3s_vars.k3s.version }}'
             nodeSelector:
               matchExpressions:
                 - { key: k3s-upgrade, operator: Exists }
@@ -191,13 +191,13 @@
           apiVersion: upgrade.cattle.io/v1
           kind: Plan
           metadata:
-            name: k3s-agent
-            namespace: upgrade-system
             labels:
               k3s-upgrade: agent
+            name: k3s-agent
+            namespace: upgrade-system
           spec:
             concurrency: 2
-            version: '{{ k3s_vars.version.release }}'
+            version: '{{ k3s_vars.k3s.version }}'
             nodeSelector:
               matchExpressions:
                 - { key: k3s-upgrade, operator: Exists }
