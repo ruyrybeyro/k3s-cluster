@@ -55,6 +55,12 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
+    - name: Set server admin password fact
+      ansible.builtin.set_fact:
+        server_admin_password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+      no_log: true
+      run_once: true
+
     - name: Install chart
       kubernetes.core.helm:
         chart_ref: '{{ argocd_vars.kubernetes.helm.repository.name }}/{{ argocd_vars.kubernetes.helm.chart.name }}'
@@ -73,10 +79,17 @@
                 cpu: '{{ argocd_vars.kubernetes.application_set.resources.requests.cpu }}'
                 memory: '{{ argocd_vars.kubernetes.application_set.resources.requests.memory }}'
           configs:
+            cm:
+              exec.enabled: true
             params:
+              application.namespaces: "{{ argocd_vars.kubernetes.server.application.namespaces | join(', ') }}"
+              rbac:
+                policy.csv: |
+                  g, {{ argocd_vars.kubernetes.server.user.name }}, role:admin
+                policy.default: role:readonly
               server.insecure: true
             secret:
-              argocdServerAdminPassword: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+              argocdServerAdminPassword: '{{ server_admin_password }}'
           redis-ha:
             enabled: true
           repoServer:
@@ -108,6 +121,11 @@
     - name: Ingress Setup
       when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
       block:
+        - name: Set server domain fact
+          ansible.builtin.set_fact:
+            server_domain: '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+          run_once: true
+
         - name: Set global domain
           kubernetes.core.helm:
             chart_ref: '{{ argocd_vars.kubernetes.helm.repository.name }}/{{ argocd_vars.kubernetes.helm.chart.name }}'
@@ -119,27 +137,27 @@
             reuse_values: true
             values:
               global:
-                domain: '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                domain: '{{ server_domain }}'
             wait: true
           register: result
           delay: 1
           retries: 3
           until: result is not failed
 
-        - name: Create frontend ingress
+        - name: Create server ingress
           kubernetes.core.k8s:
             definition:
               apiVersion: networking.k8s.io/v1
               kind: Ingress
               metadata:
-                name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
-                namespace: '{{ argocd_vars.kubernetes.namespace }}'
                 annotations:
                   cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+                name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+                namespace: '{{ argocd_vars.kubernetes.namespace }}'
               spec:
                 ingressClassName: cilium
                 rules:
-                  - host: '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                  - host: '{{ server_domain }}'
                     http:
                       paths:
                         - backend:
@@ -151,12 +169,12 @@
                           pathType: Prefix
                 tls:
                   - hosts:
-                      - '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                      - '{{ server_domain }}'
                     secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-{{ argocd_vars.kubernetes.server.ingress.service }}'
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
 
-    - name: Set frontend loadbalancer ip
+    - name: Set server loadbalancer ip
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
@@ -170,7 +188,7 @@
         wait: true
       when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
 
-    - name: Set frontend loadbalancer ip
+    - name: Set server loadbalancer ip
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
@@ -184,3 +202,41 @@
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
       when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+
+    - name: Set server user name
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'user.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    # - name: Set argocd settings fact
+    #   ansible.builtin.set_fact:
+    #     argocd:
+    #       admin:
+    #         name: admin
+    #         password: '{{ argocd_vars.kubernetes.server.admin.password | string }}'
+    #       domain: "{{ server_domain if cloudflare_vars.kubernetes.ingress.domain != 'disabled' else argocd_vars.kubernetes.server.loadbalancer.ip }}"
+    #       user:
+    #         name: '{{ argocd_vars.kubernetes.server.user.name }}'
+    #         password: '{{ argocd_vars.kubernetes.server.user.password | string }}'
+    #   no_log: true
+
+    # - name: Server login
+    #   ansible.builtin.command:
+    #     cmd: argocd login {{ argocd['domain'] }} --username {{ argocd['admin']['name'] }} --password {{ argocd['admin']['password'] }} --insecure
+    #   changed_when: server_login.rc == 0
+    #   register: server_login
+
+    # - name: Set user password command fact
+    #   ansible.builtin.set_fact:
+    #     user_password_command:
+    #       - --account {{ argocd['user']['name'] }}
+    #       - --current-password {{ argocd['admin']['password'] }}
+    #       - --new-password {{ argocd['user']['password'] }}
+    #   no_log: true
+
+    # - name: Set user password
+    #   ansible.builtin.command:
+    #     cmd: argocd account update-password {{ user_password_command | join(' ') }} --insecure
+    #   changed_when: user_password.rc == 0
+    #   register: user_password

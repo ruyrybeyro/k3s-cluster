@@ -105,12 +105,11 @@
 
     - name: Set cluster host fact
       ansible.builtin.set_fact:
-        cluster_host: {
-          'extension': "{{ host_all_fqdns.stdout | split | first | split('.') | last }}",
-          'fqdn': '{{ host_all_fqdns.stdout | split | first }}',
-          'ipv4': "{{ ansible_default_ipv4['address'] }}",
-          'name': '{{ ansible_host }}'
-        }
+        cluster_host:
+          extension: "{{ host_all_fqdns.stdout | split | first | split('.') | last | default('local') }}"
+          fqdn: '{{ host_all_fqdns.stdout | split | first }}'
+          ipv4: "{{ ansible_default_ipv4['address'] }}"
+          name: '{{ ansible_host }}'
 
     - name: Set host fqdn
       ansible.builtin.replace:
@@ -118,7 +117,7 @@
         regexp: ^127.0.1.1\s.+\s{{ cluster_host['name'] }}$
         replace: 127.0.1.1 {{ cluster_host['fqdn'] }} {{ cluster_host['name'] }}
       notify: Reboot
-      when: host_fqdn.stdout != host_all_fqdns.stdout
+      when: host_fqdn.stdout != cluster_host['fqdn']
 
     - name: Set root full name
       ansible.builtin.command:
@@ -315,6 +314,7 @@
           - '[{{ cluster_vars.mail.relay.host }}]'
           - '{{ cluster_vars.mail.relay.port }} {{ cluster_vars.mail.user.name }}'
           - '{{ cluster_vars.mail.user.password }}'
+      no_log: true
 
     - name: Create sasl password map
       ansible.builtin.copy:

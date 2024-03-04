@@ -166,10 +166,10 @@
           apiVersion: upgrade.cattle.io/v1
           kind: Plan
           metadata:
-            name: k3s-server
-            namespace: upgrade-system
             labels:
               k3s-upgrade: server
+            name: k3s-server
+            namespace: upgrade-system
           spec:
             concurrency: 1
             version: '{{ k3s_vars.k3s.version }}'
@@ -191,10 +191,10 @@
           apiVersion: upgrade.cattle.io/v1
           kind: Plan
           metadata:
-            name: k3s-agent
-            namespace: upgrade-system
             labels:
               k3s-upgrade: agent
+            name: k3s-agent
+            namespace: upgrade-system
           spec:
             concurrency: 2
             version: '{{ k3s_vars.k3s.version }}'

@@ -71,10 +71,10 @@
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: '{{ longhorn_vars.kubernetes.ingress.service }}'
-            namespace: '{{ longhorn_vars.kubernetes.namespace }}'
             annotations:
               cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+            name: '{{ longhorn_vars.kubernetes.ingress.service }}'
+            namespace: '{{ longhorn_vars.kubernetes.namespace }}'
           spec:
             ingressClassName: cilium
             rules:

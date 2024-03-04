@@ -16,10 +16,10 @@
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: '{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
-            namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
               cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+            name: '{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
           spec:
             ingressClassName: cilium
             rules:
@@ -47,10 +47,10 @@
           apiVersion: v1
           kind: Service
           metadata:
-            name: cilium-ingress-{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}
-            namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
               io.cilium/lb-ipam-ips: '{{ cilium_vars.kubernetes.hubble.ui.loadbalancer.ip }}'
+            name: cilium-ingress-{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
       when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
@@ -61,10 +61,10 @@
           apiVersion: v1
           kind: Service
           metadata:
-            name: '{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
-            namespace: '{{ cilium_vars.kubernetes.namespace }}'
             annotations:
               io.cilium/lb-ipam-ips: '{{ cilium_vars.kubernetes.hubble.ui.loadbalancer.ip }}'
+            name: '{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
+            namespace: '{{ cilium_vars.kubernetes.namespace }}'
           spec:
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
