@@ -35,12 +35,6 @@
   "includePaths": [
     "**/roles/*/defaults/main.yaml"
   ],
-  "kubernetes": {
-    "fileMatch": [
-      "\\.yaml$",
-      "\\.yml$"
-    ]
-  },
   "labels": [
     "renovate"
   ]
