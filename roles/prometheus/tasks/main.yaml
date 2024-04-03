@@ -99,11 +99,11 @@
       until: result is not failed
 
     - name: Ingress Setup
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
       block:
         - name: Set secret name prefix fact
           ansible.builtin.set_fact:
-            secret_name_prefix: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}'
+            secret_name_prefix: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.key.prefix }}'
           run_once: true
 
         - name: Create alertmanager ingress
@@ -119,7 +119,7 @@
               spec:
                 ingressClassName: cilium
                 rules:
-                  - host: '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                  - host: '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     http:
                       paths:
                         - backend:
@@ -131,7 +131,7 @@
                           pathType: Prefix
                 tls:
                   - hosts:
-                      - '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                      - '{{ prometheus_vars.kubernetes.alertmanager.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.alertmanager.ingress.service }}'
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
@@ -162,7 +162,7 @@
               spec:
                 ingressClassName: cilium
                 rules:
-                  - host: '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                  - host: '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     http:
                       paths:
                         - backend:
@@ -174,7 +174,7 @@
                           pathType: Prefix
                 tls:
                   - hosts:
-                      - '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                      - '{{ prometheus_vars.kubernetes.grafana.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.grafana.ingress.service }}'
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
@@ -205,7 +205,7 @@
               spec:
                 ingressClassName: cilium
                 rules:
-                  - host: '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                  - host: '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     http:
                       paths:
                         - backend:
@@ -217,7 +217,7 @@
                           pathType: Prefix
                 tls:
                   - hosts:
-                      - '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+                      - '{{ prometheus_vars.kubernetes.prometheus.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                     secretName: '{{ secret_name_prefix }}-{{ prometheus_vars.kubernetes.prometheus.ingress.service }}'
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
@@ -265,4 +265,4 @@
       delay: 1
       retries: 3
       until: result is not failed
-      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'

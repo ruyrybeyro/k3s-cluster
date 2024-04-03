@@ -23,7 +23,7 @@
           spec:
             ingressClassName: cilium
             rules:
-              - host: '{{ cilium_vars.kubernetes.hubble.ui.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+              - host: '{{ cilium_vars.kubernetes.hubble.ui.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
                 http:
                   paths:
                     - backend:
@@ -35,11 +35,11 @@
                       pathType: Prefix
             tls:
               - hosts:
-                  - '{{ cilium_vars.kubernetes.hubble.ui.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
+                  - '{{ cilium_vars.kubernetes.hubble.ui.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
+                secretName: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.key.prefix }}-{{ cilium_vars.kubernetes.hubble.ui.ingress.service }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
 
     - name: Set hubble ui loadbalancer ip
       kubernetes.core.k8s:
@@ -53,7 +53,7 @@
             namespace: '{{ cilium_vars.kubernetes.namespace }}'
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
 
     - name: Set hubble ui loadbalancer ip
       kubernetes.core.k8s:
@@ -68,7 +68,7 @@
           spec:
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
 
     - name: Set hubble tls
       kubernetes.core.helm:
@@ -95,7 +95,7 @@
       until: result is not failed
       when:
         - cilium_vars.kubernetes.hubble.tls.method == 'certmanager'
-        - cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+        - cloudflare_vars.kubernetes.gateway.domain != 'disabled'
 
     - name: Enable metrics
       kubernetes.core.helm:

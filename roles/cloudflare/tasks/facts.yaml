@@ -6,7 +6,7 @@
 
 - name: Set cluster issuer fact
   ansible.builtin.set_fact:
-    cloudflare_cluster_issuer: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.name }}{{ cloudflare_acme_server }}'
+    cloudflare_cluster_issuer: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.name }}{{ cloudflare_acme_server }}'
   run_once: true
 
 - name: Set variables fact
