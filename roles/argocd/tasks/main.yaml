@@ -118,7 +118,7 @@
       retries: 3
       until: result is not failed
 
-    - name: Ingress Setup
+    - name: Gateway Setup
       when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
       block:
         - name: Set server domain fact
@@ -187,12 +187,14 @@
                 hostnames:
                   - '{{ server_domain }}'
                 parentRefs:
-                  - name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+                  - kind: Gateway
+                    name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
                     namespace: '{{ argocd_vars.kubernetes.namespace }}'
                 rules:
                   - backendRefs:
-                      - name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
-                        port: 443
+                      - kind: Service
+                        name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+                        port: 8080
                     matches:
                       - path:
                           type: PathPrefix
@@ -242,20 +244,20 @@
     #     wait: true
     #   when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
 
-    # - name: Set server loadbalancer ip
-    #   kubernetes.core.k8s:
-    #     definition:
-    #       apiVersion: v1
-    #       kind: Service
-    #       metadata:
-    #         annotations:
-    #           io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
-    #         name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
-    #         namespace: '{{ argocd_vars.kubernetes.namespace }}'
-    #       spec:
-    #         type: LoadBalancer
-    #     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-    #   when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
+    - name: Set server loadbalancer ip
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            annotations:
+              io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
+            name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+            namespace: '{{ argocd_vars.kubernetes.namespace }}'
+          spec:
+            type: LoadBalancer
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+      when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
 
     - name: Set server user name
       kubernetes.core.k8s:
