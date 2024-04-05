@@ -104,9 +104,9 @@
         - name: Set hostname fact
           ansible.builtin.set_fact:
             hostname:
-              - alertmanager: '{{ prometheus_vars.kubernetes.alertmanager.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
-              - grafana: '{{ prometheus_vars.kubernetes.grafana.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
-              - prometheus: '{{ prometheus_vars.kubernetes.prometheus.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
+              alertmanager: '{{ prometheus_vars.kubernetes.alertmanager.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
+              grafana: '{{ prometheus_vars.kubernetes.grafana.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
+              prometheus: '{{ prometheus_vars.kubernetes.prometheus.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
           run_once: true
 
         - name: Set tls prefix fact
@@ -133,7 +133,7 @@
                   - allowedRoutes:
                       namespaces:
                         from: Same
-                    hostname: '{{ hostname.alertmanager }}'
+                    hostname: "{{ hostname['alertmanager'] }}"
                     name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
                     port: 443
                     protocol: HTTPS
@@ -154,7 +154,7 @@
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
-                  - '{{ hostname.alertmanager }}'
+                  - "{{ hostname['alertmanager'] }}"
                 parentRefs:
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
@@ -188,7 +188,7 @@
                   - allowedRoutes:
                       namespaces:
                         from: Same
-                    hostname: '{{ hostname.grafana }}'
+                    hostname: "{{ hostname['grafana'] }}"
                     name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
                     port: 443
                     protocol: HTTPS
@@ -209,7 +209,7 @@
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
-                  - '{{ hostname.grafana }}'
+                  - "{{ hostname['grafana'] }}"
                 parentRefs:
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
@@ -243,7 +243,7 @@
                   - allowedRoutes:
                       namespaces:
                         from: Same
-                    hostname: '{{ hostname.prometheus }}'
+                    hostname: "{{ hostname['prometheus'] }}"
                     name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
                     port: 443
                     protocol: HTTPS
@@ -264,7 +264,7 @@
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
-                  - '{{ hostname.prometheus }}'
+                  - "{{ hostname['prometheus'] }}"
                 parentRefs:
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
