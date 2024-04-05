@@ -2,9 +2,6 @@
 
 [Cilium](https://github.com/cilium/cilium) is a networking, observability, and security solution with an eBPF-based dataplane.
 
-- https://luislogs.com/posts/re-engineering-the-homelab-with-iac-and-kubernetes-an-overview/
-- https://blog.stonegarden.dev/articles/2023/12/migrating-from-metallb-to-cilium/
-
 ## Releases
 
 - [ArtifactHUB](https://artifacthub.io/packages/helm/cilium/cilium)
