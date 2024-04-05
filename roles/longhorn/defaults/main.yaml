@@ -11,7 +11,7 @@ longhorn_vars:
       repository:
         name: longhorn
         url: https://charts.longhorn.io
-    ingress:
+    gateway:
       service: longhorn-frontend
       subdomain: longhorn
     namespace: kube-system

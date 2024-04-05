@@ -2,7 +2,7 @@
 prometheus_vars:
   kubernetes:
     alertmanager:
-      ingress:
+      gateway:
         service: monitoring-kube-prometheus-alertmanager
         subdomain: alertmanager
       loadbalancer:
@@ -24,7 +24,7 @@ prometheus_vars:
         name: prometheus
         url: https://prometheus-community.github.io/helm-charts
     grafana:
-      ingress:
+      gateway:
         service: monitoring-grafana
         subdomain: grafana
       loadbalancer:
@@ -40,7 +40,7 @@ prometheus_vars:
           38383463653931373134663230383033666264646364316563663636303736326630
     namespace: kube-system
     prometheus:
-      ingress:
+      gateway:
         service: monitoring-kube-prometheus-prometheus
         subdomain: prometheus
       loadbalancer:
