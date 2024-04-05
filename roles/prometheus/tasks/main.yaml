@@ -134,7 +134,14 @@
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['alertmanager'] }}"
-                    name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      namespaces:
+                        from: Same
+                    hostname: "{{ hostname['alertmanager'] }}"
+                    name: https
                     port: 443
                     protocol: HTTPS
                     tls:
@@ -144,13 +151,13 @@
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
 
-        - name: Create alertnamager http route
+        - name: Create alertmanager http route
           kubernetes.core.k8s:
             definition:
               apiVersion: gateway.networking.k8s.io/v1beta1
               kind: HTTPRoute
               metadata:
-                name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
+                name: http-route-{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
@@ -159,6 +166,34 @@
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
                     namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create alertmanager https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - "{{ hostname['alertmanager'] }}"
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ prometheus_vars.kubernetes.alertmanager.gateway.service }}'
+                    namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: https
                 rules:
                   - backendRefs:
                       - kind: Service
@@ -189,7 +224,14 @@
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['grafana'] }}"
-                    name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      namespaces:
+                        from: Same
+                    hostname: "{{ hostname['grafana'] }}"
+                    name: https
                     port: 443
                     protocol: HTTPS
                     tls:
@@ -205,7 +247,7 @@
               apiVersion: gateway.networking.k8s.io/v1beta1
               kind: HTTPRoute
               metadata:
-                name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
+                name: http-route-{{ prometheus_vars.kubernetes.grafana.gateway.service }}
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
@@ -214,6 +256,34 @@
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
                     namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create grafana https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ prometheus_vars.kubernetes.grafana.gateway.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - "{{ hostname['grafana'] }}"
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ prometheus_vars.kubernetes.grafana.gateway.service }}'
+                    namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: https
                 rules:
                   - backendRefs:
                       - kind: Service
@@ -244,6 +314,13 @@
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['prometheus'] }}"
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      namespaces:
+                        from: Same
+                    hostname: "{{ hostname['prometheus'] }}"
                     name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
                     port: 443
                     protocol: HTTPS
@@ -260,7 +337,7 @@
               apiVersion: gateway.networking.k8s.io/v1beta1
               kind: HTTPRoute
               metadata:
-                name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
+                name: http-route-{{ prometheus_vars.kubernetes.prometheus.gateway.service }}
                 namespace: '{{ prometheus_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
@@ -269,6 +346,34 @@
                   - kind: Gateway
                     name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
                     namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create prometheus https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ prometheus_vars.kubernetes.prometheus.gateway.service }}
+                namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - "{{ hostname['prometheus'] }}"
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
+                    namespace: '{{ prometheus_vars.kubernetes.namespace }}'
+                    sectionName: https
                 rules:
                   - backendRefs:
                       - kind: Service

@@ -38,7 +38,14 @@
                       namespaces:
                         from: Same
                     hostname: '{{ hostname }}'
-                    name: '{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}'
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      namespaces:
+                        from: Same
+                    hostname: '{{ hostname }}'
+                    name: https
                     port: 443
                     protocol: HTTPS
                     tls:
@@ -54,7 +61,7 @@
               apiVersion: gateway.networking.k8s.io/v1beta1
               kind: HTTPRoute
               metadata:
-                name: '{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}'
+                name: http-route-{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}
                 namespace: '{{ cilium_vars.kubernetes.namespace }}'
               spec:
                 hostnames:
@@ -63,6 +70,34 @@
                   - kind: Gateway
                     name: '{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}'
                     namespace: '{{ cilium_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}
+                namespace: '{{ cilium_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - '{{ hostname }}'
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}'
+                    namespace: '{{ cilium_vars.kubernetes.namespace }}'
+                    sectionName: https
                 rules:
                   - backendRefs:
                       - kind: Service
