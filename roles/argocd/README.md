@@ -10,5 +10,12 @@
 Set `admin` user password:
 
 ```shell
-ansible-vault encrypt_string '<yourpassword>' --name 'argocd_user_password'
+ansible-vault encrypt_string '<adminpassword>' --name 'argocd_user_password'
+```
+
+Login to a controlplane and set `floren` user password:
+
+```shell
+argocd login argocd.noty.cc --username admin --password <adminpassword> --insecure
+argocd account update-password --account floren --current-password <adminpassword> --new-password <userpassword>
 ```
