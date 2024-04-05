@@ -249,8 +249,14 @@
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
       when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
 
-    - name: Set server user name
+    - name: Set server user
       kubernetes.core.k8s:
         definition: "{{ lookup('ansible.builtin.template', 'user.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    - name: Set server rbac policy
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'policy.j2') | from_yaml }}"
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
