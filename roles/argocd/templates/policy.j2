@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 data:
   policy.csv: |
-    g, {{ argocd_vars.kubernetes.server.user.name }}, role:admin
+    g, {{ server['user']['name'] }}, role:admin
   policy.default: role:readonly
 metadata:
   labels:

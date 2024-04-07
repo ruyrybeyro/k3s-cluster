@@ -131,6 +131,8 @@
                     io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.alertmanager.loadbalancer.ip }}'
                 listeners:
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['alertmanager'] }}"
@@ -138,6 +140,8 @@
                     port: 80
                     protocol: HTTP
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['alertmanager'] }}"
@@ -221,6 +225,8 @@
                     io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.grafana.loadbalancer.ip }}'
                 listeners:
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['grafana'] }}"
@@ -228,6 +234,8 @@
                     port: 80
                     protocol: HTTP
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['grafana'] }}"
@@ -311,6 +319,8 @@
                     io.cilium/lb-ipam-ips: '{{ prometheus_vars.kubernetes.prometheus.loadbalancer.ip }}'
                 listeners:
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['prometheus'] }}"
@@ -318,6 +328,8 @@
                     port: 80
                     protocol: HTTP
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['prometheus'] }}"

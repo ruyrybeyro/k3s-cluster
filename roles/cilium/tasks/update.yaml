@@ -35,6 +35,8 @@
                     io.cilium/lb-ipam-ips: '{{ cilium_vars.kubernetes.hubble.ui.loadbalancer.ip }}'
                 listeners:
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: '{{ hostname }}'
@@ -42,6 +44,8 @@
                     port: 80
                     protocol: HTTP
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: '{{ hostname }}'

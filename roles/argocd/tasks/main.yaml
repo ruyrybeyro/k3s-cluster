@@ -55,9 +55,14 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Set server admin password fact
+    - name: Set server user settings fact
       ansible.builtin.set_fact:
-        server_admin_password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+        server:
+          admin:
+            password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+          user:
+            name: '{{ argocd_vars.kubernetes.server.user.name }}'
+            password: "{{ argocd_vars.kubernetes.server.user.password | string | ansible.builtin.password_hash('blowfish') }}"
       no_log: true
       run_once: true
 
@@ -83,13 +88,9 @@
               exec.enabled: true
             params:
               application.namespaces: "{{ argocd_vars.kubernetes.server.application.namespaces | join(', ') }}"
-              rbac:
-                policy.csv: |
-                  g, {{ argocd_vars.kubernetes.server.user.name }}, role:admin
-                policy.default: role:readonly
               server.insecure: true
             secret:
-              argocdServerAdminPassword: '{{ server_admin_password }}'
+              argocdServerAdminPassword: "{{ server['admin']['password'] }}"
           redis-ha:
             enabled: true
           repoServer:
@@ -161,6 +162,8 @@
                     io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
                 listeners:
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: '{{ hostname }}'
@@ -168,6 +171,8 @@
                     port: 80
                     protocol: HTTP
                   - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
                       namespaces:
                         from: Same
                     hostname: '{{ hostname }}'
@@ -249,9 +254,15 @@
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
       when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
 
-    - name: Set server user
+    - name: Set server user name
       kubernetes.core.k8s:
         definition: "{{ lookup('ansible.builtin.template', 'user.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
+
+    - name: Set server user password
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'password.j2') | from_yaml }}"
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
