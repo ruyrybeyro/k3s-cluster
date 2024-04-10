@@ -25,7 +25,7 @@ Raspberry Pi k3s high-availability cluster deployed with Ansible.
 
 ### TODO
 
-- Automate the cluster and chart upgrades
+- Automate the k3s cluster upgrades, chart upgrades are functional
 - Update Renovate configuration, for automated version upgrades
 - Finalize documentation
 
