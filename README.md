@@ -2,6 +2,8 @@
 
 Raspberry Pi k3s high-availability cluster deployed with Ansible.
 
+Documentation and upgrade procedure is still a WIP.
+
 ## Hardware
 
 - 8 x Raspberry Pi 4B with 8GB RAM
