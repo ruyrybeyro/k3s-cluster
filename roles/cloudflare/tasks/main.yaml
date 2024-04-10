@@ -11,7 +11,7 @@
 - name: Cloudflare Setup
   when:
     - ansible_host == k3s_server_default_host
-    - cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+    - cloudflare_vars.kubernetes.gateway.domain != 'disabled'
   block:
     - name: Create secret
       kubernetes.core.k8s:
@@ -38,7 +38,7 @@
             acme:
               email: '{{ cluster_vars.mail.user.alias }}'
               privateKeySecretRef:
-                name: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-key'
+                name: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.key.prefix }}-key'
               server: https://acme{{ '-staging' if cloudflare_vars.kubernetes.acme.server == 'staging' }}-v02.api.letsencrypt.org/directory
               solvers:
                 - dns01:

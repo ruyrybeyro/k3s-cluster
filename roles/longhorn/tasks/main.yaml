@@ -65,36 +65,107 @@
       until: result is not failed
       when: not k3s_vars.controlplane.tainted
 
-    - name: Create frontend ingress
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            annotations:
-              cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
-            name: '{{ longhorn_vars.kubernetes.ingress.service }}'
-            namespace: '{{ longhorn_vars.kubernetes.namespace }}'
-          spec:
-            ingressClassName: cilium
-            rules:
-              - host: '{{ longhorn_vars.kubernetes.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
-                http:
-                  paths:
-                    - backend:
-                        service:
-                          name: '{{ longhorn_vars.kubernetes.ingress.service }}'
-                          port:
-                            name: http
-                      path: /
-                      pathType: Prefix
-            tls:
-              - hosts:
-                  - '{{ longhorn_vars.kubernetes.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
-                secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-{{ longhorn_vars.kubernetes.ingress.service }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+    - name: Gateway Setup
+      when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
+      block:
+        - name: Set hostname fact
+          ansible.builtin.set_fact:
+            hostname: '{{ longhorn_vars.kubernetes.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
+          run_once: true
+
+        - name: Create frontend gateway
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1
+              kind: Gateway
+              metadata:
+                annotations:
+                  cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
+                name: '{{ longhorn_vars.kubernetes.gateway.service }}'
+                namespace: '{{ longhorn_vars.kubernetes.namespace }}'
+              spec:
+                gatewayClassName: cilium
+                infrastructure:
+                  annotations:
+                    io.cilium/lb-ipam-ips: '{{ longhorn_vars.kubernetes.frontend.loadbalancer.ip }}'
+                listeners:
+                  - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
+                      namespaces:
+                        from: Same
+                    hostname: '{{ hostname }}'
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
+                      namespaces:
+                        from: Same
+                    hostname: '{{ hostname }}'
+                    name: https
+                    port: 443
+                    protocol: HTTPS
+                    tls:
+                      certificateRefs:
+                        - kind: Secret
+                          name: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.key.prefix }}-{{ longhorn_vars.kubernetes.gateway.service }}'
+            kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+            wait: true
+
+        - name: Create http route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: http-route-{{ longhorn_vars.kubernetes.gateway.service }}
+                namespace: '{{ longhorn_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - '{{ hostname }}'
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ longhorn_vars.kubernetes.gateway.service }}'
+                    namespace: '{{ longhorn_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ longhorn_vars.kubernetes.gateway.service }}
+                namespace: '{{ longhorn_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - '{{ hostname }}'
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ longhorn_vars.kubernetes.gateway.service }}'
+                    namespace: '{{ longhorn_vars.kubernetes.namespace }}'
+                    sectionName: https
+                rules:
+                  - backendRefs:
+                      - kind: Service
+                        name: '{{ longhorn_vars.kubernetes.gateway.service }}'
+                        port: 80
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
 
     - name: Set frontend loadbalancer ip
       kubernetes.core.k8s:
@@ -104,23 +175,9 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ longhorn_vars.kubernetes.frontend.loadbalancer.ip }}'
-            name: cilium-ingress-{{ longhorn_vars.kubernetes.ingress.service }}
-            namespace: '{{ longhorn_vars.kubernetes.namespace }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
-
-    - name: Set frontend loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ longhorn_vars.kubernetes.frontend.loadbalancer.ip }}'
-            name: '{{ longhorn_vars.kubernetes.ingress.service }}'
+            name: '{{ longhorn_vars.kubernetes.gateway.service }}'
             namespace: '{{ longhorn_vars.kubernetes.namespace }}'
           spec:
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'

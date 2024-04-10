@@ -55,9 +55,14 @@
 - name: Chart Setup
   when: ansible_host == k3s_server_default_host
   block:
-    - name: Set server admin password fact
+    - name: Set server user settings fact
       ansible.builtin.set_fact:
-        server_admin_password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+        server:
+          admin:
+            password: "{{ argocd_vars.kubernetes.server.admin.password | string | ansible.builtin.password_hash('blowfish') }}"
+          user:
+            name: '{{ argocd_vars.kubernetes.server.user.name }}'
+            password: "{{ argocd_vars.kubernetes.server.user.password | string | ansible.builtin.password_hash('blowfish') }}"
       no_log: true
       run_once: true
 
@@ -83,13 +88,9 @@
               exec.enabled: true
             params:
               application.namespaces: "{{ argocd_vars.kubernetes.server.application.namespaces | join(', ') }}"
-              rbac:
-                policy.csv: |
-                  g, {{ argocd_vars.kubernetes.server.user.name }}, role:admin
-                policy.default: role:readonly
               server.insecure: true
             secret:
-              argocdServerAdminPassword: '{{ server_admin_password }}'
+              argocdServerAdminPassword: "{{ server['admin']['password'] }}"
           redis-ha:
             enabled: true
           repoServer:
@@ -118,12 +119,12 @@
       retries: 3
       until: result is not failed
 
-    - name: Ingress Setup
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+    - name: Gateway Setup
+      when: cloudflare_vars.kubernetes.gateway.domain != 'disabled'
       block:
-        - name: Set server domain fact
+        - name: Set hostname fact
           ansible.builtin.set_fact:
-            server_domain: '{{ argocd_vars.kubernetes.server.ingress.subdomain }}.{{ cloudflare_vars.kubernetes.ingress.domain }}'
+            hostname: '{{ argocd_vars.kubernetes.server.gateway.subdomain }}.{{ cloudflare_vars.kubernetes.gateway.domain }}'
           run_once: true
 
         - name: Set global domain
@@ -137,56 +138,106 @@
             reuse_values: true
             values:
               global:
-                domain: '{{ server_domain }}'
+                domain: '{{ hostname }}'
             wait: true
           register: result
           delay: 1
           retries: 3
           until: result is not failed
 
-        - name: Create server ingress
+        - name: Create server gateway
           kubernetes.core.k8s:
             definition:
-              apiVersion: networking.k8s.io/v1
-              kind: Ingress
+              apiVersion: gateway.networking.k8s.io/v1
+              kind: Gateway
               metadata:
                 annotations:
                   cert-manager.io/cluster-issuer: '{{ cloudflare_cluster_issuer }}'
-                name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+                name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
                 namespace: '{{ argocd_vars.kubernetes.namespace }}'
               spec:
-                ingressClassName: cilium
-                rules:
-                  - host: '{{ server_domain }}'
-                    http:
-                      paths:
-                        - backend:
-                            service:
-                              name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
-                              port:
-                                name: https
-                          path: /
-                          pathType: Prefix
-                tls:
-                  - hosts:
-                      - '{{ server_domain }}'
-                    secretName: '{{ cloudflare_vars.kubernetes.ingress.cluster.issuer.key.prefix }}-{{ argocd_vars.kubernetes.server.ingress.service }}'
+                gatewayClassName: cilium
+                infrastructure:
+                  annotations:
+                    io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
+                listeners:
+                  - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
+                      namespaces:
+                        from: Same
+                    hostname: '{{ hostname }}'
+                    name: http
+                    port: 80
+                    protocol: HTTP
+                  - allowedRoutes:
+                      kinds:
+                        - kind: HTTPRoute
+                      namespaces:
+                        from: Same
+                    hostname: '{{ hostname }}'
+                    name: https
+                    port: 443
+                    protocol: HTTPS
+                    tls:
+                      certificateRefs:
+                        - kind: Secret
+                          name: '{{ cloudflare_vars.kubernetes.gateway.cluster.issuer.key.prefix }}-{{ argocd_vars.kubernetes.server.gateway.service }}'
             kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
             wait: true
 
-    - name: Set server loadbalancer ip
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            annotations:
-              io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
-            name: cilium-ingress-{{ argocd_vars.kubernetes.server.ingress.service }}
-            namespace: '{{ argocd_vars.kubernetes.namespace }}'
-        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-        wait: true
-      when: cloudflare_vars.kubernetes.ingress.domain != 'disabled'
+        - name: Create http route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: http-route-{{ argocd_vars.kubernetes.server.gateway.service }}
+                namespace: '{{ argocd_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - '{{ hostname }}'
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+                    namespace: '{{ argocd_vars.kubernetes.namespace }}'
+                    sectionName: http
+                rules:
+                  - filters:
+                      - requestRedirect:
+                          scheme: https
+                          statusCode: 301
+                        type: RequestRedirect
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
+
+        - name: Create https route
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: HTTPRoute
+              metadata:
+                name: https-route-{{ argocd_vars.kubernetes.server.gateway.service }}
+                namespace: '{{ argocd_vars.kubernetes.namespace }}'
+              spec:
+                hostnames:
+                  - '{{ hostname }}'
+                parentRefs:
+                  - kind: Gateway
+                    name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+                    namespace: '{{ argocd_vars.kubernetes.namespace }}'
+                    sectionName: https
+                rules:
+                  - backendRefs:
+                      - kind: Service
+                        name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
+                        port: 443
+                    matches:
+                      - path:
+                          type: PathPrefix
+                          value: /
 
     - name: Set server loadbalancer ip
       kubernetes.core.k8s:
@@ -196,12 +247,12 @@
           metadata:
             annotations:
               io.cilium/lb-ipam-ips: '{{ argocd_vars.kubernetes.server.loadbalancer.ip }}'
-            name: '{{ argocd_vars.kubernetes.server.ingress.service }}'
+            name: '{{ argocd_vars.kubernetes.server.gateway.service }}'
             namespace: '{{ argocd_vars.kubernetes.namespace }}'
           spec:
             type: LoadBalancer
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-      when: cloudflare_vars.kubernetes.ingress.domain == 'disabled'
+      when: cloudflare_vars.kubernetes.gateway.domain == 'disabled'
 
     - name: Set server user name
       kubernetes.core.k8s:
@@ -209,34 +260,14 @@
         kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
         wait: true
 
-    # - name: Set argocd settings fact
-    #   ansible.builtin.set_fact:
-    #     argocd:
-    #       admin:
-    #         name: admin
-    #         password: '{{ argocd_vars.kubernetes.server.admin.password | string }}'
-    #       domain: "{{ server_domain if cloudflare_vars.kubernetes.ingress.domain != 'disabled' else argocd_vars.kubernetes.server.loadbalancer.ip }}"
-    #       user:
-    #         name: '{{ argocd_vars.kubernetes.server.user.name }}'
-    #         password: '{{ argocd_vars.kubernetes.server.user.password | string }}'
-    #   no_log: true
+    - name: Set server user password
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'password.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true
 
-    # - name: Server login
-    #   ansible.builtin.command:
-    #     cmd: argocd login {{ argocd['domain'] }} --username {{ argocd['admin']['name'] }} --password {{ argocd['admin']['password'] }} --insecure
-    #   changed_when: server_login.rc == 0
-    #   register: server_login
-
-    # - name: Set user password command fact
-    #   ansible.builtin.set_fact:
-    #     user_password_command:
-    #       - --account {{ argocd['user']['name'] }}
-    #       - --current-password {{ argocd['admin']['password'] }}
-    #       - --new-password {{ argocd['user']['password'] }}
-    #   no_log: true
-
-    # - name: Set user password
-    #   ansible.builtin.command:
-    #     cmd: argocd account update-password {{ user_password_command | join(' ') }} --insecure
-    #   changed_when: user_password.rc == 0
-    #   register: user_password
+    - name: Set server rbac policy
+      kubernetes.core.k8s:
+        definition: "{{ lookup('ansible.builtin.template', 'policy.j2') | from_yaml }}"
+        kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
+        wait: true

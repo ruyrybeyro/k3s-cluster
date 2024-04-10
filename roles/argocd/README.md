@@ -10,5 +10,5 @@
 Set `admin` user password:
 
 ```shell
-ansible-vault encrypt_string '<yourpassword>' --name 'argocd_user_password'
+ansible-vault encrypt_string '<adminpassword>' --name 'argocd_vars.kubernetes.server.admin.password'
 ```

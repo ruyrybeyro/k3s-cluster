@@ -2,10 +2,10 @@
 cilium_vars:
   cli:
     name: cilium-linux-arm64.tar.gz
-    version: v0.15.23
+    version: v0.16.4
   hubble:
     name: hubble-linux-arm64.tar.gz
-    version: v0.13.0
+    version: v0.13.2
   kubernetes:
     client:
       rate_limit:
@@ -24,7 +24,7 @@ cilium_vars:
     helm:
       chart:
         name: cilium
-        version: v1.15.1
+        version: v1.15.3
       repository:
         name: cilium
         url: https://helm.cilium.io
@@ -40,7 +40,7 @@ cilium_vars:
             memory: 64Mi
         retry_timeout: 10s
       ui:
-        ingress:
+        gateway:
           service: hubble-ui
           subdomain: hubble
         loadbalancer:
