@@ -20,8 +20,6 @@ Raspberry Pi k3s high-availability cluster deployed with Ansible.
 - [Renovate](https://github.com/renovatebot/renovate)
 - Ubuntu LTS 22.04 OS with fully automated upgrades enabled
 
-Note: Documentation and upgrade procedure is still a WIP.
-
 ### TODO
 
 - Automate the cluster and chart upgrades
