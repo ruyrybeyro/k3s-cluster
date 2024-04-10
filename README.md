@@ -20,6 +20,7 @@ Raspberry Pi k3s high-availability cluster deployed with Ansible.
 - [Longhorn](https://longhorn.io)
 - [Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 - [Renovate](https://github.com/renovatebot/renovate)
+- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
 - Ubuntu LTS 22.04 OS with fully automated upgrades enabled
 
 ### TODO
