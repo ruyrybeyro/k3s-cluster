@@ -1,6 +1,6 @@
 # Cilium
 
-[Cilium](https://github.com/cilium/cilium) is a networking, observability, and security solution with an eBPF-based dataplane.
+Cilium is a networking, observability, and security solution with an eBPF-based dataplane.
 
 ## Releases
 
@@ -9,24 +9,43 @@
 - [Cilium CLI](https://github.com/cilium/cilium-cli/releases)
 - [Cilium Hubble](https://github.com/cilium/hubble/releases)
 
-## Helm Chart Configuration
+## Chart Variables
 
-- [Reference](https://docs.cilium.io/en/stable/helm-reference/)
-
-### Kubernetes Without kube-proxy
-
-- [Reference](ttps://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/)
-
-For [Cilium #19038](https://github.com/cilium/cilium/issues/19038), `k3s` does proxy the API server on each host to `localhost:6444`:
+Variables are located into `defaults/main.yaml` file:
 
 ```yaml
-k8sServiceHost: 127.0.0.1
-k8sServicePort: 6444
-kubeProxyReplacement: true
+cilium_vars:
+  hubble_ui:
+    loadbalancer:
+      ip: hubble ui loadbalancer ip
+  ingress_controller:
+    loadbalancer:
+      ip: ingress controller loadbalancer ip
+      mode: dedicated
+  ipam:
+    operator:
+      cluster:
+        pool: ipam operator cluster pool, k3s related
+  kubernetes:
+    gateway_api:
+      version: v1.0.0
+  loadbalancer:
+    ip:
+      pool: loadbalancer ip pool, see CiliumLoadBalancerIPPool
+  version:
+    chart: chart version, see releases
+    cli: binary cilium-cli version, see releases
+    hubble: binary hubble version, see releases
+```
+
+## Chart Upgrade
+
+```shell
+ansible-playbook --ask-vault-pass upgrade.yaml --tags cilium
 ```
 
 Validate the setup:
 
 ```shell
-sudo kubectl -n kube-system exec ds/cilium -- cilium status --verbose
+kubectl -n kube-system exec ds/cilium -- cilium status --verbose
 ```

@@ -1,14 +1,11 @@
 # Cluster
 
-Cluster related tasks.
-
-- https://unix.stackexchange.com/questions/39226/how-to-run-a-script-with-systemd-right-before-shutdown
-- https://askubuntu.com/questions/919054/how-do-i-run-a-single-command-at-startup-using-systemd
+Install k3s cluster dependencies and optimize Ubuntu OS.
 
 ## Provisioning
 
 ```shell
-ansible-playbook --skip-tags kubernetes,charts provisioning.yaml
+ansible-playbook --ask-vault-pass --tags cluster provisioning.yaml
 ```
 
 ## Troubleshooting
@@ -63,7 +60,7 @@ Reconfigure `postfix`:
 dpkg-reconfigure postfix
 ```
 
-Uninstall `postfix``:
+Uninstall `postfix`:
 
 ```shell
 apt remove --purge -y bsd-mailx postfix
