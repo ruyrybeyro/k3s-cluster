@@ -2,7 +2,17 @@
 
 Raspberry Pi k3s high-availability cluster deployed with Ansible.
 
-Documentation and upgrade procedure is still a WIP.
+Technologies used:
+
+- [ArgoCD](https://argoproj.github.io/cd/)
+- [Cilium](https://cilium.io)
+- [Cloudflare](https://www.cloudflare.com) Let's Encrypt certificates deployed with [cert-manager](https://cert-manager.io)
+- [K3S](https://k3s.io) production ready deployment
+- [Longhorn](https://longhorn.io)
+- [Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+- Ubuntu LTS 22.04 OS with fully automated upgrades enabled
+
+Note: Documentation and upgrade procedure is still a WIP.
 
 ## Hardware
 
