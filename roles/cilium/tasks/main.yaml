@@ -223,10 +223,10 @@
           l2podAnnouncements:
             enabled: true
             interface: '{{ k3s_vars.network.interface }}'
-          routingMode: '{{ cilium_vars.kubernetes.routing.mode }}'
+          routingMode: '{{ cilium_vars.kubernetes.routing_mode }}'
         wait: true
       register: result
       delay: 1
       retries: 3
       until: result is not failed
-      when: cilium_vars.kubernetes.routing.mode == 'native'
+      when: cilium_vars.kubernetes.routing_mode == 'native'

@@ -70,5 +70,4 @@ cilium_vars:
         requests:
           cpu: 100m
           memory: 64Mi
-    routing:
-      mode: native
+    routing_mode: native
