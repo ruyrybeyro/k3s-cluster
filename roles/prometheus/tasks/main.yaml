@@ -333,7 +333,7 @@
                       namespaces:
                         from: Same
                     hostname: "{{ hostname['prometheus'] }}"
-                    name: '{{ prometheus_vars.kubernetes.prometheus.gateway.service }}'
+                    name: https
                     port: 443
                     protocol: HTTPS
                     tls:
