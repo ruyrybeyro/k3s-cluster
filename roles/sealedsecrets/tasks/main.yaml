@@ -12,9 +12,9 @@
         binary:
           org: bitnami-labs
           repo: sealed-secrets
-          version: '{{ sealedsecrets_vars.version.binary }}'
-          checksums: 'sealed-secrets_{{ sealedsecrets_vars.version.binary[1:] }}_checksums.txt'
-          name: 'kubeseal-{{ sealedsecrets_vars.version.binary[1:] }}-linux-arm64.tar.gz'
+          version: '{{ sealedsecrets_vars.kubeseal.version }}'
+          checksums: 'sealed-secrets_{{ sealedsecrets_vars.kubeseal.version[1:] }}_checksums.txt'
+          name: '{{ sealedsecrets_vars.kubeseal.name }}'
       run_once: true
 
     - name: Set checksums fact
@@ -28,7 +28,7 @@
       ansible.builtin.set_fact:
         sha256_checksum: "{{ item.split(' ')[0] }}"
       loop: "{{ checksums.content.split('\n') }}"
-      when: "'linux-arm64' in item"
+      when: sealedsecrets_vars.kubeseal.name in item
       run_once: true
 
     - name: Download archive
@@ -39,6 +39,10 @@
         owner: root
         group: root
         mode: '0644'
+      register: result
+      delay: 1
+      retries: 3
+      until: result is not failed
 
     - name: Install binary
       ansible.builtin.unarchive:
@@ -60,16 +64,20 @@
 
     - name: Add repository
       kubernetes.core.helm_repository:
-        name: sealed-secrets
-        repo_url: https://bitnami-labs.github.io/sealed-secrets
+        name: '{{ sealedsecrets_vars.kubernetes.helm.repository.name }}'
+        repo_url: '{{ sealedsecrets_vars.kubernetes.helm.repository.url }}'
 
 - name: Install chart
   kubernetes.core.helm:
-    chart_ref: sealed-secrets/sealed-secrets
-    chart_version: '{{ sealedsecrets_vars.version.chart }}'
+    chart_ref: '{{ sealedsecrets_vars.kubernetes.helm.repository.name }}/{{ sealedsecrets_vars.kubernetes.helm.chart.name }}'
+    chart_version: '{{ sealedsecrets_vars.kubernetes.helm.chart.version }}'
     kubeconfig: '{{ k3s_vars.directory.config }}/k3s.yaml'
-    name: sealed-secrets
-    namespace: kube-system
+    name: '{{ sealedsecrets_vars.kubernetes.helm.chart.name }}'
+    namespace: '{{ sealedsecrets_vars.kubernetes.namespace }}'
     update_repo_cache: true
     wait: true
+  register: result
+  delay: 1
+  retries: 3
+  until: result is not failed
   when: ansible_host == k3s_server_default_host

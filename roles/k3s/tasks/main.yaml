@@ -8,12 +8,16 @@
   block:
     - name: Install k3s binary
       ansible.builtin.get_url:
-        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.version.release }}/k3s-arm64
-        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.version.release }}/sha256sum-arm64.txt
+        url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.k3s.version }}/k3s-arm64
+        checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_vars.k3s.version }}/sha256sum-arm64.txt
         dest: /usr/local/bin/k3s
         owner: root
         group: root
         mode: '0755'
+      register: result
+      delay: 1
+      retries: 3
+      until: result is not failed
 
     - name: Create configuration directory
       ansible.builtin.file:

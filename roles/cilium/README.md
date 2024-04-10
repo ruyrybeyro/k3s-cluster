@@ -2,12 +2,6 @@
 
 Cilium is a networking, observability, and security solution with an eBPF-based dataplane.
 
-## Role Tasks
-
-- Install required binaries
-- Install helm repository
-- Install helm chart
-
 ## Releases
 
 - [ArtifactHUB](https://artifacthub.io/packages/helm/cilium/cilium)

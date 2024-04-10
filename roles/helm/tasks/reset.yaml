@@ -7,9 +7,6 @@
 - name: Remove Dependencies
   when: ansible_host in k3s_server_hosts
   block:
-    - name: Get packages information
-      ansible.builtin.package_facts:
-
     - name: Remove plugin
       kubernetes.core.helm_plugin:
         plugin_name: diff
