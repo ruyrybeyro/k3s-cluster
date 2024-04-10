@@ -17,9 +17,16 @@ Raspberry Pi k3s high-availability cluster deployed with Ansible.
 - [K3S](https://k3s.io) production ready deployment
 - [Longhorn](https://longhorn.io)
 - [Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+- [Renovate](https://github.com/renovatebot/renovate)
 - Ubuntu LTS 22.04 OS with fully automated upgrades enabled
 
 Note: Documentation and upgrade procedure is still a WIP.
+
+### TODO
+
+- Automate the cluster and chart upgrades
+- Update Renovate configuration, for automated version upgrades
+- Finalize documentation
 
 ## Ansible
 
