@@ -2,7 +2,14 @@
 
 Raspberry Pi k3s high-availability cluster deployed with Ansible.
 
-Technologies used:
+## Hardware
+
+- 8 x Raspberry Pi 4B with 8GB RAM
+- 8 x Samsung PM883 240GB SSD, connected to same USB port
+- 8 x SLK Tech [Sata to USB cable](https://www.amazon.com/gp/product/B07S9CKV7X/)
+- Unifi [USW-Pro-24-POE](https://store.ui.com/us/en/collections/unifi-switching-pro-power-over-ethernet/products/usw-pro-24-poe) switch, powering the Raspberry Pi's
+
+## Used Technologies
 
 - [ArgoCD](https://argoproj.github.io/cd/)
 - [Cilium](https://cilium.io)
@@ -13,13 +20,6 @@ Technologies used:
 - Ubuntu LTS 22.04 OS with fully automated upgrades enabled
 
 Note: Documentation and upgrade procedure is still a WIP.
-
-## Hardware
-
-- 8 x Raspberry Pi 4B with 8GB RAM
-- 8 x Samsung PM883 240GB SSD, connected to same USB port
-- 8 x SLK Tech [Sata to USB cable](https://www.amazon.com/gp/product/B07S9CKV7X/)
-- Unifi [USW-Pro-24-POE](https://store.ui.com/us/en/collections/unifi-switching-pro-power-over-ethernet/products/usw-pro-24-poe) switch, powering the Raspberry Pi's
 
 ## Ansible
 
